@@ -4,7 +4,7 @@
 
 // ============================================
 // PRODUCT DATA
-// Edita aquí tus productos. Las imágenes están en Cloudinary: https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/
+// Edita aquí tus productos. Las imágenes están en Cloudinary: https://res.cloudinary.com/dflyysqln/image/upload/
 // ============================================
 // DROP 01 — BORN TO SHINE
 // DROP 02 — EL ANIMAL PRINT NUNCA MUERE
@@ -15,12 +15,12 @@ const PRODUCTS = [
     drop: 'BORN TO SHINE',
     price: 700,
     description: 'Camisa del drop Born to Shine. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/born-to-shine.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/born-to-shine_dboku4.webp',
     gallery: [
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-01-born-to-shine/born-to-shine/born-to-shine-1.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-01-born-to-shine/born-to-shine/born-to-shine-2.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-01-born-to-shine/born-to-shine/born-to-shine-3.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-01-born-to-shine/born-to-shine/born-to-shine-4.webp',
+      'https://res.cloudinary.com/dflyysqln/image/upload/borntoshine1_mhdrgc.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/brn1_ixp42v.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/borntoshine3_apqt8r.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/borntoshine4_hpg4y8.jpg',
     ],
     badge: 'LIMITED',       // LIMITED | NEW | SOLDOUT
     stock: 2,
@@ -33,11 +33,11 @@ const PRODUCTS = [
     drop: 'BORN TO SHINE',
     price: 750,
     description: 'Jort del drop Born to Shine. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/over-as-fk.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/over-as-fk_pi6g19.webp',
     gallery: [
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-01-born-to-shine/over-as-fk/over-as-fk-1.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-01-born-to-shine/over-as-fk/over-as-fk-2.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-01-born-to-shine/over-as-fk/over-as-fk-3.webp',
+      'https://res.cloudinary.com/dflyysqln/image/upload/overas1_tgmuzs.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/overas2_flxg98.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/overas3_ypmnih.jpg',
     ],
     badge: 'LIMITED',
     stock: 3,
@@ -50,14 +50,14 @@ const PRODUCTS = [
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
     price: 800,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/under-my-skin.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/under-my-skin_a20sjc.webp',
     gallery: [
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/under-my-skin/under-my-skin-1.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/under-my-skin/under-my-skin-2.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/under-my-skin/under-my-skin-3.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/under-my-skin/under-my-skin-4.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/under-my-skin/under-my-skin-5.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/under-my-skin/under-my-skin-6.webp',
+      'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin1_u3ulw1.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin2_brvy0g.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin3_jrteip.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin4_zef1fn.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin5_nzap7h.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin6_f97hki.jpg',
     ],
     badge: 'LIMITED',
     stock: 3,
@@ -70,14 +70,14 @@ const PRODUCTS = [
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
     price: 0,         // TODO: agregar precio
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/be-a-depredator.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/be-a-depredator_tc6fut.webp',
     gallery: [
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/be-a-depredator/be-a-depredator-1.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/be-a-depredator/be-a-depredator-2.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/be-a-depredator/be-a-depredator-3.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/be-a-depredator/be-a-depredator-4.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/be-a-depredator/be-a-depredator-5.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/be-a-depredator/be-a-depredator-6.webp',
+      'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator1_btz8nt.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator2_oprlcc.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator3_cffy7u.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator4_h7oyhv.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator5_yyvzh9.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator6_bwigtm.jpg',
     ],
     badge: null,
     stock: 2,
@@ -90,10 +90,10 @@ const PRODUCTS = [
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
     price: 700,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/bendecido.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/bendecido_shkmci.webp',
     gallery: [
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/bendecido/bendecido-1.webp',
-      'https://res.cloudinary.com/dflyysqln/image/upload/dstar/products/drop-02-animal-print/bendecido/bendecido-2.webp',
+      'https://res.cloudinary.com/dflyysqln/image/upload/bendecido1_lollup.jpg',
+      'https://res.cloudinary.com/dflyysqln/image/upload/bendecido2_f5b9gb.jpg',
     ],
     badge: 'LIMITED',
     stock: 3,
@@ -101,6 +101,17 @@ const PRODUCTS = [
     sizesStock: { S: 1, M: 1, L: 1 }
   }
 ];
+
+// ============================================
+// CDN HELPER — inyecta transformaciones Cloudinary
+// ============================================
+function cdnOpt(url, w, h) {
+  if (!url || !url.includes('cloudinary.com')) return url;
+  const transforms = ['f_auto', 'q_auto'];
+  if (w) transforms.push(`w_${w}`);
+  if (h) transforms.push(`h_${h}`);
+  return url.replace('/image/upload/', `/image/upload/${transforms.join(',')}/`);
+}
 
 // ============================================
 // CONFIG
@@ -224,7 +235,8 @@ function renderProducts() {
            style="--stagger-delay: ${delay}s"
            ${href}>
         <div class="product-card__image">
-          <img src="${p.image}" alt="${p.name}"
+          <img src="${cdnOpt(p.image, 600)}" alt="${p.name}"
+               loading="lazy" decoding="async"
                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2020/svg%22 viewBox=%220 0 300 400%22%3E%3Crect fill=%22%23141414%22 width=%22300%22 height=%22400%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E'">
           <span class="product-card__badge product-card__badge--${badgeClass}">${badgeText}</span>
         </div>
@@ -274,7 +286,7 @@ function openProductModal(index) {
 
   // Poblar datos del producto
   const modalImg = $('#modalImage');
-  modalImg.src = p.image;
+  modalImg.src = cdnOpt(p.image, 800);
   modalImg.onerror = function() {
     this.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 500%22%3E%3Crect fill=%22%23141414%22 width=%22400%22 height=%22500%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2218%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E';
   };
@@ -574,7 +586,7 @@ function updateCartUI() {
 
     itemsEl.innerHTML = cart.map((item, i) => `
       <div class="cart-item">
-        <img class="cart-item__image" src="${item.image}" alt="${item.name}"
+        <img class="cart-item__image" src="${cdnOpt(item.image, 150)}" alt="${item.name}" decoding="async"
              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 90%22%3E%3Crect fill=%22%23141414%22 width=%2270%22 height=%2290%22/%3E%3C/svg%3E'">
         <div class="cart-item__info">
           <div class="cart-item__name">${item.name}</div>
@@ -684,12 +696,12 @@ function showToast(msg) {
 // Recomendado: fotos en imágenes/lookbook/
 // ============================================
 const LOOKBOOK = [
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/lookbook/look-01.webp', caption: 'DROP 01 — PHANTOM' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/lookbook/look-02.webp', caption: 'TEE CONCRETE' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/lookbook/look-03.webp', caption: 'BARRIO SESSIONS' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/lookbook/look-04.webp', caption: 'HOODIE BARRIO' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/lookbook/look-05.webp', caption: 'CARGO NOCTURNO' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/lookbook/look-06.webp', caption: 'FULL FIT' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook01_lvl7hb.jpg', caption: 'DROP 01 — PHANTOM' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook02_gztk5q.jpg', caption: 'TEE CONCRETE' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook03_zxfrhr.jpg', caption: 'BARRIO SESSIONS' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook04_hrbtc3.jpg', caption: 'HOODIE BARRIO' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook05_r49ynl.jpg', caption: 'CARGO NOCTURNO' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook06_g3utzp.jpg', caption: 'FULL FIT' },
 ];
 
 // ============================================
@@ -703,7 +715,7 @@ const BLOG_POSTS = [
     date: 'MAR 2026',
     category: 'DROPS',
     excerpt: 'El proceso detrás del primer drop de DSTAR. Cómo nacieron Born to Shine y Over as F**k, y qué significa esta colección para nosotros.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/blog/post-01.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/blog01_beoifd.jpg',
   },
   {
     slug: 'streetwear-mexico-escena',
@@ -771,7 +783,7 @@ function renderLookbook() {
   grid.innerHTML = LOOKBOOK.map((item, i) => `
     <div class="lookbook-panel">
       <div class="lookbook-panel__img-wrap">
-        <img src="${item.image}" alt="${item.caption}"
+        <img src="${cdnOpt(item.image, 900)}" alt="${item.caption}"
              loading="${i === 0 ? 'eager' : 'lazy'}"
              decoding="async"
              onerror="this.parentElement.style.background='var(--dark)'">
@@ -794,7 +806,8 @@ function renderBlog() {
   grid.innerHTML = BLOG_POSTS.map((post, i) => `
     <a href="blog/${post.slug}.html" class="blog-card fade-in" style="--stagger-delay: ${i * 0.1}s">
       <div class="blog-card__image">
-        <img src="${post.image}" alt="${post.title}"
+        <img src="${cdnOpt(post.image, 600)}" alt="${post.title}"
+             loading="lazy" decoding="async"
              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 225%22%3E%3Crect fill=%22%23141414%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E'">
         <span class="blog-card__cat">${post.category}</span>
       </div>

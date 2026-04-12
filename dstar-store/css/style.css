@@ -30,7 +30,7 @@ html {
 body {
   font-family: var(--font-mono);
   background-color: #7a7a74;
-  background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/dstar/backwebpc.webp');
+  background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_1920/backwebpc_bvcu4q.webp');
   background-size: cover;
   background-attachment: fixed;
   background-position: center top;
@@ -71,7 +71,7 @@ body {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/dstar/backcelular.webp');
+    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_800/backcelular_cpimyk.webp');
     background-size: 100% auto;
     background-position: center top;
     background-repeat: no-repeat;
