@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSTAR — Orden Confirmada</title>
+  <meta name="description" content="Tu pedido DSTAR fue confirmado. Gracias por tu compra.">
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/dstar/logo3ddd123.webp">
+
+  <!-- Preload del logo — carga inmediata sin parpadeo -->
+  <link rel="preload" as="image" href="https://res.cloudinary.com/dflyysqln/image/upload/dstar/logo3ddd123.webp" type="image/webp">
+
+  <!-- Fonts: Bebas Neue, Space Mono, Archivo Black -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
+
+  <!-- GSAP desde CDN — animación de entrada -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.2/gsap.min.js"></script>
+
+  <style>
+    /* ============================================
+       VARIABLES — idénticas al sitio principal
+       ============================================ */
+    :root {
+      --black:          #0a0a0a;
+      --dark:           #141414;
+      --concrete:       #8a8a83;
+      --concrete-light: #b0b0a8;
+      --concrete-dark:  #5c5c57;
+      --white:          #f0ede8;
+      --red:            #e63232;
+      --font-display:   'Archivo Black', sans-serif;
+      --font-heading:   'Bebas Neue', sans-serif;
+      --font-mono:      'Space Mono', monospace;
+      --border:         1px solid #2a2a2a;
+    }
+
+    /* RESET */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: var(--font-mono);
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--concrete); }
+
+    /* ============================================
+       CONTENEDOR PRINCIPAL
+       ============================================ */
+    .confirm-page {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    .confirm-inner {
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      /* GSAP animará esto desde opacity:0 y y:40 */
+      opacity: 0;
+    }
+
+    /* ============================================
+       ÍCONO DE CHECK
+       ============================================ */
+    .confirm-check {
+      width: 80px;
+      height: 80px;
+      border: 2px solid var(--red);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 32px;
+      /* GSAP lo animará */
+      opacity: 0;
+    }
+    .confirm-check svg {
+      width: 36px;
+      height: 36px;
+      stroke: var(--red);
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    /* ============================================
+       ETIQUETA "CONFIRMADO"
+       ============================================ */
+    .confirm-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--red);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      opacity: 0;
+    }
+
+    /* ============================================
+       TÍTULO PRINCIPAL
+       ============================================ */
+    .confirm-title {
+      font-family: var(--font-heading);
+      font-size: clamp(48px, 10vw, 88px);
+      letter-spacing: 6px;
+      line-height: 1;
+      color: var(--white);
+      margin-bottom: 24px;
+      opacity: 0;
+    }
+
+    /* ============================================
+       MENSAJE DE TEXTO
+       ============================================ */
+    .confirm-text {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 2;
+      color: var(--concrete-light);
+      margin-bottom: 40px;
+      opacity: 0;
+    }
+
+    /* ============================================
+       SEPARADOR DECORATIVO
+       ============================================ */
+    .confirm-divider {
+      border: none;
+      border-top: var(--border);
+      margin: 32px auto;
+      width: 60px;
+      opacity: 0;
+    }
+
+    /* ============================================
+       NÚMERO DE PEDIDO (ornamental)
+       ============================================ */
+    .confirm-ref {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--concrete-dark);
+      margin-bottom: 32px;
+      opacity: 0;
+    }
+    .confirm-ref span {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      color: var(--concrete);
+      letter-spacing: 3px;
+    }
+
+    /* ============================================
+       BOTÓN "SEGUIR COMPRANDO"
+       ============================================ */
+    .btn-seguir {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: var(--black);
+      background: var(--red);
+      padding: 16px 40px;
+      border-radius: 2px;
+      transition: background 0.2s, transform 0.1s;
+      opacity: 0;
+    }
+    .btn-seguir:hover { background: #cc2020; }
+    .btn-seguir:active { transform: scale(0.99); }
+
+    /* ============================================
+       LÍNEA DECORATIVA DE FONDO (sutil)
+       ============================================ */
+    .confirm-grid-line {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #1a1a1a;
+      pointer-events: none;
+    }
+    .confirm-grid-line:nth-child(1) { left: 25%; }
+    .confirm-grid-line:nth-child(2) { left: 50%; }
+    .confirm-grid-line:nth-child(3) { left: 75%; }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 480px) {
+      .confirm-title { font-size: 52px; }
+      .confirm-text { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Líneas decorativas de fondo — estética industrial -->
+  <div class="confirm-grid-line"></div>
+  <div class="confirm-grid-line"></div>
+  <div class="confirm-grid-line"></div>
+
+  <!-- ============================================
+       CONTENIDO PRINCIPAL
+       ============================================ -->
+  <div class="confirm-page">
+    <div class="confirm-inner" id="confirmInner">
+
+      <!-- Ícono check -->
+      <div class="confirm-check" id="confirmCheck">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+
+      <!-- Label rojo -->
+      <p class="confirm-label" id="confirmLabel">Pago exitoso</p>
+
+      <!-- Título grande -->
+      <h1 class="confirm-title" id="confirmTitle">
+        ORDEN<br>CONFIRMADA
+      </h1>
+
+      <!-- Mensaje informativo -->
+      <p class="confirm-text" id="confirmText">
+        Te enviamos un email con los detalles de tu pedido<br>
+        y número de rastreo en cuanto tu guía esté lista.<br><br>
+        <strong style="color:var(--white)">¿Dudas?</strong> Escríbenos a
+        <a href="mailto:contacto@dstar.mx" style="color:var(--red)">contacto@dstar.mx</a>
+      </p>
+
+      <hr class="confirm-divider" id="confirmDivider">
+
+      <!-- Referencia de pedido -->
+      <p class="confirm-ref" id="confirmRef">
+        PEDIDO REGISTRADO&nbsp;&nbsp;
+        <span id="pedidoId">—</span>
+      </p>
+
+      <!-- CTA principal -->
+      <a href="index.html" class="btn-seguir" id="btnSeguir">
+        SEGUIR COMPRANDO
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ============================================
+       JAVASCRIPT
+       ============================================ -->
+  <script>
+    // ============================================
+    // LIMPIAR EL CARRITO
+    // La compra fue completada — eliminar carrito del localStorage.
+    // Esto se hace al cargar la página de confirmación para que
+    // la próxima visita a la tienda empiece desde cero.
+    // ============================================
+    localStorage.removeItem('dstar_cart');
+
+    // ============================================
+    // MOSTRAR REFERENCIA DEL PEDIDO
+    // MercadoPago agrega ?payment_id=... en la URL al redirigir.
+    // Lo mostramos de forma ornamental para que el cliente
+    // pueda referenciarlo en soporte.
+    // ============================================
+    const urlParams  = new URLSearchParams(window.location.search);
+    const paymentId  = urlParams.get('payment_id') || urlParams.get('collection_id');
+    const pedidoEl   = document.getElementById('pedidoId');
+    if (paymentId && pedidoEl) {
+      pedidoEl.textContent = '#' + paymentId;
+    }
+
+    // ============================================
+    // ANIMACIÓN DE ENTRADA CON GSAP
+    // Secuencia: check → label → título → texto → divider → ref → botón
+    // Cada elemento entra desde abajo con fade-in escalonado.
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.gsap) {
+        // Fallback sin GSAP: mostrar todo de golpe
+        document.getElementById('confirmInner').style.opacity = '1';
+        document.querySelectorAll('.confirm-check, .confirm-label, .confirm-title, .confirm-text, .confirm-divider, .confirm-ref, .btn-seguir')
+          .forEach(el => el.style.opacity = '1');
+        return;
+      }
+
+      // Timeline principal — entrada escalonada y elegante
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+      // 1. El contenedor padre aparece
+      tl.to('#confirmInner', { opacity: 1, duration: 0.01 })
+
+      // 2. El ícono de check entra con un leve scale-up
+        .fromTo('#confirmCheck',
+          { opacity: 0, scale: 0.7, y: 20 },
+          { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: 'back.out(1.4)' },
+          0.1
+        )
+
+      // 3. Label "Pago exitoso"
+        .to('#confirmLabel',
+          { opacity: 1, y: 0, duration: 0.4 },
+          '-=0.2'
+        )
+
+      // 4. Título grande "ORDEN CONFIRMADA"
+        .fromTo('#confirmTitle',
+          { opacity: 0, y: 32 },
+          { opacity: 1, y: 0, duration: 0.55 },
+          '-=0.15'
+        )
+
+      // 5. Texto informativo
+        .to('#confirmText',
+          { opacity: 1, duration: 0.4 },
+          '-=0.2'
+        )
+
+      // 6. Divisor
+        .to('#confirmDivider',
+          { opacity: 1, duration: 0.3 },
+          '-=0.1'
+        )
+
+      // 7. Referencia del pedido
+        .to('#confirmRef',
+          { opacity: 1, duration: 0.3 },
+          '-=0.1'
+        )
+
+      // 8. Botón CTA — entra con un pequeño bounce
+        .fromTo('#btnSeguir',
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.4, ease: 'back.out(1.2)' },
+          '-=0.1'
+        );
+    });
+  </script>
+
+</body>
+</html>

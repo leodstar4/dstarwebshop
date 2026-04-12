@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSTAR — Pago pendiente</title>
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/dstar/logo3ddd123.webp">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .status-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+    .status-page__inner { max-width: 500px; }
+    .status-page__icon { font-size: 64px; margin-bottom: 24px; }
+    .status-page__title {
+      font-family: 'Archivo Black', sans-serif;
+      font-size: clamp(28px, 6vw, 48px);
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+    }
+    .status-page__text {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #b0b0a8;
+      margin-bottom: 32px;
+    }
+    .status-page__cta {
+      display: inline-block;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 4px;
+      color: #0a0a0a;
+      background: #f0ede8;
+      padding: 14px 40px;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .status-page__cta:hover { background: #b0b0a8; }
+  </style>
+</head>
+<body>
+  <div class="status-page">
+    <div class="status-page__inner">
+      <div class="status-page__icon">⏳</div>
+      <h1 class="status-page__title">PAGO PENDIENTE</h1>
+      <p class="status-page__text">
+        Tu pago está siendo procesado. Si pagaste en OXXO o por SPEI, 
+        puede tomar hasta 24 horas en reflejarse.<br><br>
+        Te enviaremos un correo de confirmación cuando se acredite. 
+        Cualquier duda: contacto@dstar.mx
+      </p>
+      <a href="/" class="status-page__cta">VOLVER A LA TIENDA</a>
+    </div>
+  </div>
+</body>
+</html>

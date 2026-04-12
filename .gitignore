@@ -1,0 +1,13 @@
+# Local Netlify folder
+.netlify
+
+# Variables de entorno — nunca subir al repo
+.env
+.env.local
+.env.*.local
+
+# Dependencias
+node_modules/
+
+# Claude Code local settings
+.claude/

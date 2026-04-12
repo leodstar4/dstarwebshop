@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSTAR — Checkout</title>
+  <meta name="description" content="Completa tu pedido DSTAR — envío a todo México.">
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/dstar/logo3ddd123.webp">
+
+  <!-- Preload del logo — evita el parpadeo / retraso al aparecer -->
+  <link rel="preload" as="image" href="https://res.cloudinary.com/dflyysqln/image/upload/dstar/logo3ddd123.webp" type="image/webp">
+
+  <!-- Fonts: Bebas Neue (números/precios), Space Mono (labels/texto), Archivo Black (títulos) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
+
+  <!-- GSAP desde CDN — usado para animaciones de entrada -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.2/gsap.min.js"></script>
+
+  <style>
+    /* ============================================
+       VARIABLES — igual que style.css principal
+       ============================================ */
+    :root {
+      --black:           #0a0a0a;
+      --dark:            #141414;
+      --dark-2:          #1a1a1a;
+      --concrete:        #8a8a83;
+      --concrete-light:  #b0b0a8;
+      --concrete-dark:   #5c5c57;
+      --white:           #f0ede8;
+      --red:             #e63232;
+      --font-display:    'Archivo Black', sans-serif;
+      --font-heading:    'Bebas Neue', sans-serif;
+      --font-mono:       'Space Mono', monospace;
+      --ease:            cubic-bezier(0.23, 1, 0.32, 1);
+      --border:          1px solid #2a2a2a;
+    }
+
+    /* ============================================
+       RESET BÁSICO
+       ============================================ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-mono);
+      background: var(--black);
+      color: var(--white);
+      overflow-x: hidden;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--concrete); }
+
+    /* ============================================
+       HEADER — idéntico al resto del sitio
+       ============================================ */
+    .header {
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 40px);
+      max-width: 1400px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border: var(--border);
+      border-radius: 2px;
+      z-index: 1000;
+      transition: top 0.35s var(--ease);
+    }
+    .header__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+    }
+    .header__logo {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      color: var(--red);
+      letter-spacing: 4px;
+    }
+    .header__logo img {
+      height: 32px;
+      width: auto;
+      filter: brightness(1.8);
+      transition: filter 0.3s;
+    }
+    .header__logo img:hover { filter: brightness(2.2); }
+    .header__nav { display: flex; gap: 32px; }
+    .header__link {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--concrete-light);
+      transition: color 0.2s;
+    }
+    .header__link:hover { color: var(--white); }
+    .header__back {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--concrete);
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header__back:hover { color: var(--white); }
+    @media (max-width: 768px) {
+      .header__nav { display: none; }
+      .header { top: 16px; width: calc(100% - 24px); }
+    }
+
+    /* ============================================
+       LAYOUT PRINCIPAL
+       ============================================ */
+    .checkout-page {
+      padding-top: 120px;
+      padding-bottom: 80px;
+      min-height: 100vh;
+    }
+    .checkout-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .checkout-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============================================
+       TÍTULO DE SECCIÓN
+       ============================================ */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--red);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(20px, 3vw, 28px);
+      letter-spacing: 3px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+
+    /* ============================================
+       TARJETA DE SECCIÓN
+       ============================================ */
+    .checkout-card {
+      background: var(--dark);
+      border: var(--border);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .checkout-card + .checkout-card { margin-top: 0; }
+
+    /* ============================================
+       COLUMNA IZQUIERDA — Formulario
+       ============================================ */
+    .checkout-left { display: flex; flex-direction: column; }
+
+    /* ============================================
+       FORMULARIO DE ENVÍO
+       ============================================ */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-grid--full { grid-column: 1 / -1; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--concrete);
+      text-transform: uppercase;
+    }
+    .field input {
+      background: var(--dark-2);
+      border: 1px solid #2a2a2a;
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 12px 14px;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .field input::placeholder { color: var(--concrete-dark); }
+    .field input:focus { border-color: var(--concrete); }
+    .field input.input-error { border-color: var(--red); }
+    .field input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ============================================
+       TARIFAS DE ENVÍO
+       ============================================ */
+    #tarifas-envio {
+      min-height: 48px;
+      transition: all 0.3s;
+    }
+    .tarifas-status {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--concrete);
+      letter-spacing: 1px;
+      padding: 16px 0 8px;
+    }
+    .tarifas-lista {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    /* Radio tarifa — estilo industrial */
+    .tarifa-opcion {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid #2a2a2a;
+      background: var(--dark-2);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      border-radius: 2px;
+    }
+    .tarifa-opcion:hover { border-color: var(--concrete-dark); }
+    .tarifa-opcion.selected {
+      border-color: var(--red);
+      background: rgba(230, 50, 50, 0.06);
+    }
+    .tarifa-opcion input[type="radio"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--red);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .tarifa-info { flex: 1; }
+    .tarifa-nombre {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--white);
+    }
+    .tarifa-detalle {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--concrete);
+      margin-top: 2px;
+    }
+    .tarifa-precio {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      color: var(--white);
+      white-space: nowrap;
+    }
+    .tarifas-error {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--red);
+      padding: 12px 0;
+    }
+
+    /* ============================================
+       COLUMNA DERECHA — Resumen + Total
+       ============================================ */
+    .checkout-right { position: sticky; top: 120px; }
+
+    /* Items del carrito */
+    .order-items { display: flex; flex-direction: column; gap: 16px; }
+    .order-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .order-item__image {
+      width: 64px;
+      height: 80px;
+      object-fit: cover;
+      background: var(--dark-2);
+      border: var(--border);
+      flex-shrink: 0;
+    }
+    .order-item__info { flex: 1; }
+    .order-item__name {
+      font-family: var(--font-display);
+      font-size: 13px;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .order-item__meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--concrete);
+      letter-spacing: 1px;
+    }
+    .order-item__price {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      color: var(--white);
+      white-space: nowrap;
+    }
+
+    /* Divisor */
+    .divider {
+      border: none;
+      border-top: var(--border);
+      margin: 20px 0;
+    }
+
+    /* Resumen de precios */
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .price-label {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--concrete-light);
+    }
+    .price-value {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      color: var(--white);
+    }
+    .price-row--total .price-label {
+      font-family: var(--font-display);
+      font-size: 14px;
+      color: var(--white);
+      letter-spacing: 2px;
+    }
+    .price-row--total .price-value {
+      font-size: 36px;
+      color: var(--red);
+    }
+
+    /* Botón PAGAR */
+    .btn-pagar {
+      width: 100%;
+      background: var(--red);
+      color: var(--white);
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 4px;
+      padding: 18px 24px;
+      border-radius: 2px;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-pagar:hover { background: #cc2020; }
+    .btn-pagar:active { transform: scale(0.99); }
+    .btn-pagar:disabled {
+      background: var(--concrete-dark);
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-pagar__spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .btn-pagar.loading .btn-pagar__spinner { display: block; }
+    .btn-pagar.loading .btn-pagar__text { opacity: 0.6; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Nota seguridad */
+    .security-note {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--concrete-dark);
+      text-align: center;
+      letter-spacing: 1px;
+      margin-top: 14px;
+      line-height: 1.8;
+    }
+
+    /* ============================================
+       MENSAJE CARRITO VACÍO
+       ============================================ */
+    .cart-empty-msg {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .cart-empty-msg h2 {
+      font-family: var(--font-heading);
+      font-size: 36px;
+      color: var(--concrete);
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+    }
+    .cart-empty-msg p {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--concrete-dark);
+      margin-bottom: 24px;
+    }
+    .btn-volver {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--white);
+      border: var(--border);
+      padding: 12px 28px;
+      transition: border-color 0.2s;
+    }
+    .btn-volver:hover { border-color: var(--concrete); }
+
+    /* ============================================
+       TOAST de error / info
+       ============================================ */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--dark);
+      color: var(--white);
+      border: var(--border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 12px 24px;
+      border-radius: 2px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    .toast.toast--error { border-color: var(--red); color: var(--red); }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ============================================
+       RESPONSIVE MÓVIL
+       ============================================ */
+    @media (max-width: 768px) {
+      .checkout-page { padding-top: 100px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid--full { grid-column: 1; }
+      .checkout-right { position: static; margin-top: 0; }
+      .price-row--total .price-value { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       HEADER — consistente con el resto del sitio
+       ============================================ -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <a href="index.html" class="header__logo">
+        <img src="https://res.cloudinary.com/dflyysqln/image/upload/dstar/logo3ddd123.webp" alt="DSTAR" onerror="this.style.display='none';this.parentElement.textContent='DSTAR'">
+      </a>
+      <nav class="header__nav">
+        <a href="index.html#drops"    class="header__link">DROPS</a>
+        <a href="index.html#lookbook" class="header__link">LOOKBOOK</a>
+        <a href="index.html#about"    class="header__link">NOSOTROS</a>
+        <a href="index.html#blog"     class="header__link">BLOG</a>
+        <a href="index.html#contact"  class="header__link">CONTACTO</a>
+      </nav>
+      <a href="index.html" class="header__back">
+        ← VOLVER A LA TIENDA
+      </a>
+    </div>
+  </header>
+
+  <!-- ============================================
+       PÁGINA PRINCIPAL
+       ============================================ -->
+  <main class="checkout-page">
+    <div class="checkout-container" id="checkoutContainer">
+
+      <!-- ==========================================
+           COLUMNA IZQUIERDA — Envío + Forma de pago
+           ========================================== -->
+      <div class="checkout-left" id="checkoutLeft">
+
+        <!-- SECCIÓN: DATOS DE ENVÍO -->
+        <div class="checkout-card" id="cardEnvio">
+          <p class="section-label">02 — ENVÍO</p>
+          <h2 class="section-title">Datos de envío</h2>
+
+          <form id="formEnvio" novalidate>
+            <div class="form-grid">
+
+              <!-- Nombre completo -->
+              <div class="field form-grid--full">
+                <label for="nombre">NOMBRE COMPLETO *</label>
+                <input type="text" id="nombre" name="nombre"
+                       placeholder="Como aparece en tu ID" required autocomplete="name">
+              </div>
+
+              <!-- Email -->
+              <div class="field">
+                <label for="email">EMAIL *</label>
+                <input type="email" id="email" name="email"
+                       placeholder="tu@email.com" required autocomplete="email">
+              </div>
+
+              <!-- Teléfono -->
+              <div class="field">
+                <label for="telefono">TELÉFONO *</label>
+                <input type="tel" id="telefono" name="telefono"
+                       placeholder="10 dígitos" required autocomplete="tel">
+              </div>
+
+              <!-- Calle y número -->
+              <div class="field form-grid--full">
+                <label for="calle">CALLE Y NÚMERO *</label>
+                <input type="text" id="calle" name="calle"
+                       placeholder="Calle y número" required autocomplete="street-address">
+              </div>
+
+              <!-- Colonia -->
+              <div class="field">
+                <label for="colonia">COLONIA *</label>
+                <input type="text" id="colonia" name="colonia"
+                       placeholder="Colonia o fraccionamiento" required>
+              </div>
+
+              <!-- Código Postal — el blur dispara la cotización -->
+              <div class="field">
+                <label for="cp">CÓDIGO POSTAL *</label>
+                <input type="text" id="cp" name="cp"
+                       placeholder="00000" required
+                       maxlength="5" inputmode="numeric" autocomplete="postal-code">
+              </div>
+
+              <!-- Ciudad -->
+              <div class="field">
+                <label for="ciudad">CIUDAD *</label>
+                <input type="text" id="ciudad" name="ciudad"
+                       placeholder="Ciudad" required autocomplete="address-level2">
+              </div>
+
+              <!-- Estado -->
+              <div class="field">
+                <label for="estado">ESTADO *</label>
+                <input type="text" id="estado" name="estado"
+                       placeholder="Estado" required autocomplete="address-level1">
+              </div>
+
+            </div><!-- /form-grid -->
+          </form>
+        </div><!-- /cardEnvio -->
+
+        <!-- SECCIÓN: OPCIONES DE ENVÍO -->
+        <div class="checkout-card" id="cardTarifas">
+          <p class="section-label">03 — ENVÍO</p>
+          <h2 class="section-title">Opciones de envío</h2>
+
+          <!-- Las tarifas se renderizan aquí dinámicamente -->
+          <div id="tarifas-envio">
+            <p class="tarifas-status">
+              Ingresa tu código postal para ver las opciones de envío disponibles.
+            </p>
+          </div>
+        </div><!-- /cardTarifas -->
+
+      </div><!-- /checkout-left -->
+
+      <!-- ==========================================
+           COLUMNA DERECHA — Resumen del pedido + Total
+           ========================================== -->
+      <div class="checkout-right" id="checkoutRight">
+
+        <!-- Resumen del carrito -->
+        <div class="checkout-card">
+          <p class="section-label">01 — PEDIDO</p>
+          <h2 class="section-title">Tu pedido</h2>
+          <div class="order-items" id="orderItems">
+            <!-- Se llena con JS -->
+          </div>
+        </div>
+
+        <!-- Total + Botón pagar -->
+        <div class="checkout-card">
+          <div class="price-row">
+            <span class="price-label">SUBTOTAL</span>
+            <span class="price-value" id="subtotalDisplay">$0</span>
+          </div>
+          <div class="price-row">
+            <span class="price-label">ENVÍO</span>
+            <span class="price-value" id="envioDisplay" style="font-size:16px; color:var(--concrete);">--</span>
+          </div>
+          <hr class="divider">
+          <div class="price-row price-row--total">
+            <span class="price-label">TOTAL</span>
+            <span class="price-value" id="totalDisplay">$0</span>
+          </div>
+
+          <!-- Botón principal de pago -->
+          <button class="btn-pagar" id="btnPagar" type="button">
+            <div class="btn-pagar__spinner"></div>
+            <span class="btn-pagar__text">PAGAR</span>
+          </button>
+
+          <p class="security-note">
+            PAGO SEGURO CON MERCADO PAGO<br>
+            TUS DATOS ESTÁN PROTEGIDOS
+          </p>
+        </div>
+
+      </div><!-- /checkout-right -->
+
+    </div><!-- /checkout-container -->
+  </main>
+
+  <!-- Toast de mensajes -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ============================================
+       JAVASCRIPT — Lógica del checkout
+       ============================================ -->
+  <script>
+    // ============================================
+    // ESTADO GLOBAL DEL CHECKOUT
+    // ============================================
+    // Leer el carrito del localStorage (mismo key que app.js)
+    let cart = JSON.parse(localStorage.getItem('dstar_cart') || '[]');
+
+    // Tarifa seleccionada por el usuario
+    let tarifaSeleccionada = null; // { carrier_id, precio, nombre }
+
+    // Subtotal calculado del carrito
+    let subtotal = 0;
+
+    // ============================================
+    // UTILIDADES
+    // ============================================
+    // Formatear precio en MXN — igual que en app.js
+    function formatPrice(n) {
+      return new Intl.NumberFormat('es-MX', {
+        style: 'currency', currency: 'MXN', minimumFractionDigits: 0
+      }).format(n);
+    }
+
+    // Mostrar un mensaje toast temporal
+    function showToast(msg, isError = false) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast' + (isError ? ' toast--error' : '');
+      el.classList.add('visible');
+      setTimeout(() => el.classList.remove('visible'), 3500);
+    }
+
+    // ============================================
+    // VERIFICAR CARRITO — redirigir si está vacío
+    // ============================================
+    // Si el usuario llega al checkout sin productos, lo devolvemos a la tienda
+    if (!cart || cart.length === 0) {
+      document.addEventListener('DOMContentLoaded', () => {
+        // Reemplazamos el contenido con un mensaje amigable en vez de redirigir
+        // bruscamente, para que el usuario entienda qué pasó
+        const container = document.getElementById('checkoutContainer');
+        container.innerHTML = `
+          <div class="cart-empty-msg" style="grid-column:1/-1">
+            <h2>CARRITO VACÍO</h2>
+            <p>Agrega productos antes de continuar al checkout.</p>
+            <a href="index.html" class="btn-volver">← EXPLORAR DROPS</a>
+          </div>
+        `;
+      });
+    }
+
+    // ============================================
+    // RENDER DEL RESUMEN DEL PEDIDO
+    // ============================================
+    function renderOrderSummary() {
+      const container = document.getElementById('orderItems');
+      if (!container || cart.length === 0) return;
+
+      // Calcular subtotal total del carrito
+      subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+      // Renderizar cada item del carrito
+      container.innerHTML = cart.map(item => `
+        <div class="order-item">
+          <img
+            class="order-item__image"
+            src="${item.image}"
+            alt="${item.name}"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 80%22%3E%3Crect fill=%22%23141414%22 width=%2264%22 height=%2280%22/%3E%3C/svg%3E'"
+          >
+          <div class="order-item__info">
+            <div class="order-item__name">${item.name}</div>
+            <div class="order-item__meta">TALLA: ${item.size} &nbsp;·&nbsp; QTY: ${item.qty}</div>
+          </div>
+          <div class="order-item__price">${formatPrice(item.price * item.qty)}</div>
+        </div>
+      `).join('');
+
+      // Actualizar el display del subtotal
+      document.getElementById('subtotalDisplay').textContent = formatPrice(subtotal);
+      document.getElementById('totalDisplay').textContent    = formatPrice(subtotal);
+    }
+
+    // ============================================
+    // ACTUALIZAR DISPLAY DEL TOTAL
+    // ============================================
+    function actualizarTotal() {
+      const costoEnvio = tarifaSeleccionada ? tarifaSeleccionada.precio : 0;
+      const total = subtotal + costoEnvio;
+
+      // Mostrar costo de envío seleccionado
+      const envioEl = document.getElementById('envioDisplay');
+      if (tarifaSeleccionada) {
+        envioEl.textContent = formatPrice(costoEnvio);
+        envioEl.style.color = 'var(--white)';
+      } else {
+        envioEl.textContent = '--';
+        envioEl.style.color = 'var(--concrete)';
+      }
+
+      // Actualizar total
+      document.getElementById('totalDisplay').textContent = formatPrice(
+        tarifaSeleccionada ? total : subtotal
+      );
+    }
+
+    // ============================================
+    // COTIZAR ENVÍO — llamada a la Netlify Function
+    // ============================================
+    async function cotizarEnvio(cp) {
+      const contenedor = document.getElementById('tarifas-envio');
+
+      // Mostrar estado de carga
+      contenedor.innerHTML = `<p class="tarifas-status">⟳ CALCULANDO ENVÍO...</p>`;
+
+      try {
+        const response = await fetch('/.netlify/functions/cotizar-envio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cp_destino: cp,
+            // Dimensiones default del paquete DSTAR
+            peso:  0.5,
+            alto:  15,
+            ancho: 20,
+            largo: 5
+          })
+        });
+
+        const data = await response.json();
+
+        // Error de la función
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al obtener tarifas');
+        }
+
+        const rates = data.rates || [];
+
+        // Si Skydropx no devuelve tarifas para ese CP
+        if (rates.length === 0) {
+          contenedor.innerHTML = `
+            <p class="tarifas-error">
+              No hay opciones de envío disponibles para ese código postal.<br>
+              Verifica que sea un CP válido de México.
+            </p>
+          `;
+          return;
+        }
+
+        // Renderizar cada tarifa como radio button seleccionable
+        renderTarifas(rates);
+
+      } catch (err) {
+        console.error('cotizarEnvio — error:', err);
+        contenedor.innerHTML = `
+          <p class="tarifas-error">
+            No se pudieron obtener las tarifas. Verifica tu CP e intenta de nuevo.
+          </p>
+        `;
+      }
+    }
+
+    // ============================================
+    // RENDER DE TARIFAS DE ENVÍO
+    // ============================================
+    function renderTarifas(rates) {
+      const contenedor = document.getElementById('tarifas-envio');
+
+      // Limpiar tarifa seleccionada anterior
+      tarifaSeleccionada = null;
+      actualizarTotal();
+
+      // Construir lista de opciones
+      const lista = rates.map((rate, i) => {
+        // Extraer datos de la tarifa (estructura de Skydropx)
+        const carrierId    = rate.carrier_account_id || rate.id || `rate_${i}`;
+        const carrierName  = rate.carrier            || 'Carrier';
+        const serviceName  = rate.service_level_name || rate.service || '';
+        const precio       = parseFloat(rate.total_price || rate.price || 0);
+        const dias         = rate.days               || rate.estimated_days || '?';
+
+        return `
+          <label class="tarifa-opcion" data-carrier-id="${carrierId}" data-precio="${precio}">
+            <input
+              type="radio"
+              name="tarifa"
+              value="${carrierId}"
+              data-precio="${precio}"
+              data-nombre="${carrierName} — ${serviceName}"
+            >
+            <div class="tarifa-info">
+              <div class="tarifa-nombre">${carrierName}</div>
+              <div class="tarifa-detalle">
+                ${serviceName}${dias !== '?' ? ` &nbsp;·&nbsp; ${dias} DÍA${dias === '1' ? '' : 'S'} HÁBILES` : ''}
+              </div>
+            </div>
+            <div class="tarifa-precio">${formatPrice(precio)}</div>
+          </label>
+        `;
+      }).join('');
+
+      contenedor.innerHTML = `<div class="tarifas-lista">${lista}</div>`;
+
+      // Escuchar selección de tarifa
+      contenedor.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const label = e.target.closest('.tarifa-opcion');
+          // Quitar clase "selected" de todas
+          contenedor.querySelectorAll('.tarifa-opcion').forEach(l => l.classList.remove('selected'));
+          // Marcar la seleccionada
+          label.classList.add('selected');
+
+          // Guardar tarifa seleccionada en estado
+          tarifaSeleccionada = {
+            carrier_id: e.target.value,
+            precio:     parseFloat(e.target.dataset.precio),
+            nombre:     e.target.dataset.nombre
+          };
+
+          // Recalcular y mostrar el total
+          actualizarTotal();
+        });
+      });
+
+      // Animar entrada de las opciones con GSAP
+      if (window.gsap) {
+        gsap.fromTo('.tarifa-opcion',
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.35, stagger: 0.07, ease: 'power2.out' }
+        );
+      }
+    }
+
+    // ============================================
+    // EVENTO BLUR DEL CÓDIGO POSTAL
+    // ============================================
+    // Cuando el usuario sale del campo CP con 5 dígitos,
+    // se dispara automáticamente la cotización de envío.
+    document.addEventListener('DOMContentLoaded', () => {
+      const cpInput = document.getElementById('cp');
+      if (!cpInput) return;
+
+      cpInput.addEventListener('blur', () => {
+        const cp = cpInput.value.trim();
+        // Solo cotizar si son exactamente 5 dígitos numéricos
+        if (/^\d{5}$/.test(cp)) {
+          cotizarEnvio(cp);
+        }
+      });
+
+      // También cotizar al presionar Enter dentro del campo CP
+      cpInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          cpInput.blur();
+        }
+      });
+    });
+
+    // ============================================
+    // VALIDACIÓN DEL FORMULARIO
+    // ============================================
+    function validarFormulario() {
+      const campos = ['nombre', 'email', 'telefono', 'calle', 'colonia', 'cp', 'ciudad', 'estado'];
+      let valido = true;
+
+      // Limpiar errores anteriores
+      campos.forEach(id => {
+        document.getElementById(id)?.classList.remove('input-error');
+      });
+
+      // Validar cada campo requerido
+      campos.forEach(id => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        if (!input.value.trim()) {
+          input.classList.add('input-error');
+          valido = false;
+        }
+      });
+
+      // Validar formato de email básico
+      const emailInput = document.getElementById('email');
+      if (emailInput && emailInput.value && !emailInput.value.includes('@')) {
+        emailInput.classList.add('input-error');
+        valido = false;
+      }
+
+      // Validar CP — exactamente 5 dígitos
+      const cpInput = document.getElementById('cp');
+      if (cpInput && !/^\d{5}$/.test(cpInput.value.trim())) {
+        cpInput.classList.add('input-error');
+        valido = false;
+      }
+
+      return valido;
+    }
+
+    // ============================================
+    // BOTÓN PAGAR — lógica principal
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnPagar = document.getElementById('btnPagar');
+      if (!btnPagar) return;
+
+      btnPagar.addEventListener('click', async () => {
+        // 1. Validar que el carrito no esté vacío
+        if (!cart || cart.length === 0) {
+          showToast('TU CARRITO ESTÁ VACÍO', true);
+          return;
+        }
+
+        // 2. Validar todos los campos del formulario
+        if (!validarFormulario()) {
+          showToast('COMPLETA TODOS LOS CAMPOS REQUERIDOS', true);
+
+          // Hacer scroll al primer campo con error
+          const firstError = document.querySelector('.input-error');
+          if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstError.focus();
+          }
+          return;
+        }
+
+        // 3. Validar que haya una opción de envío seleccionada
+        if (!tarifaSeleccionada) {
+          showToast('SELECCIONA UNA OPCIÓN DE ENVÍO', true);
+          document.getElementById('cardTarifas')?.scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+
+        // 4. Construir el objeto cliente con los datos del formulario
+        const cliente = {
+          nombre:   document.getElementById('nombre').value.trim(),
+          email:    document.getElementById('email').value.trim(),
+          telefono: document.getElementById('telefono').value.trim(),
+          calle:    document.getElementById('calle').value.trim(),
+          colonia:  document.getElementById('colonia').value.trim(),
+          cp:       document.getElementById('cp').value.trim(),
+          ciudad:   document.getElementById('ciudad').value.trim(),
+          estado:   document.getElementById('estado').value.trim()
+        };
+
+        // 5. Dimensiones del paquete — defaults estándar DSTAR
+        const parcel = { weight: 0.5, height: 15, width: 20, length: 5 };
+
+        // 6. Calcular total final
+        const total = subtotal + tarifaSeleccionada.precio;
+
+        // 7. Mostrar estado de carga en el botón
+        btnPagar.disabled = true;
+        btnPagar.classList.add('loading');
+        btnPagar.querySelector('.btn-pagar__text').textContent = 'PROCESANDO...';
+
+        try {
+          // 8. Mapear los items del carrito al formato esperado por mp-preference
+          const items = cart.map(item => ({
+            title:      `${item.name} — Talla ${item.size}`,
+            unit_price: item.price,
+            quantity:   item.qty,
+            currency_id: 'MXN'
+          }));
+
+          // 9. Crear la preferencia de MercadoPago via Netlify Function
+          const response = await fetch('/.netlify/functions/mp-preference', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items,
+              cliente,
+              carrier_id: tarifaSeleccionada.carrier_id,
+              parcel,
+              total
+            })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Error al crear el pago');
+          }
+
+          // 10. Redirigir al checkout de MercadoPago
+          if (data.init_point) {
+            window.location.href = data.init_point;
+          } else {
+            throw new Error('No se recibió el link de pago');
+          }
+
+        } catch (err) {
+          console.error('btnPagar — error:', err);
+          showToast('ERROR AL PROCESAR EL PAGO — INTENTA DE NUEVO', true);
+
+          // Restaurar el botón
+          btnPagar.disabled = false;
+          btnPagar.classList.remove('loading');
+          btnPagar.querySelector('.btn-pagar__text').textContent = 'PAGAR';
+        }
+      });
+    });
+
+    // ============================================
+    // INIT — renderizar resumen + animaciones GSAP
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Solo continuar si hay carrito
+      if (!cart || cart.length === 0) return;
+
+      // Renderizar resumen del pedido
+      renderOrderSummary();
+
+      // Animación de entrada con GSAP para las secciones
+      if (window.gsap) {
+        // Las tarjetas entran desde abajo escalonadas
+        gsap.fromTo(
+          '.checkout-card',
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.1 }
+        );
+      }
+
+      // Header scroll hide/show — igual que en el sitio principal
+      let lastScroll = 0;
+      const header = document.getElementById('header');
+      window.addEventListener('scroll', () => {
+        const current = window.scrollY;
+        if (current > 80) {
+          header.style.top = current > lastScroll ? '-100px' : '12px';
+        } else {
+          header.style.top = '32px';
+        }
+        lastScroll = current;
+      });
+    });
+  </script>
+
+</body>
+</html>
