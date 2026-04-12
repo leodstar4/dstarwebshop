@@ -222,112 +222,138 @@ function initAboutCounters() {
 }
 
 // ============================================
-// LOOKBOOK — CSS scroll-snap + flechas + dots  (mobile only)
+// LOOKBOOK — gsap.matchMedia() responsive
+// Mobile/tablet (< 1024): CSS scroll-snap + flechas + dots
+// Desktop (≥ 1024): masonry entrance con IntersectionObserver
 // ============================================
-function initLookbookSnap() {
-  // Desktop gets the masonry grid — skip this entirely
-  if (window.innerWidth >= 1024) return;
+function initLookbook() {
+  const mm = gsap.matchMedia();
 
-  const wrap  = document.querySelector('.lookbook__horiz-wrap');
-  const track = document.querySelector('.lookbook__horiz-track');
-  if (!wrap || !track) return;
+  // ── MOBILE / TABLET ──────────────────────────────────────────────
+  mm.add('(max-width: 1023px)', () => {
+    const wrap  = document.querySelector('.lookbook__horiz-wrap');
+    const track = document.querySelector('.lookbook__horiz-track');
+    if (!wrap || !track) return;
 
-  const panels = Array.from(track.querySelectorAll('.lookbook-panel'));
-  if (!panels.length) return;
+    const panels = Array.from(track.querySelectorAll('.lookbook-panel'));
+    if (!panels.length) return;
 
-  // --- Inyectar navegación (flechas + dots) ---
-  const navContainer = document.createElement('div');
-  navContainer.className = 'lookbook__nav';
+    const navContainer = document.createElement('div');
+    navContainer.className = 'lookbook__nav';
 
-  const prevBtn = document.createElement('button');
-  prevBtn.className = 'lookbook__nav-arrow';
-  prevBtn.innerHTML = '←';
-  prevBtn.setAttribute('aria-label', 'Foto anterior');
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'lookbook__nav-arrow';
+    prevBtn.innerHTML = '←';
+    prevBtn.setAttribute('aria-label', 'Foto anterior');
 
-  const dotsContainer = document.createElement('div');
-  dotsContainer.className = 'lookbook__dots';
-  panels.forEach((_, i) => {
-    const dot = document.createElement('button');
-    dot.className = 'lookbook__dot' + (i === 0 ? ' active' : '');
-    dot.setAttribute('aria-label', `Foto ${i + 1}`);
-    dotsContainer.appendChild(dot);
-  });
-
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'lookbook__nav-arrow';
-  nextBtn.innerHTML = '→';
-  nextBtn.setAttribute('aria-label', 'Foto siguiente');
-
-  navContainer.appendChild(prevBtn);
-  navContainer.appendChild(dotsContainer);
-  navContainer.appendChild(nextBtn);
-
-  // Insertar después del wrap
-  wrap.parentNode.insertBefore(navContainer, wrap.nextSibling);
-
-  const dots = Array.from(dotsContainer.querySelectorAll('.lookbook__dot'));
-  let currentIndex = 0;
-
-  // --- Scroll centrado al panel indicado ---
-  function scrollToPanel(index) {
-    index = Math.max(0, Math.min(panels.length - 1, index));
-    const panel = panels[index];
-    // Centra el panel en el viewport del wrap
-    const targetLeft = panel.offsetLeft - (wrap.offsetWidth - panel.offsetWidth) / 2;
-    wrap.scrollTo({ left: targetLeft, behavior: 'smooth' });
-    setActive(index);
-  }
-
-  function setActive(index) {
-    dots[currentIndex].classList.remove('active');
-    currentIndex = index;
-    dots[currentIndex].classList.add('active');
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === panels.length - 1;
-  }
-
-  prevBtn.addEventListener('click', () => scrollToPanel(currentIndex - 1));
-  nextBtn.addEventListener('click', () => scrollToPanel(currentIndex + 1));
-  dots.forEach((dot, i) => dot.addEventListener('click', () => scrollToPanel(i)));
-
-  // --- Actualizar dot activo al hacer scroll ---
-  let scrollTimer;
-  wrap.addEventListener('scroll', () => {
-    clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(() => {
-      const wrapCenter = wrap.scrollLeft + wrap.offsetWidth / 2;
-      let closest = 0;
-      let minDist = Infinity;
-      panels.forEach((panel, i) => {
-        const dist = Math.abs((panel.offsetLeft + panel.offsetWidth / 2) - wrapCenter);
-        if (dist < minDist) { minDist = dist; closest = i; }
-      });
-      if (closest !== currentIndex) setActive(closest);
-    }, 60);
-  }, { passive: true });
-
-  // Estado inicial
-  prevBtn.disabled = true;
-
-  // --- Caption reveal con IntersectionObserver (root = wrap) ---
-  // Ocultar captions inicialmente para animarlas al entrar
-  panels.forEach(panel => {
-    const caption = panel.querySelector('.lookbook-panel__caption');
-    if (caption) gsap.set(caption, { opacity: 0, y: 18 });
-  });
-
-  const captionObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const caption = entry.target.querySelector('.lookbook-panel__caption');
-      if (caption) {
-        gsap.to(caption, { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out' });
-      }
-      captionObserver.unobserve(entry.target);
+    const dotsContainer = document.createElement('div');
+    dotsContainer.className = 'lookbook__dots';
+    panels.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'lookbook__dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `Foto ${i + 1}`);
+      dotsContainer.appendChild(dot);
     });
-  }, { root: wrap, threshold: 0.45 });
 
-  panels.forEach(panel => captionObserver.observe(panel));
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'lookbook__nav-arrow';
+    nextBtn.innerHTML = '→';
+    nextBtn.setAttribute('aria-label', 'Foto siguiente');
+
+    navContainer.appendChild(prevBtn);
+    navContainer.appendChild(dotsContainer);
+    navContainer.appendChild(nextBtn);
+    wrap.parentNode.insertBefore(navContainer, wrap.nextSibling);
+
+    const dots = Array.from(dotsContainer.querySelectorAll('.lookbook__dot'));
+    let currentIndex = 0;
+
+    function scrollToPanel(index) {
+      index = Math.max(0, Math.min(panels.length - 1, index));
+      const panel = panels[index];
+      const targetLeft = panel.offsetLeft - (wrap.offsetWidth - panel.offsetWidth) / 2;
+      wrap.scrollTo({ left: targetLeft, behavior: 'smooth' });
+      setActive(index);
+    }
+
+    function setActive(index) {
+      dots[currentIndex].classList.remove('active');
+      currentIndex = index;
+      dots[currentIndex].classList.add('active');
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === panels.length - 1;
+    }
+
+    prevBtn.addEventListener('click', () => scrollToPanel(currentIndex - 1));
+    nextBtn.addEventListener('click', () => scrollToPanel(currentIndex + 1));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => scrollToPanel(i)));
+
+    let scrollTimer;
+    wrap.addEventListener('scroll', () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        const wrapCenter = wrap.scrollLeft + wrap.offsetWidth / 2;
+        let closest = 0, minDist = Infinity;
+        panels.forEach((panel, i) => {
+          const dist = Math.abs((panel.offsetLeft + panel.offsetWidth / 2) - wrapCenter);
+          if (dist < minDist) { minDist = dist; closest = i; }
+        });
+        if (closest !== currentIndex) setActive(closest);
+      }, 60);
+    }, { passive: true });
+
+    prevBtn.disabled = true;
+
+    // Caption reveal — threshold 0.25 (era 0.45, demasiado alto en móvil)
+    panels.forEach(panel => {
+      const caption = panel.querySelector('.lookbook-panel__caption');
+      if (caption) gsap.set(caption, { opacity: 0, y: 18 });
+    });
+
+    const captionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const caption = entry.target.querySelector('.lookbook-panel__caption');
+        if (caption) gsap.to(caption, { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out' });
+        captionObserver.unobserve(entry.target);
+      });
+    }, { root: wrap, threshold: 0.25 });
+
+    panels.forEach(panel => captionObserver.observe(panel));
+
+    // Cleanup al salir del breakpoint
+    return () => {
+      captionObserver.disconnect();
+      navContainer.parentNode?.removeChild(navContainer);
+      panels.forEach(panel => {
+        const caption = panel.querySelector('.lookbook-panel__caption');
+        if (caption) gsap.set(caption, { clearProps: 'all' });
+      });
+    };
+  });
+
+  // ── DESKTOP ───────────────────────────────────────────────────────
+  mm.add('(min-width: 1024px)', () => {
+    const panels = document.querySelectorAll('.lookbook-panel');
+    if (!panels.length) return;
+
+    const STAGGER_MS = 110;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const idx = Array.from(panels).indexOf(entry.target);
+        setTimeout(() => entry.target.classList.add('lb-in'), idx * STAGGER_MS);
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12 });
+
+    panels.forEach(panel => observer.observe(panel));
+
+    return () => {
+      observer.disconnect();
+      panels.forEach(p => p.classList.remove('lb-in'));
+    };
+  });
 }
 
 // ============================================
@@ -395,7 +421,8 @@ function initProductCardClick() {
 
     const href = card.getAttribute('href');
     const img  = card.querySelector('.product-card__image img');
-    if (!img || !img.src || img.src === window.location.href) {
+    // Si la imagen no cargó aún (lazy) o no tiene src, navegar directo sin animación
+    if (!img || !img.src || img.src === window.location.href || img.naturalWidth === 0) {
       window.location.href = href;
       return;
     }
@@ -555,10 +582,13 @@ document.addEventListener('DOMContentLoaded', () => {
         initFadeIns();
         initAboutCounters();
         initBlogReveal();
-        initLookbookSnap();
-        initLookbookMasonry();
+        initLookbook();          // reemplaza initLookbookSnap + initLookbookMasonry
         initProductCardClick();
         ScrollTrigger.refresh();
+
+        // Segundo refresh cuando todas las imágenes lazy terminan de cargar
+        // (cambian el layout y desplazan los triggers de ScrollTrigger)
+        window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true });
       }
     });
   });
