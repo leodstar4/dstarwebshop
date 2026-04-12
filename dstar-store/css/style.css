@@ -54,28 +54,35 @@ body {
 }
 
 @media (max-width: 768px) {
+  /* Capa de fondo fija para todo el scroll en iOS/Android
+     (background-attachment:fixed está roto en iOS Safari — usamos un pseudo-elemento
+     position:fixed como workaround estándar) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_800/backcelular_cpimyk.webp');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    pointer-events: none;
+  }
   body {
     background-image: none;
-    background-color: #0a0a0a;
+    background-color: #0a0a0a;  /* fallback si la imagen no carga */
   }
   .hero {
     min-height: 100dvh;
     background-image: none;
   }
   .hero::before {
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.25);
     z-index: 1;
   }
+  /* hero::after ya no necesario — el body::before cubre todo el fondo */
   .hero::after {
-    content: '';
-    position: absolute;  /* fixed → absolute: elimina jank en iOS Safari */
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_800/backcelular_cpimyk.webp');
-    background-size: 100% auto;
-    background-position: center top;
-    background-repeat: no-repeat;
-    z-index: -1;
+    content: none;
   }
 }
 
@@ -88,6 +95,16 @@ ul { list-style: none; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--dark); }
 ::-webkit-scrollbar-thumb { background: var(--concrete); border-radius: 3px; }
+
+/* GPU compositing para elementos de scroll — mejora fluidez en todos los navegadores */
+.product-card,
+.blog-card,
+.lookbook-item,
+.about__value,
+.hero__cta {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
 
 /* ============================================
    LOADER
@@ -343,12 +360,15 @@ ul { list-style: none; }
   align-items: center;
   gap: 0;
   padding-bottom: 80px;
+  will-change: opacity;
 }
 .hero__logo {
   width: clamp(200px, 55vw, 520px);
   filter: brightness(1.6) drop-shadow(0 0 60px rgba(255,255,255,0.08));
   animation: heroFadeIn 1.2s var(--ease) 1.8s both;
   margin-bottom: 8px;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 .hero__tagline {
   font-family: var(--font-display);
@@ -359,6 +379,8 @@ ul { list-style: none; }
   text-shadow: 0 4px 40px rgba(0,0,0,0.5);
   animation: heroFadeIn 1s var(--ease) 2.2s both;
   margin-bottom: 32px;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 .hero__cta {
   font-family: var(--font-heading);
@@ -2126,6 +2148,7 @@ body::after {
 .split-char {
   display: inline-block;
   backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 /* ============================================

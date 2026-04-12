@@ -14,6 +14,8 @@ function initHeroTagline() {
   const tagline = document.querySelector('.hero__tagline');
   if (!tagline) return;
 
+  const isMobile = window.innerWidth <= 768;
+
   // Quitar la CSS animation y tomar control con GSAP
   tagline.style.animation = 'none';
   tagline.style.opacity = '0';
@@ -21,30 +23,38 @@ function initHeroTagline() {
   // Separar el texto en caracteres individuales
   const split = SplitText.create(tagline, { type: 'chars', charsClass: 'split-char' });
 
-  // Animar chars con delay post-loader (~2.4s coincide con el loader)
+  // Móvil: animación más ligera (sin rotationX 3D que puede causar jank)
+  // Desktop: efecto cinematográfico completo
   gsap.fromTo(split.chars,
-    { opacity: 0, y: 36, rotationX: -50, transformOrigin: '50% 100%' },
+    {
+      opacity: 0,
+      y: isMobile ? 22 : 36,
+      rotationX: isMobile ? 0 : -50,
+      transformOrigin: '50% 100%'
+    },
     {
       opacity: 1,
       y: 0,
       rotationX: 0,
-      duration: 0.65,
-      stagger: 0.045,
+      duration: isMobile ? 0.55 : 0.65,
+      stagger: isMobile ? 0.035 : 0.045,
       ease: 'power3.out',
       delay: 2.3,
       onStart() {
-        tagline.style.opacity = '1'; // mostrar el contenedor
+        tagline.style.opacity = '1';
       },
       onComplete() {
-        // Efecto "breathing" sutil después de la entrada
-        gsap.to(tagline, {
-          scale: 1.006,
-          duration: 3.5,
-          ease: 'sine.inOut',
-          yoyo: true,
-          repeat: -1,
-          transformOrigin: 'center center'
-        });
+        // Breathing sutil — solo en desktop para no afectar rendimiento móvil
+        if (!isMobile) {
+          gsap.to(tagline, {
+            scale: 1.006,
+            duration: 3.5,
+            ease: 'sine.inOut',
+            yoyo: true,
+            repeat: -1,
+            transformOrigin: 'center center'
+          });
+        }
       }
     }
   );
@@ -59,46 +69,58 @@ function initHeroParallax() {
   const hero = document.querySelector('.hero');
   if (!hero) return;
 
-  const content        = hero.querySelector('.hero__content');
-  const logo           = hero.querySelector('.hero__logo');
-  const tagline        = hero.querySelector('.hero__tagline');
+  // Móvil: solo fade del contenido (sin parallax de profundidad — ahorra
+  // composite layers y evita jank con el fondo fijo)
+  const isMobile = window.innerWidth <= 768;
+
+  const content         = hero.querySelector('.hero__content');
+  const logo            = hero.querySelector('.hero__logo');
+  const tagline         = hero.querySelector('.hero__tagline');
   const scrollIndicator = hero.querySelector('.hero__scroll-indicator');
 
-  // Parallax depth — content moves down slower than the hero scrolls up,
-  // creating a floating-in-space effect. Positive yPercent = moves down
-  // relative to the hero frame (correct parallax direction).
-  if (logo) {
-    gsap.to(logo, {
-      yPercent: 20,
-      ease: 'none',
-      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
-    });
+  if (!isMobile) {
+    // Desktop: parallax completo con lag suave (scrub: 1 = ~1s de suavizado)
+    if (logo) {
+      gsap.to(logo, {
+        yPercent: 20,
+        ease: 'none',
+        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 1 }
+      });
+    }
+    if (tagline) {
+      gsap.to(tagline, {
+        yPercent: 30,
+        ease: 'none',
+        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 1 }
+      });
+    }
   }
 
-  if (tagline) {
-    gsap.to(tagline, {
-      yPercent: 30,
-      ease: 'none',
-      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
-    });
-  }
-
-  // Fade the whole content block out in the last 45% of the hero scroll
-  // so it never visually bleeds into the section below.
+  // Fade del bloque completo — tanto móvil como desktop (scrub suave)
   if (content) {
     gsap.to(content, {
       opacity: 0,
       ease: 'power1.in',
-      scrollTrigger: { trigger: hero, start: '55% top', end: 'bottom top', scrub: true }
+      scrollTrigger: {
+        trigger: hero,
+        start: isMobile ? '45% top' : '55% top',
+        end: 'bottom top',
+        scrub: 0.6
+      }
     });
   }
 
-  // Scroll indicator fades quickly at the top of the scroll
+  // Scroll indicator: desaparece rápido al empezar a scrollear
   if (scrollIndicator) {
     gsap.to(scrollIndicator, {
       opacity: 0,
-      ease: 'none',
-      scrollTrigger: { trigger: hero, start: 'top top', end: '22% top', scrub: true }
+      ease: 'power1.in',
+      scrollTrigger: {
+        trigger: hero,
+        start: 'top top',
+        end: isMobile ? '18% top' : '22% top',
+        scrub: 0.4
+      }
     });
   }
 }
@@ -109,25 +131,28 @@ function initHeroParallax() {
 function initSectionTitles() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+  const isMobile = window.innerWidth <= 768;
+
   document.querySelectorAll('.section-title, .about__title').forEach(el => {
     const split = SplitText.create(el, {
       type: 'chars',
       charsClass: 'split-char'
     });
 
-    gsap.set(split.chars, { opacity: 0, y: 28, skewX: 10 });
+    // Móvil: sin skewX (más ligero), desktop: efecto completo
+    gsap.set(split.chars, { opacity: 0, y: isMobile ? 18 : 28, skewX: isMobile ? 0 : 10 });
 
     ScrollTrigger.create({
       trigger: el,
-      start: 'top 86%',
+      start: 'top 88%',
       once: true,
       onEnter: () => {
         gsap.to(split.chars, {
           opacity: 1,
           y: 0,
           skewX: 0,
-          duration: 0.55,
-          stagger: 0.03,
+          duration: isMobile ? 0.45 : 0.55,
+          stagger: isMobile ? 0.025 : 0.03,
           ease: 'power3.out'
         });
       }
@@ -164,7 +189,7 @@ function initScrollProgress() {
   gsap.to(bar, {
     width: '100%',
     ease: 'none',
-    scrollTrigger: { start: 0, end: 'max', scrub: 0 }
+    scrollTrigger: { start: 0, end: 'max', scrub: 0.2 }
   });
 }
 
@@ -175,18 +200,19 @@ function initFadeIns() {
   const fadeEls = document.querySelectorAll('.fade-in');
   if (!fadeEls.length) return;
 
-  gsap.set(fadeEls, { opacity: 0, y: 30 });
+  const isMobile = window.innerWidth <= 768;
+  gsap.set(fadeEls, { opacity: 0, y: isMobile ? 18 : 30 });
 
   ScrollTrigger.batch(fadeEls, {
-    start: 'top 91%',
+    start: 'top 92%',
     once: true,
-    interval: 0.1,
+    interval: 0.08,
     onEnter: (batch) => {
       gsap.to(batch, {
         opacity: 1,
         y: 0,
-        duration: 0.75,
-        stagger: 0.09,
+        duration: isMobile ? 0.6 : 0.75,
+        stagger: 0.08,
         ease: 'power2.out'
       });
     }
