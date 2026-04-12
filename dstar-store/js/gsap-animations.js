@@ -133,6 +133,21 @@ function initSectionTitles() {
 
   const isMobile = window.innerWidth <= 768;
 
+  // Very low-end devices (≤480px): skip SplitText entirely — char-by-char layout
+  // recalculation causes measurable jank on budget Android phones. Use simple fade.
+  if (window.innerWidth <= 480) {
+    document.querySelectorAll('.section-title, .about__title').forEach(el => {
+      gsap.set(el, { opacity: 0, y: 18 });
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 88%',
+        once: true,
+        onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' })
+      });
+    });
+    return;
+  }
+
   document.querySelectorAll('.section-title, .about__title').forEach(el => {
     const split = SplitText.create(el, {
       type: 'chars',

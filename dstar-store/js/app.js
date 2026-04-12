@@ -830,11 +830,22 @@ function renderFAQ() {
 
   list.innerHTML = FAQ_ITEMS.map((item, i) => `
     <div class="faq__item fade-in" id="faq-item-${i}">
-      <button class="faq__question" onclick="toggleFAQ(${i})">
+      <button
+        class="faq__question"
+        onclick="toggleFAQ(${i})"
+        aria-expanded="false"
+        aria-controls="faq-answer-${i}"
+        id="faq-btn-${i}"
+      >
         <span>${item.q}</span>
-        <span class="faq__icon">+</span>
+        <span class="faq__icon" aria-hidden="true">+</span>
       </button>
-      <div class="faq__answer" id="faq-answer-${i}">
+      <div
+        class="faq__answer"
+        id="faq-answer-${i}"
+        role="region"
+        aria-labelledby="faq-btn-${i}"
+      >
         <div class="faq__answer-inner">${item.a}</div>
       </div>
     </div>
@@ -842,20 +853,24 @@ function renderFAQ() {
 }
 
 function toggleFAQ(index) {
-  const item = document.getElementById(`faq-item-${index}`);
+  const item   = document.getElementById(`faq-item-${index}`);
   const answer = document.getElementById(`faq-answer-${index}`);
+  const btn    = document.getElementById(`faq-btn-${index}`);
   const isOpen = item.classList.contains('open');
 
-  // Cerrar todos
+  // Cerrar todos y actualizar aria-expanded
   document.querySelectorAll('.faq__item.open').forEach(el => {
     el.classList.remove('open');
     el.querySelector('.faq__answer').style.maxHeight = '0';
+    const openBtn = el.querySelector('.faq__question');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
   });
 
   // Abrir el clickeado si estaba cerrado
   if (!isOpen) {
     item.classList.add('open');
     answer.style.maxHeight = answer.scrollHeight + 'px';
+    if (btn) btn.setAttribute('aria-expanded', 'true');
   }
 }
 

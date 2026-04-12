@@ -41,15 +41,31 @@ body {
 }
 
 /* TABLET FIX - iPads (769px → 1024px)
-   background-attachment: fixed is broken on iOS Safari — the browser ignores it
-   or renders the background incorrectly on iPad. We override to scroll here.
-   background-position adjusted to 50% 15% so ceiling lights stay visible at top
-   and the floor reflection isn't cut off at the bottom. */
+   background-attachment: fixed is broken on iOS Safari on iPad too.
+   We use the same body::before pseudo-element approach as mobile:
+   a position:fixed layer below the content that never scrolls.
+   This avoids the scroll/repaint issues with background-attachment: scroll. */
 @media (min-width: 769px) and (max-width: 1024px) {
   body {
-    background-attachment: scroll;   /* TABLET FIX - iPads: fixed is broken on iOS Safari */
-    background-position: 50% 15%;   /* TABLET FIX - iPads: keep ceiling lights + floor in frame */
-    background-size: cover;         /* TABLET FIX - iPads: explicit, ensures full coverage */
+    background-image: none; /* pseudo-element handles the bg */
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_1920/backwebpc_bvcu4q.webp');
+    background-size: cover;
+    background-position: 50% 15%; /* portrait: keep ceiling lights + floor in frame */
+    background-repeat: no-repeat;
+    pointer-events: none;
+    will-change: transform; /* own compositing layer — prevents repaint on scroll */
+  }
+}
+/* iPad landscape: background sits higher to keep ceiling lights visible */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+  body::before {
+    background-position: 50% 10%;
   }
 }
 
@@ -67,12 +83,14 @@ body {
     background-position: center top;
     background-repeat: no-repeat;
     pointer-events: none;
+    will-change: transform; /* own compositing layer — no repaint on scroll */
   }
   body {
     background-image: none;
     background-color: #0a0a0a;  /* fallback si la imagen no carga */
   }
   .hero {
+    height: 100dvh;       /* 100dvh = excluye address bar → sin layout shift */
     min-height: 100dvh;
     background-image: none;
   }
@@ -86,8 +104,8 @@ body {
   }
 }
 
-a { color: inherit; text-decoration: none; }
-button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; touch-action: manipulation; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; touch-action: manipulation; }
 img { max-width: 100%; display: block; }
 ul { list-style: none; }
 
@@ -211,6 +229,8 @@ ul { list-style: none; }
   color: var(--concrete-light);
   transition: color 0.3s;
   position: relative;
+  white-space: nowrap;  /* prevent wrapping at ~900px tablet widths */
+  flex-shrink: 0;
 }
 .header__link::after {
   content: '';
@@ -230,6 +250,15 @@ ul { list-style: none; }
   position: relative;
   color: var(--concrete-light);
   transition: color 0.3s;
+}
+/* Expand tap target to 44×44 without affecting flex layout or badge position */
+.cart-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
 }
 .cart-btn:hover { color: var(--white); }
 .cart-btn__count {
@@ -257,7 +286,7 @@ ul { list-style: none; }
   display: none;
   flex-direction: column;
   gap: 5px;
-  padding: 4px;
+  padding: 10px; /* min 44×44 tap area: 24px lines + 2×10px = 44px */
 }
 .menu-btn span {
   display: block;
@@ -288,6 +317,7 @@ ul { list-style: none; }
   z-index: 850;
   background: rgba(10, 10, 10, 0.97);
   backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -337,7 +367,7 @@ ul { list-style: none; }
    ============================================ */
 .hero {
   position: relative;
-  height: 100vh;
+  height: 100dvh;
   min-height: 700px;
   display: flex;
   align-items: center;
@@ -469,6 +499,12 @@ ul { list-style: none; }
   padding: 0 20px 80px;
   max-width: 1200px;
   margin: 0 auto;
+}
+/* Tablet: 3 columns is too cramped at 900px — switch to 2 */
+@media (max-width: 900px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 640px) {
   .products-grid {
@@ -711,7 +747,7 @@ ul { list-style: none; }
   right: 0;
   width: 400px;
   max-width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background: var(--black);
   border-left: 1px solid rgba(255,255,255,0.06);
   z-index: 960;
@@ -745,6 +781,7 @@ ul { list-style: none; }
   flex: 1;
   overflow-y: auto;
   padding: 16px 24px;
+  overscroll-behavior: contain; /* prevent page scroll when drawer scrolls to end */
 }
 
 .cart-item {
@@ -793,6 +830,16 @@ ul { list-style: none; }
   align-items: center;
   justify-content: center;
   transition: border-color 0.2s;
+  /* Expanded tap area via padding without changing visual size */
+  position: relative;
+}
+.cart-item__qty button::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
 }
 .cart-item__qty button:hover { border-color: var(--white); }
 .cart-item__qty span {
@@ -1172,6 +1219,7 @@ ul { list-style: none; }
   cursor: zoom-out;
   opacity: 0;
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .img-fullscreen img {
   max-width: 90vw;
@@ -1222,8 +1270,14 @@ ul { list-style: none; }
     max-height: 100dvh;
     border: none;
     box-shadow: none;
+    overscroll-behavior: contain; /* prevent page scroll behind modal */
   }
-  .product-modal__image { aspect-ratio: unset; max-height: 42vh; cursor: default; }
+  .product-modal__image {
+    aspect-ratio: unset;
+    /* clamp: min 35vh on short phones (SE), ideal 42vh, max 50dvh */
+    max-height: clamp(35vh, 42vh, 50dvh);
+    cursor: default;
+  }
   .product-modal__image:hover img { transform: none; }
   .product-modal__info { padding: 20px 20px 32px; justify-content: flex-start; }
   .product-modal__name { font-size: 22px; }
@@ -1580,6 +1634,7 @@ ul { list-style: none; }
 }
 @media (max-width: 600px) {
   .blog__grid { grid-template-columns: 1fr; padding: 0 8px; }
+  .blog-card { min-width: 0; } /* prevent card from stretching past 320px viewport */
 }
 
 /* ============================================
@@ -1921,6 +1976,12 @@ ul { list-style: none; }
 .product-card {
   transform-style: preserve-3d;
 }
+/* will-change only on pointer:fine (mouse/trackpad) — wastes GPU memory on touch devices */
+@media (pointer: fine) {
+  .product-card {
+    will-change: transform;
+  }
+}
 .products-grid {
   perspective: 1200px;
 }
@@ -1951,6 +2012,7 @@ body::after {
   background-repeat: repeat;
   background-size: 256px;
   opacity: 0.4;
+  will-change: opacity; /* own compositing layer — avoids seam with body::before on Android */
 }
 
 /* cursor nativo restaurado — sin estilos de cursor custom */
@@ -1972,7 +2034,7 @@ body::after {
   overscroll-behavior-x: contain;
   /* Ocultar scrollbar visual */
   scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  /* Note: -webkit-overflow-scrolling: touch is deprecated — scroll-snap + overscroll handles this */
   cursor: grab;
 }
 .lookbook__horiz-wrap::-webkit-scrollbar { display: none; }
@@ -2074,8 +2136,10 @@ body::after {
   padding: 18px 0 0;
 }
 .lookbook__nav-arrow {
-  width: 42px;
-  height: 42px;
+  min-width: 44px;  /* WCAG 2.2 AA: 44×44px minimum tap target */
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(10,10,10,0.7);
   backdrop-filter: blur(8px);
@@ -2113,11 +2177,39 @@ body::after {
   padding: 0;
   transition: all 0.35s var(--ease);
   flex-shrink: 0;
+  position: relative; /* needed for ::before tap expansion */
+}
+/* Expand tap target to 44×44 without changing visual size */
+.lookbook__dot::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
 }
 .lookbook__dot.active {
   background: var(--white);
   width: 22px;
   border-radius: 3px;
+}
+
+/* Tablet (769–1023px): panels 80vw — same as mobile but taller */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .lookbook__horiz-wrap {
+    height: 60vw;
+    min-height: 420px;
+    cursor: default;
+  }
+  .lookbook__horiz-track {
+    padding: 0 10vw;
+    gap: 6px;
+  }
+  .lookbook-panel,
+  .lookbook-panel:first-child {
+    width: 80vw;
+    height: 100%;
+  }
 }
 
 /* Mobile: scroll horizontal con panels 80vw + snap (hereda todo del desktop) */
@@ -2139,7 +2231,7 @@ body::after {
   }
   .lookbook-panel__num { font-size: 44px; }
   .lookbook__nav { padding: 12px 0 0; }
-  .lookbook__nav-arrow { width: 36px; height: 36px; font-size: 14px; }
+  .lookbook__nav-arrow { width: 44px; height: 44px; font-size: 14px; }
 }
 
 /* ============================================
