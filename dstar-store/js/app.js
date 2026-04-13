@@ -1103,8 +1103,12 @@ function initProductPage() {
   // Gallery — main image
   const mainImg = document.getElementById('pdMainImg');
   if (mainImg) {
-    mainImg.src = gallery[0];
+    const isMobile = window.innerWidth <= 768;
+    const mainW = isMobile ? 600 : 900;
+    mainImg.src = cdnOpt(gallery[0], mainW);
     mainImg.alt = p.name;
+    mainImg.setAttribute('loading', 'eager');
+    mainImg.setAttribute('fetchpriority', 'high');
   }
 
   // Gallery — thumbnails (only if multiple images)
@@ -1113,8 +1117,9 @@ function initProductPage() {
     if (gallery.length > 1) {
       thumbsEl.innerHTML = gallery.map((src, i) => `
         <button class="pd-thumb ${i === 0 ? 'pd-thumb--active' : ''}"
-                onclick="pdSelectThumb(this,'${src}')">
-          <img src="${src}" alt="${p.name} foto ${i + 1}">
+                data-src="${src}"
+                onclick="pdSelectThumb(this)">
+          <img src="${cdnOpt(src, 150)}" alt="${p.name} foto ${i + 1}" loading="lazy" decoding="async">
         </button>`).join('');
     } else {
       thumbsEl.style.display = 'none';
@@ -1180,11 +1185,14 @@ function initProductPage() {
   window._pdSelectedSize = null;
 }
 
-function pdSelectThumb(btn, src) {
+function pdSelectThumb(btn) {
   document.querySelectorAll('.pd-thumb').forEach(b => b.classList.remove('pd-thumb--active'));
   btn.classList.add('pd-thumb--active');
   const mainImg = document.getElementById('pdMainImg');
-  if (mainImg) mainImg.src = src;
+  if (mainImg) {
+    const isMobile = window.innerWidth <= 768;
+    mainImg.src = cdnOpt(btn.dataset.src, isMobile ? 600 : 900);
+  }
 }
 
 function pdSelectSize(size, btn) {

@@ -241,41 +241,78 @@
   // black exit-overlay is still in the DOM at opacity:1.
   // event.persisted === true → clean up and rebuild.
   // ============================================
-  window.addEventListener('pageshow', function (event) {
-    if (!event.persisted) return;
-
+  function bfcacheCleanup() {
     // 1. Eliminar el overlay de transición de inmediato (sin animación).
     //    También limpiar el flag de sessionStorage para que no se re-inyecte.
     sessionStorage.removeItem(TRANSIT_FLAG);
     var cover = document.getElementById(OVERLAY_ID);
     if (cover && cover.parentNode) cover.parentNode.removeChild(cover);
 
-    // 2. Reanudar GSAP y restaurar timeScale por si quedó pausado o lento.
+    // 2. Desbloquear el scroll del body (overflow + position — iOS Safari usa position:fixed).
+    document.body.style.overflow  = '';
+    document.body.style.position  = '';
+
+    // 3. Reanudar GSAP y restaurar timeScale por si quedó pausado o lento.
     if (window.gsap) {
       gsap.globalTimeline.resume();
       gsap.globalTimeline.timeScale(1);
     }
 
-    // 3. Matar todas las instancias de ScrollTrigger y reconstruirlas desde cero.
+    // 4. Matar todas las instancias de ScrollTrigger y reconstruirlas desde cero.
     //    Esto evita que posiciones scrubbed queden congeladas en el estado de salida.
     if (window.ScrollTrigger) {
       ScrollTrigger.getAll().forEach(function (st) { st.kill(); });
       ScrollTrigger.refresh();
     }
 
-    // 4. Resetear tarjetas de producto — limpia cualquier transform/opacity residual.
+    // 5. Resetear tarjetas de producto — limpia cualquier transform/opacity residual.
     if (window.gsap) {
       gsap.set('.product-card', { clearProps: 'all' });
     }
 
-    // 5. Eliminar elementos inyectados por transiciones de tarjeta de producto
+    // 6. Eliminar elementos inyectados por transiciones de tarjeta de producto
     //    (clone, label, overlay oscuro — marcados con data-pd-transit).
     document.querySelectorAll('[data-pd-transit]').forEach(function (el) {
       el.parentNode && el.parentNode.removeChild(el);
     });
 
-    // 6. Desbloquear el scroll del body por si quedó con overflow:hidden.
-    document.body.style.overflow = '';
+    // 7. iOS Safari: scroll a cero y volver a refrescar ScrollTrigger tras 50ms
+    //    para que recalcule posiciones correctamente después de la restauración.
+    window.scrollTo(0, 0);
+    if (window.ScrollTrigger) {
+      setTimeout(function () { ScrollTrigger.refresh(); }, 50);
+    }
+  }
+
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return;
+    bfcacheCleanup();
+  });
+
+  // ============================================
+  // VISIBILITYCHANGE FIX — iOS a veces no dispara
+  // pageshow de forma fiable al restaurar desde bfcache.
+  // Cuando la pestaña vuelve a ser visible y había un
+  // overlay de tránsito activo, ejecutamos la misma limpieza.
+  // ============================================
+  var _wasHidden = false;
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      _wasHidden = true;
+      return;
+    }
+    // visibilityState === 'visible'
+    if (!_wasHidden) return;
+    _wasHidden = false;
+
+    // Solo limpiar si hay rastros de una transición de salida pendiente.
+    var hasCover  = !!document.getElementById(OVERLAY_ID);
+    var hasFlag   = !!sessionStorage.getItem(TRANSIT_FLAG);
+    var hasLocked = document.body.style.overflow === 'hidden' ||
+                    document.body.style.position === 'fixed';
+    if (hasCover || hasFlag || hasLocked) {
+      bfcacheCleanup();
+    }
   });
 
   // ============================================
