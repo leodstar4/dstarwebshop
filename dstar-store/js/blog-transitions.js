@@ -83,10 +83,13 @@
       if (href.startsWith('javascript:')) return;
       if (link.target === '_blank')       return;
 
-      // Skip: genuinely external domains
+      // Skip: genuinely external domains, or same-page hash-only navigation
       try {
         const resolved = new URL(href, window.location.href);
         if (resolved.hostname !== window.location.hostname) return;
+        // Same pathname + hash → browser handles native anchor scroll, no transition needed.
+        // Covers cases like "index.html#drops" or "./page.html#section" resolved on that same page.
+        if (resolved.pathname === window.location.pathname && resolved.hash) return;
       } catch (_) {
         return;
       }
@@ -236,56 +239,43 @@
   // BFCACHE FIX — pageshow fires on back/forward
   // When the browser restores a cached page the
   // black exit-overlay is still in the DOM at opacity:1.
-  // event.persisted === true → clear it.
+  // event.persisted === true → clean up and rebuild.
   // ============================================
   window.addEventListener('pageshow', function (event) {
     if (!event.persisted) return;
 
-    // 1. Limpiar overlay del fade de navegación normal (blog/producto → atrás)
+    // 1. Eliminar el overlay de transición de inmediato (sin animación).
+    //    También limpiar el flag de sessionStorage para que no se re-inyecte.
+    sessionStorage.removeItem(TRANSIT_FLAG);
     var cover = document.getElementById(OVERLAY_ID);
-    if (cover) {
-      if (window.gsap) {
-        gsap.to(cover, {
-          opacity: 0,
-          duration: 0.48,
-          ease: 'power2.out',
-          onComplete: function () { cover.parentNode && cover.parentNode.removeChild(cover); }
-        });
-      } else {
-        cover.parentNode && cover.parentNode.removeChild(cover);
-      }
+    if (cover && cover.parentNode) cover.parentNode.removeChild(cover);
+
+    // 2. Reanudar GSAP y restaurar timeScale por si quedó pausado o lento.
+    if (window.gsap) {
+      gsap.globalTimeline.resume();
+      gsap.globalTimeline.timeScale(1);
     }
 
-    // 2. Limpiar elementos inyectados por la animación de tarjeta de producto
-    //    (clone, label, dark — marcados con data-pd-transit)
+    // 3. Matar todas las instancias de ScrollTrigger y reconstruirlas desde cero.
+    //    Esto evita que posiciones scrubbed queden congeladas en el estado de salida.
+    if (window.ScrollTrigger) {
+      ScrollTrigger.getAll().forEach(function (st) { st.kill(); });
+      ScrollTrigger.refresh();
+    }
+
+    // 4. Resetear tarjetas de producto — limpia cualquier transform/opacity residual.
+    if (window.gsap) {
+      gsap.set('.product-card', { clearProps: 'all' });
+    }
+
+    // 5. Eliminar elementos inyectados por transiciones de tarjeta de producto
+    //    (clone, label, overlay oscuro — marcados con data-pd-transit).
     document.querySelectorAll('[data-pd-transit]').forEach(function (el) {
       el.parentNode && el.parentNode.removeChild(el);
     });
 
-    // 3. Resetear tarjetas de producto que quedaron dimmeadas/escaladas
-    var cards = document.querySelectorAll('.product-card');
-    if (cards.length) {
-      if (window.gsap) {
-        gsap.set(cards, { clearProps: 'all' });
-      } else {
-        cards.forEach(function (c) {
-          c.style.opacity = '';
-          c.style.transform = '';
-        });
-      }
-    }
-
-    // 4. Reanudar el global timeline de GSAP (puede quedar pausado por visibility API)
-    if (window.gsap) {
-      gsap.globalTimeline.resume();
-    }
-
-    // 5. Recalcular todos los ScrollTrigger desde la posición de scroll actual.
-    //    Sin esto, los elementos scrubbed (hero opacity, fade-ins) quedan en el
-    //    estado en que los dejó la animación de salida, no en el del scroll restaurado.
-    if (window.ScrollTrigger) {
-      ScrollTrigger.refresh();
-    }
+    // 6. Desbloquear el scroll del body por si quedó con overflow:hidden.
+    document.body.style.overflow = '';
   });
 
   // ============================================

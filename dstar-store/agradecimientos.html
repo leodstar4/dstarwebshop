@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRACIAS — DSTAR</title>
+  <meta name="description" content="DSTAR existe gracias a personas que creyeron desde el principio. Todo con amor.">
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_64/logo3ddd123_ueu676.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=2">
+  <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
+  <style>
+    .agradecimientos {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 6rem 1.5rem 5rem;
+    }
+    .agradecimientos__back {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: var(--concrete);
+      text-decoration: none;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+      transition: color 0.2s;
+    }
+    .agradecimientos__back:hover { color: var(--white); }
+    .agradecimientos__label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      color: var(--concrete);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .agradecimientos__title {
+      font-family: var(--font-heading);
+      font-size: clamp(4rem, 12vw, 8rem);
+      line-height: 1;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      margin-bottom: 3.5rem;
+    }
+    .agradecimientos__divider {
+      width: 40px;
+      height: 2px;
+      background: var(--concrete-dark);
+      margin: 2.5rem 0;
+    }
+    .agradecimientos__tribute {
+      margin-bottom: 3rem;
+    }
+    .agradecimientos__name {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      color: var(--white);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .agradecimientos__text {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.9;
+      color: var(--concrete-light);
+    }
+    .agradecimientos__text strong {
+      color: var(--white);
+      font-weight: 700;
+    }
+    .agradecimientos__closing {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.9;
+      color: var(--concrete);
+      margin-top: 3rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid var(--concrete-dark);
+    }
+    .agradecimientos__closing strong {
+      color: var(--white);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="scrollProgress"></div>
+
+  <!-- ANNOUNCEMENT BAR -->
+  <div class="announcement-bar">
+    <div class="announcement-bar__track">
+      <span>ENVÍO GRATIS EN COMPRAS MAYORES A $999 MXN</span>
+      <span>★</span>
+      <span>PIEZAS LIMITADAS</span>
+      <span>★</span>
+      <span>TODO CON AMOR</span>
+      <span>★</span>
+      <span>ENVÍO GRATIS EN COMPRAS MAYORES A $999 MXN</span>
+      <span>★</span>
+      <span>PIEZAS LIMITADAS</span>
+      <span>★</span>
+      <span>TODO CON AMOR</span>
+      <span>★</span>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header__inner">
+      <a href="/" class="header__logo">
+        <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR">
+      </a>
+      <nav class="header__nav" id="mainNav">
+        <a href="/#drops" class="header__link">DROPS</a>
+        <a href="/#lookbook" class="header__link">LOOKBOOK</a>
+        <a href="/#about" class="header__link">NOSOTROS</a>
+        <a href="/#blog" class="header__link">BLOG</a>
+        <a href="/#contact" class="header__link">CONTACTO</a>
+      </nav>
+      <div class="header__actions">
+        <button class="cart-btn" id="cartBtn" aria-label="Carrito">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 01-8 0"></path>
+          </svg>
+          <span class="cart-btn__count" id="cartCount">0</span>
+        </button>
+        <button class="menu-btn" id="menuBtn" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav__inner">
+      <a href="/#drops" class="mobile-nav__link" data-close-nav>DROPS</a>
+      <a href="/#lookbook" class="mobile-nav__link" data-close-nav>LOOKBOOK</a>
+      <a href="/#about" class="mobile-nav__link" data-close-nav>NOSOTROS</a>
+      <a href="/#blog" class="mobile-nav__link" data-close-nav>BLOG</a>
+      <a href="/#contact" class="mobile-nav__link" data-close-nav>CONTACTO</a>
+      <div class="mobile-nav__socials">
+        <a href="https://instagram.com/dstar_.4" target="_blank">INSTAGRAM</a>
+        <a href="#" target="_blank">TIKTOK</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <main class="agradecimientos">
+    <a href="/" class="agradecimientos__back">← INICIO</a>
+
+    <p class="agradecimientos__label">DSTAR — TODO CON AMOR</p>
+    <h1 class="agradecimientos__title">GRACIAS</h1>
+
+    <div class="agradecimientos__tribute">
+      <p class="agradecimientos__name">Tía Maribel</p>
+      <p class="agradecimientos__text">
+        Antes de que hubiera un logo, antes de que hubiera un drop, antes de que hubiera siquiera
+        una idea clara de qué era DSTAR — estaba ella.<br><br>
+        <strong>Tía Maribel</strong> me enseñó a leer una tela, a entender el patronaje desde cero,
+        a ver una prenda no como objeto sino como construcción. Cada pieza que diseño lleva algo de
+        esa enseñanza: el respeto por el proceso, la precisión en el corte, el amor por hacer las
+        cosas bien desde el principio.<br><br>
+        Desde el primer proyecto creyó. Cuando yo todavía no sabía bien qué estaba haciendo,
+        ella ya veía lo que podía llegar a ser. Eso no tiene precio.
+      </p>
+    </div>
+
+    <div class="agradecimientos__divider"></div>
+
+    <div class="agradecimientos__tribute">
+      <p class="agradecimientos__name">Normita</p>
+      <p class="agradecimientos__text">
+        Me enseñó a coser. No solo el cómo — también el ritmo, la paciencia, el detalle.
+        Hay cosas que solo se aprenden viendo a alguien que lo sabe de verdad, y <strong>Normita</strong>
+        lo sabe de verdad.<br><br>
+        Sigue ahí. Sigue apoyando igual que desde el principio, sin pedirlo, sin condiciones.
+        Ese tipo de presencia es de las pocas cosas que de verdad sostienen un proyecto cuando
+        todavía no hay certeza de nada.
+      </p>
+    </div>
+
+    <div class="agradecimientos__closing">
+      DSTAR existe porque hubo personas que enseñaron, que creyeron y que estuvieron.<br>
+      Esto es para ellas.<br><br>
+      <strong>Todo con amor. — DSTAR</strong>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR" class="footer__logo">
+      <div class="footer__links">
+        <a href="/#drops">Drops</a>
+        <a href="/#lookbook">Lookbook</a>
+        <a href="/#about">Nosotros</a>
+        <a href="/#blog">Blog</a>
+        <a href="/#contact">Contacto</a>
+        <a href="agradecimientos.html">Gracias</a>
+      </div>
+      <p class="footer__copy">© 2026 DSTAR. TODOS LOS DERECHOS RESERVADOS.</p>
+      <p class="footer__note">HECHO EN MÉXICO 🇲🇽</p>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer__header">
+      <h3>TU CARRITO</h3>
+      <button class="cart-drawer__close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-drawer__items" id="cartItems"></div>
+    <div class="cart-drawer__empty" id="cartEmpty">
+      <p>Tu carrito está vacío</p>
+    </div>
+    <div class="cart-drawer__footer" id="cartFooter" style="display:none;">
+      <div class="cart-drawer__total">
+        <span>TOTAL</span>
+        <span id="cartTotal">$0</span>
+      </div>
+      <p class="cart-drawer__shipping-note">Envío gratis en compras +$999 MXN</p>
+      <button class="cart-drawer__checkout" id="checkoutBtn">PAGAR CON MERCADO PAGO</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js"></script>
+  <script src="js/app.js?v=2"></script>
+  <script src="js/blog-transitions.js?v=2"></script>
+</body>
+</html>

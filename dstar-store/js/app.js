@@ -15,7 +15,7 @@ const PRODUCTS = [
     drop: 'BORN TO SHINE',
     price: 450,
     description: 'Camisa del drop Born to Shine. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/borntoshinedosvistas_khieim.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/borntoshinedosvistas_blwlew.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/borntoshine1_mhdrgc.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/brn1_ixp42v.jpg',
@@ -33,7 +33,7 @@ const PRODUCTS = [
     drop: 'BORN TO SHINE',
     price: 500,
     description: 'Jort del drop Born to Shine. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/overasdosvistas_fb4qmr.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/overasdosvistas_lwrtst.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/overas1_tgmuzs.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/overas2_flxg98.jpg',
@@ -50,7 +50,7 @@ const PRODUCTS = [
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
     price: 400,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/undermyskindosvistas_me1boh.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/undermyskindosvistas_foypii.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin1_u3ulw1.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin2_brvy0g.jpg',
@@ -70,7 +70,7 @@ const PRODUCTS = [
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
     price: 350,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/beadepredatordosvistas_zrxo9m.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/beadepredatordosvistas_wxwbp2.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator1_btz8nt.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator2_oprlcc.jpg',
@@ -105,11 +105,14 @@ const PRODUCTS = [
 // ============================================
 // CDN HELPER — inyecta transformaciones Cloudinary
 // ============================================
-function cdnOpt(url, w, h) {
+function cdnOpt(url, w, h, { limit = false } = {}) {
   if (!url || !url.includes('cloudinary.com')) return url;
-  const transforms = ['f_auto', 'q_auto'];
+  const isJpg = /\.(jpe?g|jpg)(\?|$)/i.test(url);
+  const transforms = ['f_auto', 'q_auto', 'dpr_auto'];
+  if (isJpg) transforms.push('fl_progressive');
   if (w) transforms.push(`w_${w}`);
   if (h) transforms.push(`h_${h}`);
+  if (limit) transforms.push('c_limit');
   return url.replace('/image/upload/', `/image/upload/${transforms.join(',')}/`);
 }
 
@@ -238,8 +241,8 @@ function renderProducts() {
            style="--stagger-delay: ${delay}s"
            ${href}>
         <div class="product-card__image">
-          <img src="${cdnOpt(p.image, 600)}" alt="${p.name}"
-               loading="lazy" decoding="async"
+          <img src="${cdnOpt(p.image, 600, null, { limit: true })}" alt="${p.name}"
+               ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"
                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2020/svg%22 viewBox=%220 0 300 400%22%3E%3Crect fill=%22%23141414%22 width=%22300%22 height=%22400%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E'">
           <span class="product-card__badge product-card__badge--${badgeClass}">${badgeText}</span>
         </div>
@@ -768,7 +771,7 @@ const FAQ_ITEMS = [
   },
   {
     q: '¿HACEN COLABORACIONES O CUSTOM?',
-    a: 'Sí abrimos colaboraciones seleccionadas con artistas, colectivos y marcas que compartan nuestra visión. Escríbenos a contacto@dstar.mx con tu propuesta.'
+    a: 'Sí abrimos colaboraciones seleccionadas con artistas, colectivos y marcas que compartan nuestra visión. Escríbenos a dstarstudioss@gmail.com con tu propuesta.'
   },
 ];
 
@@ -1195,6 +1198,25 @@ function pdSelectSize(size, btn) {
   const span = addBtn.querySelector('.btn-text');
   if (span) span.textContent = 'AGREGAR AL CARRITO';
 }
+
+// ============================================
+// BFCACHE — popstate reload
+// When the user hits back/forward, the browser may
+// restore a page from bfcache. If the restored page
+// is index.html or producto.html (which need full JS
+// init), reload so all state is fresh.
+// ============================================
+window.addEventListener('popstate', function () {
+  const path = window.location.pathname;
+  // Pages that need full JS reinit on back/forward navigation
+  if (
+    path === '/' ||
+    path.endsWith('/index.html') ||
+    path.endsWith('/producto.html')
+  ) {
+    window.location.reload();
+  }
+});
 
 function pdAddToCart() {
   const addBtn = document.getElementById('pdAddBtn');
