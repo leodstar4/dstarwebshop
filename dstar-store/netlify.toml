@@ -23,16 +23,21 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://sdk.mercadopago.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com https:; connect-src 'self' https://api.mercadopago.com https://res.cloudinary.com"
 
-# Cache agresivo para assets estáticos (JS, CSS, fonts)
+# Cache para assets estáticos.
+# IMPORTANTE: NO usar "immutable" en JS/CSS porque los archivos se actualizan con cada
+# deploy pero conservan el mismo nombre (sin hash). "immutable" hace que los navegadores
+# ignoren el archivo nuevo por hasta 1 año, rompiendo fixes en producción para usuarios
+# que ya visitaron el sitio. En su lugar usamos max-age corto + must-revalidate.
+# Las woff2/fonts sí pueden ser immutable porque nunca cambian.
 [[headers]]
   for = "/*.js"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=86400, must-revalidate"
 
 [[headers]]
   for = "/*.css"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=86400, must-revalidate"
 
 [[headers]]
   for = "/*.woff2"

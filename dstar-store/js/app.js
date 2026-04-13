@@ -13,9 +13,9 @@ const PRODUCTS = [
     id: 'dstar-bts-shirt-01',
     name: 'BORN TO SHINE',
     drop: 'BORN TO SHINE',
-    price: 700,
+    price: 450,
     description: 'Camisa del drop Born to Shine. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/born-to-shine_dboku4.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/borntoshinedosvistas_khieim.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/borntoshine1_mhdrgc.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/brn1_ixp42v.jpg',
@@ -31,9 +31,9 @@ const PRODUCTS = [
     id: 'dstar-bts-jort-01',
     name: 'OVER AS F**K',
     drop: 'BORN TO SHINE',
-    price: 750,
+    price: 500,
     description: 'Jort del drop Born to Shine. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/over-as-fk_pi6g19.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/overasdosvistas_fb4qmr.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/overas1_tgmuzs.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/overas2_flxg98.jpg',
@@ -48,9 +48,9 @@ const PRODUCTS = [
     id: 'dstar-apnm-ls-01',
     name: 'UNDER MY SKIN',
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
-    price: 800,
+    price: 400,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/under-my-skin_a20sjc.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/undermyskindosvistas_me1boh.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin1_u3ulw1.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/undermyskin2_brvy0g.jpg',
@@ -68,9 +68,9 @@ const PRODUCTS = [
     id: 'dstar-apnm-ls-02',
     name: 'BE A DEPREDATOR',
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
-    price: 0,         // TODO: agregar precio
+    price: 350,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/be-a-depredator_tc6fut.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/beadepredatordosvistas_zrxo9m.webp',
     gallery: [
       'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator1_btz8nt.jpg',
       'https://res.cloudinary.com/dflyysqln/image/upload/beadepredator2_oprlcc.jpg',
@@ -88,7 +88,7 @@ const PRODUCTS = [
     id: 'dstar-apnm-shirt-01',
     name: 'BENDECIDO',
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
-    price: 700,
+    price: 300,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
     image: 'https://res.cloudinary.com/dflyysqln/image/upload/bendecido_shkmci.webp',
     gallery: [
@@ -219,6 +219,9 @@ function initNav() {
 // ============================================
 function renderProducts() {
   const grid = $('#productsGrid');
+  // Guard: blog pages and other sub-pages load app.js but don't have #productsGrid.
+  // Without this check, null.innerHTML throws and kills initNav/initCart on those pages.
+  if (!grid) return;
   grid.innerHTML = PRODUCTS.map((p, i) => {
     const isSoldOut = p.stock === 0 || p.badge === 'SOLDOUT';
     const badgeClass = p.badge === 'LIMITED' ? 'limited' :
