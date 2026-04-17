@@ -82,21 +82,18 @@
 
   <!-- PRODUCT DETAIL -->
   <main class="product-detail">
-
-    <a href="/#drops" class="product-detail__back">← VOLVER A DROPS</a>
-
     <div class="product-detail__layout">
 
-      <!-- GALERÍA -->
+      <!-- GALERÍA: desktop stack / mobile carousel (rendered by JS) -->
       <div class="product-detail__gallery">
-        <div class="product-detail__main-img">
-          <img id="pdMainImg" src="" alt="">
-        </div>
-        <div class="product-detail__thumbs" id="pdThumbs"></div>
+        <div class="pd-gallery-stack" id="pdGalleryStack"></div>
+        <div class="pd-carousel" id="pdCarousel"></div>
+        <div class="pd-carousel-dots" id="pdCarouselDots"></div>
       </div>
 
-      <!-- INFO -->
+      <!-- INFO — sticky panel on desktop -->
       <div class="product-detail__info">
+        <a href="/#drops" class="product-detail__back">← VOLVER</a>
         <span class="product-detail__badge" id="pdBadge" style="display:none"></span>
         <p class="product-detail__drop" id="pdDrop"></p>
         <h1 class="product-detail__name" id="pdName"></h1>
@@ -113,6 +110,17 @@
 
     </div>
   </main>
+
+  <!-- PRODUCT LIGHTBOX (desktop only, populated by JS) -->
+  <div id="pdLightbox">
+    <button id="pdLbClose" aria-label="Cerrar">✕</button>
+    <div id="pdLbThumbs"></div>
+    <div id="pdLbMain">
+      <img id="pdLbImg" src="" alt="">
+      <button id="pdLbPrev" aria-label="Anterior">↑</button>
+      <button id="pdLbNext" aria-label="Siguiente">↓</button>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer class="footer">

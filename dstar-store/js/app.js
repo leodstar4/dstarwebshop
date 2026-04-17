@@ -172,6 +172,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
+// BFCACHE — force reload on back/forward so GSAP entry animations re-run
+// ============================================
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
+
+// ============================================
 // LOADER
 // ============================================
 function initLoader() {
@@ -1086,7 +1095,7 @@ function initCardTilt() {
 }
 
 // ============================================
-// PRODUCT DETAIL PAGE
+// PRODUCT DETAIL PAGE — Zara-style layout
 // ============================================
 function initProductPage() {
   const params = new URLSearchParams(window.location.search);
@@ -1099,31 +1108,14 @@ function initProductPage() {
 
   const isSoldOut = p.stock === 0 || p.badge === 'SOLDOUT';
   const gallery   = (p.gallery && p.gallery.length) ? p.gallery : [p.image];
+  const isMobile  = window.innerWidth <= 768;
 
-  // Gallery — main image
-  const mainImg = document.getElementById('pdMainImg');
-  if (mainImg) {
-    const isMobile = window.innerWidth <= 768;
-    const mainW = isMobile ? 600 : 900;
-    mainImg.src = cdnOpt(gallery[0], mainW);
-    mainImg.alt = p.name;
-    mainImg.setAttribute('loading', 'eager');
-    mainImg.setAttribute('fetchpriority', 'high');
-  }
-
-  // Gallery — thumbnails (only if multiple images)
-  const thumbsEl = document.getElementById('pdThumbs');
-  if (thumbsEl) {
-    if (gallery.length > 1) {
-      thumbsEl.innerHTML = gallery.map((src, i) => `
-        <button class="pd-thumb ${i === 0 ? 'pd-thumb--active' : ''}"
-                data-src="${src}"
-                onclick="pdSelectThumb(this)">
-          <img src="${cdnOpt(src, 150)}" alt="${p.name} foto ${i + 1}" loading="lazy" decoding="async">
-        </button>`).join('');
-    } else {
-      thumbsEl.style.display = 'none';
-    }
+  // Gallery: desktop stack of images vs mobile swipe carousel
+  if (isMobile) {
+    _pdBuildCarousel(gallery, p.name);
+  } else {
+    _pdBuildStack(gallery, p.name);
+    _pdBuildLightbox(gallery, p.name);
   }
 
   // Badge
@@ -1181,17 +1173,236 @@ function initProductPage() {
   }
 
   // Store product reference
-  window._pdProduct     = p;
+  window._pdProduct      = p;
   window._pdSelectedSize = null;
+  window._pdLightboxIndex = 0;
 }
 
-function pdSelectThumb(btn) {
-  document.querySelectorAll('.pd-thumb').forEach(b => b.classList.remove('pd-thumb--active'));
-  btn.classList.add('pd-thumb--active');
-  const mainImg = document.getElementById('pdMainImg');
-  if (mainImg) {
-    const isMobile = window.innerWidth <= 768;
-    mainImg.src = cdnOpt(btn.dataset.src, isMobile ? 600 : 900);
+// ── Desktop: render all gallery images as a vertical stack ──
+function _pdBuildStack(gallery, productName) {
+  const stack = document.getElementById('pdGalleryStack');
+  if (!stack) return;
+
+  stack.innerHTML = gallery.map((src, i) => `
+    <div class="pd-gallery-img pd-gallery-img--loading" data-index="${i}">
+      <img src="${cdnOpt(src, 900)}" alt="${productName} — foto ${i + 1}"
+           loading="${i === 0 ? 'eager' : 'lazy'}"
+           fetchpriority="${i === 0 ? 'high' : 'auto'}"
+           decoding="async">
+    </div>`).join('');
+
+  stack.querySelectorAll('.pd-gallery-img').forEach(el => {
+    // Remove shimmer once the image loads
+    const img = el.querySelector('img');
+    if (img) {
+      if (img.complete) {
+        el.classList.remove('pd-gallery-img--loading');
+      } else {
+        img.addEventListener('load', () => el.classList.remove('pd-gallery-img--loading'), { once: true });
+      }
+    }
+    el.addEventListener('click', () => pdLightboxOpen(parseInt(el.dataset.index)));
+  });
+
+  // GSAP entrance — stagger images up into view
+  if (window.gsap) {
+    gsap.fromTo('.pd-gallery-img',
+      { opacity: 0, y: 40 },
+      { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, ease: 'power3.out', delay: 0.3 }
+    );
+
+    // Per-image parallax scroll
+    if (window.ScrollTrigger) {
+      stack.querySelectorAll('.pd-gallery-img').forEach(el => {
+        gsap.to(el, {
+          yPercent: -8,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true
+          }
+        });
+      });
+    }
+  }
+}
+
+// ── Mobile: horizontal swipe carousel with dot indicators ──
+function _pdBuildCarousel(gallery, productName) {
+  const carousel = document.getElementById('pdCarousel');
+  const dotsEl   = document.getElementById('pdCarouselDots');
+  if (!carousel) return;
+
+  carousel.innerHTML = gallery.map((src, i) => `
+    <div class="pd-carousel__item">
+      <img src="${cdnOpt(src, 600)}" alt="${productName} — foto ${i + 1}"
+           loading="${i === 0 ? 'eager' : 'lazy'}"
+           fetchpriority="${i === 0 ? 'high' : 'auto'}"
+           decoding="async">
+    </div>`).join('');
+
+  // Image counter overlay
+  const counterEl = document.createElement('div');
+  counterEl.className = 'pd-carousel-counter';
+  counterEl.textContent = gallery.length > 1 ? `1 / ${gallery.length}` : '';
+  carousel.parentElement.style.position = 'relative';
+  carousel.parentElement.appendChild(counterEl);
+
+  if (!dotsEl) return;
+
+  if (gallery.length < 2) { dotsEl.style.display = 'none'; return; }
+
+  dotsEl.innerHTML = gallery.map((_, i) => `
+    <button class="pd-carousel-dot${i === 0 ? ' pd-carousel-dot--active' : ''}"
+            data-index="${i}" aria-label="Foto ${i + 1}"></button>`).join('');
+
+  const dots = Array.from(dotsEl.querySelectorAll('.pd-carousel-dot'));
+
+  // Scroll → update active dot + counter
+  carousel.addEventListener('scroll', () => {
+    const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+    dots.forEach((d, i) => d.classList.toggle('pd-carousel-dot--active', i === idx));
+    counterEl.textContent = `${idx + 1} / ${gallery.length}`;
+  }, { passive: true });
+
+  // Dot click → scroll to image
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      carousel.scrollTo({ left: parseInt(dot.dataset.index) * carousel.offsetWidth, behavior: 'smooth' });
+    });
+  });
+}
+
+// ── Desktop: build lightbox structure (thumbnails + main view) ──
+function _pdBuildLightbox(gallery, productName) {
+  const thumbsEl = document.getElementById('pdLbThumbs');
+  const closeBtn = document.getElementById('pdLbClose');
+  const prevBtn  = document.getElementById('pdLbPrev');
+  const nextBtn  = document.getElementById('pdLbNext');
+  const lb       = document.getElementById('pdLightbox');
+  if (!thumbsEl || !lb) return;
+
+  thumbsEl.innerHTML = gallery.map((src, i) => `
+    <button class="pd-lb-thumb${i === 0 ? ' pd-lb-thumb--active' : ''}"
+            data-index="${i}" aria-label="Foto ${i + 1}">
+      <img src="${cdnOpt(src, 150)}" alt="${productName} foto ${i + 1}" loading="lazy" decoding="async">
+    </button>`).join('');
+
+  thumbsEl.querySelectorAll('.pd-lb-thumb').forEach(btn => {
+    btn.addEventListener('click', () => pdLightboxGo(parseInt(btn.dataset.index)));
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', pdLightboxClose);
+
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    const total = gallery.length;
+    pdLightboxGo((window._pdLightboxIndex - 1 + total) % total);
+  });
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    const total = gallery.length;
+    pdLightboxGo((window._pdLightboxIndex + 1) % total);
+  });
+
+  // ESC + arrow key navigation
+  document.addEventListener('keydown', e => {
+    const open = lb.classList.contains('is-open');
+    if (!open) return;
+    if (e.key === 'Escape') { pdLightboxClose(); return; }
+    const total = gallery.length;
+    if (e.key === 'ArrowDown'  || e.key === 'ArrowRight') pdLightboxGo((window._pdLightboxIndex + 1) % total);
+    if (e.key === 'ArrowUp'    || e.key === 'ArrowLeft')  pdLightboxGo((window._pdLightboxIndex - 1 + total) % total);
+  });
+}
+
+// ── Open lightbox at a given image index ──
+function pdLightboxOpen(index) {
+  const lb  = document.getElementById('pdLightbox');
+  const img = document.getElementById('pdLbImg');
+  if (!lb) return;
+  lb.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  pdLightboxGo(index);
+  if (window.gsap) {
+    const thumbs = Array.from(document.querySelectorAll('.pd-lb-thumb'));
+    gsap.killTweensOf([lb, img, ...thumbs]);
+    gsap.fromTo(lb,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.28, ease: 'power3.out' }
+    );
+    if (img) {
+      gsap.fromTo(img,
+        { scale: 0.92, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.36, ease: 'power3.out', delay: 0.06 }
+      );
+    }
+    if (thumbs.length) {
+      gsap.fromTo(thumbs,
+        { x: -20, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.32, stagger: 0.05, ease: 'power3.out', delay: 0.08 }
+      );
+    }
+  }
+}
+
+// ── Close lightbox ──
+function pdLightboxClose() {
+  const lb = document.getElementById('pdLightbox');
+  if (!lb) return;
+  if (window.gsap) {
+    gsap.to(lb, {
+      opacity: 0, duration: 0.22, ease: 'power2.in',
+      onComplete() {
+        lb.classList.remove('is-open');
+        document.body.style.overflow = '';
+      }
+    });
+  } else {
+    lb.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+}
+
+// ── Navigate lightbox to a given index ──
+function pdLightboxGo(index) {
+  const img      = document.getElementById('pdLbImg');
+  const thumbsEl = document.getElementById('pdLbThumbs');
+  const p        = window._pdProduct;
+  if (!img || !p) return;
+
+  const gallery = (p.gallery && p.gallery.length) ? p.gallery : [p.image];
+  index = Math.max(0, Math.min(gallery.length - 1, index));
+
+  const newSrc = cdnOpt(gallery[index], 1400, null, { limit: true });
+  const newAlt = p.name + ` — foto ${index + 1}`;
+
+  if (window.gsap && window._pdLightboxIndex !== index) {
+    // Slide current image out, then swap and slide in
+    gsap.to(img, {
+      x: -20, opacity: 0, duration: 0.18, ease: 'power2.in',
+      onComplete() {
+        img.src = newSrc;
+        img.alt = newAlt;
+        window._pdLightboxIndex = index;
+        gsap.fromTo(img,
+          { x: 20, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.22, ease: 'power3.out' }
+        );
+      }
+    });
+  } else {
+    img.src = newSrc;
+    img.alt = newAlt;
+    window._pdLightboxIndex = index;
+  }
+
+  if (thumbsEl) {
+    thumbsEl.querySelectorAll('.pd-lb-thumb').forEach((btn, i) => {
+      btn.classList.toggle('pd-lb-thumb--active', i === index);
+    });
+    const active = thumbsEl.querySelector('.pd-lb-thumb--active');
+    if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 }
 

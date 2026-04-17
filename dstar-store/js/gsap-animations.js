@@ -546,6 +546,13 @@ function initProductCardClick() {
     tl.to(dark, { opacity: 1, duration: 0.28, ease: 'power2.in' }, 0.6);
 
   }, true); // capture phase → antes que blog-transitions
+
+  // pageshow — force reload on bfcache restore so GSAP entry animations re-run
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
 }
 
 // ============================================
@@ -605,6 +612,87 @@ function initProductPageEntry() {
 }
 
 // ============================================
+// BUTTON GLOW SYSTEM — iluminación premium
+// Mouse-tracking spotlight, ripple on click, magnetic cart
+// ============================================
+function initButtonEffects() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  // ── 1. Cursor-tracking spotlight on primary CTA buttons ──
+  // JS sets --bx/--by CSS vars so the ::after radial-gradient follows the cursor
+  const ctaSelector = '.product-detail__add, .product-modal__add, .cart-drawer__checkout';
+  document.querySelectorAll(ctaSelector).forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const r = btn.getBoundingClientRect();
+      btn.style.setProperty('--bx', ((e.clientX - r.left) / r.width  * 100).toFixed(1) + '%');
+      btn.style.setProperty('--by', ((e.clientY - r.top)  / r.height * 100).toFixed(1) + '%');
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.setProperty('--bx', '50%');
+      btn.style.setProperty('--by', '50%');
+    });
+  });
+
+  // ── 2. Ripple on click (event delegation — works on dynamic buttons too) ──
+  function spawnRipple(btn, e, isLight) {
+    if (btn.disabled) return;
+    const r = btn.getBoundingClientRect();
+    const span = document.createElement('span');
+    span.className = 'btn-ripple ' + (isLight ? 'btn-ripple--light' : 'btn-ripple--dark');
+    span.style.left = (e.clientX - r.left - 4) + 'px';
+    span.style.top  = (e.clientY - r.top  - 4) + 'px';
+    btn.appendChild(span);
+    span.addEventListener('animationend', () => span.remove(), { once: true });
+  }
+
+  document.addEventListener('click', e => {
+    // Dark buttons (white bg): light ripple
+    const ctaBtn = e.target.closest(
+      '.product-detail__add, .product-modal__add, .cart-drawer__checkout, .hero__cta'
+    );
+    if (ctaBtn) { spawnRipple(ctaBtn, e, true); return; }
+
+    // Size buttons (dark bg): light ripple
+    const sizeBtn = e.target.closest('.size-btn');
+    if (sizeBtn) { spawnRipple(sizeBtn, e, true); return; }
+
+    // Lookbook arrows (dark bg): light ripple
+    const arrow = e.target.closest('.lookbook__nav-arrow');
+    if (arrow) { spawnRipple(arrow, e, true); return; }
+  });
+
+  // ── 3. Magnetic cart button (desktop only) ──
+  const cartBtn = document.getElementById('cartBtn');
+  if (cartBtn && window.innerWidth > 768) {
+    cartBtn.addEventListener('mousemove', e => {
+      const r  = cartBtn.getBoundingClientRect();
+      const cx = r.left + r.width  / 2;
+      const cy = r.top  + r.height / 2;
+      gsap.to(cartBtn, {
+        x: (e.clientX - cx) * 0.38,
+        y: (e.clientY - cy) * 0.38,
+        duration: 0.28,
+        ease: 'power2.out',
+        overwrite: 'auto'
+      });
+    });
+    cartBtn.addEventListener('mouseleave', () => {
+      gsap.to(cartBtn, { x: 0, y: 0, duration: 0.55, ease: 'elastic.out(1, 0.4)', overwrite: 'auto' });
+    });
+  }
+
+  // ── 4. GSAP hover animations on lookbook nav arrows ──
+  document.querySelectorAll('.lookbook__nav-arrow').forEach(btn => {
+    btn.addEventListener('mouseenter', () => {
+      if (!btn.disabled) gsap.to(btn, { scale: 1.12, duration: 0.2, ease: 'power2.out' });
+    });
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, { scale: 1, duration: 0.3, ease: 'elastic.out(1.2, 0.5)' });
+    });
+  });
+}
+
+// ============================================
 // INIT ALL
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -613,6 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (document.body.classList.contains('page-product')) {
         // ── Página de detalle de producto ──
         initProductPageEntry();
+        initButtonEffects();
       } else {
         // ── Página principal ──
         initHeroTagline();
@@ -625,6 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initBlogReveal();
         initLookbook();          // reemplaza initLookbookSnap + initLookbookMasonry
         initProductCardClick();
+        initButtonEffects();
         ScrollTrigger.refresh();
 
         // Segundo refresh cuando todas las imágenes lazy terminan de cargar
