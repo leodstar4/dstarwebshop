@@ -2512,8 +2512,9 @@ body::after {
 }
 
 /* Mobile carousel — hidden on desktop */
-.pd-carousel      { display: none; }
-.pd-carousel-dots { display: none; }
+.pd-carousel        { display: none; }
+.pd-carousel-dots   { display: none; }
+.pd-carousel-counter{ display: none; } /* shown only inside @media (max-width: 768px) */
 
 /* ── RIGHT: Sticky info panel ── */
 .product-detail__info {
@@ -2651,7 +2652,9 @@ body::after {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
+    /* scroll-behavior:smooth intentionally omitted —
+       combining it with scroll-snap-type on iOS Safari
+       causes the carousel to mis-render and show blank frames */
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     position: relative;
@@ -2676,6 +2679,7 @@ body::after {
 
   /* Image counter overlay */
   .pd-carousel-counter {
+    display: block; /* override the desktop display:none */
     position: absolute;
     top: 14px;
     right: 16px;

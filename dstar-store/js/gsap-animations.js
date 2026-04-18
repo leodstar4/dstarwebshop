@@ -216,22 +216,38 @@ function initFadeIns() {
   if (!fadeEls.length) return;
 
   const isMobile = window.innerWidth <= 768;
-  gsap.set(fadeEls, { opacity: 0, y: isMobile ? 18 : 30 });
+  const dy = isMobile ? 18 : 30;
+  gsap.set(fadeEls, { opacity: 0, y: dy });
 
   ScrollTrigger.batch(fadeEls, {
-    start: 'top 92%',
+    start: 'top 105%',   // fire as soon as any part nears the viewport
     once: true,
     interval: 0.08,
     onEnter: (batch) => {
       gsap.to(batch, {
         opacity: 1,
         y: 0,
-        duration: isMobile ? 0.6 : 0.75,
-        stagger: 0.08,
+        duration: isMobile ? 0.55 : 0.75,
+        stagger: 0.07,
         ease: 'power2.out'
       });
     }
   });
+
+  // Safety net: after all assets load, force-animate any element
+  // still stuck at opacity:0 that is already in (or near) the viewport.
+  window.addEventListener('load', () => {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.fade-in').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight + 80;
+        const stillHidden = parseFloat(gsap.getProperty(el, 'opacity')) < 0.1;
+        if (inView && stillHidden) {
+          gsap.to(el, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
+        }
+      });
+    });
+  }, { once: true });
 }
 
 // ============================================

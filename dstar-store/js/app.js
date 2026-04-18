@@ -1243,12 +1243,14 @@ function _pdBuildCarousel(gallery, productName) {
            decoding="async">
     </div>`).join('');
 
-  // Image counter overlay
+  // Image counter overlay (mobile only — desktop uses stacked gallery)
+  const galleryEl = carousel.parentElement;
+  if (galleryEl) galleryEl.style.position = 'relative';
   const counterEl = document.createElement('div');
   counterEl.className = 'pd-carousel-counter';
   counterEl.textContent = gallery.length > 1 ? `1 / ${gallery.length}` : '';
-  carousel.parentElement.style.position = 'relative';
-  carousel.parentElement.appendChild(counterEl);
+  counterEl.style.display = 'block'; // visible on mobile via CSS; hidden on desktop via @media
+  if (galleryEl) galleryEl.appendChild(counterEl);
 
   if (!dotsEl) return;
 
