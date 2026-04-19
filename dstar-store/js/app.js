@@ -236,14 +236,22 @@ function renderProducts() {
   if (!grid) return;
   grid.innerHTML = PRODUCTS.map((p, i) => {
     const isSoldOut = p.stock === 0 || p.badge === 'SOLDOUT';
-    const badgeClass = p.badge === 'LIMITED' ? 'limited' :
-                       p.badge === 'NEW' ? 'new' : 'soldout';
-    const badgeText = p.badge === 'LIMITED' ? 'LIMITADO' :
-                      p.badge === 'NEW' ? 'NUEVO' : 'AGOTADO';
     const delay = Math.min(i, 5) * 0.08;
+
+    const badgeVariant = isSoldOut          ? 'soldout' :
+                         p.badge === 'LIMITED' ? 'limited' :
+                         p.badge === 'NEW'     ? 'new'     : null;
+    const badgeText    = isSoldOut          ? 'AGOTADO' :
+                         p.badge === 'LIMITED' ? 'LIMITADO' :
+                         p.badge === 'NEW'     ? 'NUEVO'    : '';
 
     const tag   = isSoldOut ? 'div' : 'a';
     const href  = isSoldOut ? '' : `href="producto.html?id=${p.id}"`;
+    const badgeHtml = badgeVariant
+      ? `<span class="product-card__badge product-card__badge--${badgeVariant}">${badgeText}</span>`
+      : '';
+    const priceText = isSoldOut ? 'AGOTADO' : formatPrice(p.price);
+
     return `
       <${tag} class="product-card fade-in ${isSoldOut ? 'sold-out' : ''}"
            data-product-index="${i}"
@@ -253,12 +261,13 @@ function renderProducts() {
           <img src="${cdnOpt(p.image, 600, null, { limit: true })}" alt="${p.name}"
                ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"
                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2020/svg%22 viewBox=%220 0 300 400%22%3E%3Crect fill=%22%23141414%22 width=%22300%22 height=%22400%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E'">
-          <span class="product-card__badge product-card__badge--${badgeClass}">${badgeText}</span>
+          ${badgeHtml}
         </div>
-        <div class="product-card__info">
-          <h3 class="product-card__name">${p.name}</h3>
-          <p class="product-card__price">${isSoldOut ? 'AGOTADO' : formatPrice(p.price)}</p>
-          ${!isSoldOut ? `<p class="product-card__stock">QUEDAN ${p.stock} PIEZAS</p>` : ''}
+        <div class="product-card__tape">
+          <span class="product-card__tape-text">
+            <span class="product-card__name">${p.name}</span>
+            <span class="product-card__tape-price">${priceText}</span>
+          </span>
         </div>
       </${tag}>
     `;
@@ -1192,13 +1201,17 @@ function _pdBuildStack(gallery, productName) {
     </div>`).join('');
 
   stack.querySelectorAll('.pd-gallery-img').forEach(el => {
-    // Remove shimmer once the image loads
+    // Drop the shimmer (and its 3:4 placeholder box) once the image
+    // settles — whether it loaded or errored — so the wrapper can
+    // collapse to the image's natural height.
     const img = el.querySelector('img');
     if (img) {
+      const done = () => el.classList.remove('pd-gallery-img--loading');
       if (img.complete) {
-        el.classList.remove('pd-gallery-img--loading');
+        done();
       } else {
-        img.addEventListener('load', () => el.classList.remove('pd-gallery-img--loading'), { once: true });
+        img.addEventListener('load',  done, { once: true });
+        img.addEventListener('error', done, { once: true });
       }
     }
     el.addEventListener('click', () => pdLightboxOpen(parseInt(el.dataset.index)));
@@ -1236,12 +1249,25 @@ function _pdBuildCarousel(gallery, productName) {
   if (!carousel) return;
 
   carousel.innerHTML = gallery.map((src, i) => `
-    <div class="pd-carousel__item">
+    <div class="pd-carousel__item pd-carousel__item--loading">
       <img src="${cdnOpt(src, 600)}" alt="${productName} — foto ${i + 1}"
            loading="${i === 0 ? 'eager' : 'lazy'}"
            fetchpriority="${i === 0 ? 'high' : 'auto'}"
            decoding="async">
     </div>`).join('');
+
+  // Drop shimmer once each image settles (load or error)
+  carousel.querySelectorAll('.pd-carousel__item').forEach(el => {
+    const img = el.querySelector('img');
+    if (!img) return;
+    const done = () => el.classList.remove('pd-carousel__item--loading');
+    if (img.complete) {
+      done();
+    } else {
+      img.addEventListener('load',  done, { once: true });
+      img.addEventListener('error', done, { once: true });
+    }
+  });
 
   // Image counter overlay (mobile only — desktop uses stacked gallery)
   const galleryEl = carousel.parentElement;

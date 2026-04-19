@@ -563,53 +563,93 @@ ul { list-style: none; }
 .product-card:hover .product-card__image img {
   transform: scale(1.06);
 }
+/* ── Badge (top-left, absolute over the photo) ── */
 .product-card__badge {
   position: absolute;
-  top: 6px;
+  top: 8px;
   left: 0;
+  z-index: 4;
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.5px;
   padding: 3px 8px;
-  z-index: 2;
+  text-transform: uppercase;
 }
 .product-card__badge--limited {
   background: var(--red);
   color: var(--white);
 }
-.product-card__badge--soldout {
-  background: transparent;
-  color: var(--concrete);
-  border: none;
-}
 .product-card__badge--new {
   background: var(--white);
   color: var(--black);
 }
-.product-card__info {
-  padding: 6px 0 0;
+.product-card__badge--soldout {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid var(--white);
+}
+
+/* ── Compact masking-tape "price tag" sitting just below the product photo ── */
+.product-card__tape {
+  position: relative;
+  z-index: 2;
+  width: clamp(140px, 40%, 200px);
+  /* e_trim auto-removes transparent padding from the source asset →
+     1999×451 ribbon (≈4.43/1). Matching the container aspect-ratio to
+     this keeps background-size:100% 100% perfectly distortion-free. */
+  aspect-ratio: 1999 / 451;
+  margin: -8px auto 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/e_trim,f_auto,q_auto/masking_tape_vphtp2');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  /* drop-shadow respects the tape's irregular silhouette (transparent PNG). */
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+  transform: rotate(-1.5deg);
+  transition: transform 0.4s var(--ease);
+}
+/* Alternate rotation for a handmade, inconsistent look */
+.product-card:nth-child(even) .product-card__tape {
+  transform: rotate(1.2deg);
+}
+.product-card:hover .product-card__tape {
+  transform: rotate(-1.5deg) translateY(-2px) scale(1.03);
+}
+.product-card:nth-child(even):hover .product-card__tape {
+  transform: rotate(1.2deg) translateY(-2px) scale(1.03);
+}
+
+.product-card__tape-text {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 0 10px;
+  font-family: var(--font-heading);
+  font-size: clamp(9px, 0.9vw, 11px);
+  letter-spacing: 1.2px;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1;
 }
 .product-card__name {
-  font-family: var(--font-heading);
-  font-size: 14px;
-  letter-spacing: 2.5px;
-  color: var(--white);
-  margin-bottom: 4px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
 }
-.product-card__price {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--concrete-light);
-  letter-spacing: 1px;
-}
-.product-card__stock {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 1px;
-  color: var(--concrete);
-  margin-top: 6px;
-  text-transform: uppercase;
+.product-card__tape-price {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
 }
 
 .product-card.sold-out {
@@ -619,16 +659,30 @@ ul { list-style: none; }
   filter: grayscale(1) brightness(0.4);
   opacity: 0.5;
 }
-.product-card.sold-out .product-card__name {
+.product-card.sold-out .product-card__tape {
+  opacity: 0.7;
+}
+.product-card.sold-out .product-card__tape-text {
   text-decoration: line-through;
-  color: var(--concrete-dark);
+  color: #555;
 }
 
 @media (max-width: 640px) {
-  .product-card__info { padding: 10px; }
-  .product-card__name { font-size: 16px; }
-  .product-card__price { font-size: 12px; }
-  .product-card__badge { font-size: 8px; padding: 3px 6px; top: 8px; left: 8px; }
+  .product-card__tape {
+    width: clamp(110px, 50%, 160px);
+    transform: rotate(-0.8deg);
+  }
+  .product-card:nth-child(even) .product-card__tape {
+    transform: rotate(0.6deg);
+  }
+  .product-card:hover .product-card__tape {
+    transform: rotate(-0.8deg) translateY(-2px) scale(1.03);
+  }
+  .product-card:nth-child(even):hover .product-card__tape {
+    transform: rotate(0.6deg) translateY(-2px) scale(1.03);
+  }
+  .product-card__tape-text { font-size: 10px; gap: 8px; letter-spacing: 1px; padding: 0 8px; }
+  .product-card__badge { font-size: 8px; padding: 2px 6px; letter-spacing: 1.2px; }
 }
 
 /* ============================================
@@ -2475,19 +2529,22 @@ body::after {
   max-width: 55vw;
 }
 
-/* Wrapper — carries shimmer background while loading */
+/* Wrapper — collapses to the image's natural aspect ratio once loaded.
+   overflow:hidden keeps the hover scale(1.03) from bleeding outside. */
 .pd-gallery-img {
   width: 100%;
-  aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: #141414;
+  background: #0f0f0f;
   display: block;
   cursor: zoom-in;
   position: relative;
 }
 
-/* Shimmer state (removed via onload in JS) */
+/* Shimmer: reserves a 3:4 placeholder box ONLY while loading so the page
+   doesn't jump (CLS). Removed via load/error handlers in JS, at which point
+   the wrapper collapses to whatever height the real image needs. */
 .pd-gallery-img--loading {
+  aspect-ratio: 3 / 4;
   background: linear-gradient(
     90deg,
     #141414 25%,
@@ -2500,9 +2557,7 @@ body::after {
 
 .pd-gallery-img img {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: #0f0f0f;
+  height: auto;
   display: block;
   transition: transform 0.6s var(--ease);
 }
@@ -2664,16 +2719,26 @@ body::after {
   .pd-carousel__item {
     flex-shrink: 0;
     width: 100vw;
-    aspect-ratio: 3 / 4;
     overflow: hidden;
     background: #0f0f0f;
     scroll-snap-align: start;
+    position: relative;
+  }
+  /* Shimmer placeholder — same CLS-prevention trick as desktop. */
+  .pd-carousel__item--loading {
+    aspect-ratio: 3 / 4;
+    background: linear-gradient(
+      90deg,
+      #141414 25%,
+      #1e1e1e 50%,
+      #141414 75%
+    );
+    background-size: 200% 100%;
+    animation: pdShimmer 1.4s infinite linear;
   }
   .pd-carousel__item img {
     width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: #0f0f0f;
+    height: auto;
     display: block;
   }
 
