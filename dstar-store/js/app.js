@@ -278,7 +278,6 @@ function renderProducts() {
     `;
   }).join('');
 
-  initCardTilt();
 }
 
 // ============================================
@@ -1061,36 +1060,6 @@ function initTextScramble() {
   $$('.section-title').forEach(el => {
     el.dataset.original = el.textContent.trim();
     observer.observe(el);
-  });
-}
-
-// ============================================
-// PRODUCT CARD — spotlight que sigue al cursor vía CSS vars --mx/--my
-// ============================================
-function initCardTilt() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (!window.matchMedia('(pointer: fine)').matches) return;
-
-  $$('.product-card:not(.sold-out)').forEach(card => {
-    let rafId = null;
-
-    card.addEventListener('mousemove', (e) => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        const rect = card.getBoundingClientRect();
-        const mx = ((e.clientX - rect.left) / rect.width) * 100;
-        const my = ((e.clientY - rect.top)  / rect.height) * 100;
-        card.style.setProperty('--mx', mx + '%');
-        card.style.setProperty('--my', my + '%');
-      });
-    });
-
-    card.addEventListener('mouseleave', () => {
-      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-      card.style.removeProperty('--mx');
-      card.style.removeProperty('--my');
-    });
   });
 }
 

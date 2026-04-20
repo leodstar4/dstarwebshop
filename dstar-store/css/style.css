@@ -535,10 +535,8 @@ ul { list-style: none; }
   }
 }
 
-/* PRODUCT CARD — prenda sin fondo + hover FX (spotlight, brackets, shine) */
+/* PRODUCT CARD — prenda sin fondo + hover FX (brackets, shine) */
 .product-card {
-  --mx: 50%;
-  --my: 50%;
   position: relative;
   display: block;
   text-decoration: none;
@@ -549,21 +547,6 @@ ul { list-style: none; }
   transition: transform 0.55s var(--ease);
 }
 .product-card:hover { transform: translateY(-6px); }
-
-/* Spotlight radial que sigue al cursor (solo pointer:fine) */
-.product-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(260px circle at var(--mx) var(--my), rgba(230,50,50,0.14), transparent 60%);
-  transition: opacity 0.35s var(--ease);
-  z-index: 0;
-}
-@media (pointer: fine) {
-  .product-card:hover::before { opacity: 1; }
-}
 
 /* Corner brackets — borde recortado a las 4 esquinas vía mask */
 .product-card::after {
