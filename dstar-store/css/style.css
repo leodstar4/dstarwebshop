@@ -535,154 +535,205 @@ ul { list-style: none; }
   }
 }
 
-/* PRODUCT CARD */
+/* PRODUCT CARD — prenda sin fondo + hover FX (spotlight, brackets, shine) */
 .product-card {
+  --mx: 50%;
+  --my: 50%;
   position: relative;
-  background: transparent;
-  border: none;
-  overflow: visible;
+  display: block;
+  text-decoration: none;
+  color: inherit;
   cursor: pointer;
-  transition: transform 0.4s var(--ease);
+  padding: 14px 14px 18px;
+  isolation: isolate;
+  transition: transform 0.55s var(--ease);
 }
-.product-card:hover {
-  transform: translateY(-6px);
+.product-card:hover { transform: translateY(-6px); }
+
+/* Spotlight radial que sigue al cursor (solo pointer:fine) */
+.product-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(260px circle at var(--mx) var(--my), rgba(230,50,50,0.14), transparent 60%);
+  transition: opacity 0.35s var(--ease);
+  z-index: 0;
 }
+@media (pointer: fine) {
+  .product-card:hover::before { opacity: 1; }
+}
+
+/* Corner brackets — borde recortado a las 4 esquinas vía mask */
+.product-card::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  border: 1px solid rgba(240, 237, 232, 0.45);
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity 0.35s var(--ease), transform 0.45s var(--ease);
+  -webkit-mask:
+    linear-gradient(#000 0 0) top left    / 20px 20px no-repeat,
+    linear-gradient(#000 0 0) top right   / 20px 20px no-repeat,
+    linear-gradient(#000 0 0) bottom left / 20px 20px no-repeat,
+    linear-gradient(#000 0 0) bottom right/ 20px 20px no-repeat;
+          mask:
+    linear-gradient(#000 0 0) top left    / 20px 20px no-repeat,
+    linear-gradient(#000 0 0) top right   / 20px 20px no-repeat,
+    linear-gradient(#000 0 0) bottom left / 20px 20px no-repeat,
+    linear-gradient(#000 0 0) bottom right/ 20px 20px no-repeat;
+  z-index: 1;
+}
+@media (pointer: fine) {
+  .product-card:hover::after { opacity: 1; transform: scale(1); }
+}
+
+/* Image wrap — prenda flotando (transparent bg, contain) */
 .product-card__image {
   position: relative;
   aspect-ratio: 3/4;
   overflow: hidden;
   background: transparent;
+  z-index: 2;
 }
 .product-card__image img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transform: scale(1.03);
-  transition: transform 0.6s var(--ease);
+  transition: transform 0.6s var(--ease), filter 0.6s var(--ease);
 }
 .product-card:hover .product-card__image img {
-  transform: scale(1.06);
+  transform: scale(1.08);
+  filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.45));
 }
-/* ── Badge (top-left, absolute over the photo) ── */
+
+/* Shine diagonal — barre la imagen en hover */
+.product-card__image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg,
+    transparent 0%, transparent 35%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 65%, transparent 100%);
+  transform: translateX(-120%) skewX(-12deg);
+  opacity: 0;
+  z-index: 3;
+}
+@media (pointer: fine) {
+  .product-card:hover .product-card__image::after {
+    animation: cardShine 0.95s var(--ease) forwards;
+  }
+}
+@keyframes cardShine {
+  0%   { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateX(120%) skewX(-12deg); opacity: 0; }
+}
+
+/* Badge (top-left sobre la foto) */
 .product-card__badge {
   position: absolute;
-  top: 8px;
+  top: 10px;
   left: 0;
-  z-index: 4;
+  z-index: 5;
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.5px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   text-transform: uppercase;
 }
-.product-card__badge--limited {
-  background: var(--red);
-  color: var(--white);
-}
-.product-card__badge--new {
-  background: var(--white);
-  color: var(--black);
-}
+.product-card__badge--limited { background: var(--red);   color: var(--white); }
+.product-card__badge--new     { background: var(--white); color: var(--black); }
 .product-card__badge--soldout {
-  background: transparent;
+  background: rgba(10, 10, 10, 0.55);
   color: var(--white);
-  border: 1px solid var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-/* ── Compact masking-tape "price tag" sitting just below the product photo ── */
-.product-card__tape {
+/* Info row debajo de la foto */
+.product-card__info {
   position: relative;
   z-index: 2;
-  width: clamp(140px, 40%, 200px);
-  /* e_trim auto-removes transparent padding from the source asset →
-     1999×451 ribbon (≈4.43/1). Matching the container aspect-ratio to
-     this keeps background-size:100% 100% perfectly distortion-free. */
-  aspect-ratio: 1999 / 451;
-  margin: -8px auto 0;
-  padding: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/e_trim,f_auto,q_auto/masking_tape_vphtp2');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  /* drop-shadow respects the tape's irregular silhouette (transparent PNG). */
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
-  transform: rotate(-1.5deg);
-  transition: transform 0.4s var(--ease);
-}
-/* Alternate rotation for a handmade, inconsistent look */
-.product-card:nth-child(even) .product-card__tape {
-  transform: rotate(1.2deg);
-}
-.product-card:hover .product-card__tape {
-  transform: rotate(-1.5deg) translateY(-2px) scale(1.03);
-}
-.product-card:nth-child(even):hover .product-card__tape {
-  transform: rotate(1.2deg) translateY(-2px) scale(1.03);
-}
-
-.product-card__tape-text {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 10px;
-  padding: 0 10px;
-  font-family: var(--font-heading);
-  font-size: clamp(9px, 0.9vw, 11px);
-  letter-spacing: 1.2px;
-  color: #1a1a1a;
-  text-transform: uppercase;
-  white-space: nowrap;
-  text-align: center;
-  line-height: 1;
+  padding: 16px 4px 2px;
+}
+.product-card__accent {
+  width: 32px;
+  height: 2px;
+  background: var(--red);
+  transition: width 0.55s var(--ease), background 0.55s var(--ease);
+}
+.product-card:hover .product-card__accent {
+  width: 100%;
+  background: var(--white);
 }
 .product-card__name {
-  font: inherit;
-  letter-spacing: inherit;
-  color: inherit;
+  font-family: var(--font-display);
+  font-size: clamp(17px, 1.8vw, 22px);
+  letter-spacing: 3px;
+  color: var(--white);
+  text-transform: uppercase;
+  line-height: 1;
   margin: 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
-.product-card__tape-price {
-  font: inherit;
-  letter-spacing: inherit;
-  color: inherit;
+.product-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
+.product-card__price {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--white);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.product-card__cta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--concrete-light);
+  text-transform: uppercase;
+  transition: color 0.3s var(--ease);
+}
+.product-card__cta span {
+  display: inline-block;
+  transition: transform 0.35s var(--ease);
+}
+.product-card:hover .product-card__cta      { color: var(--white); }
+.product-card:hover .product-card__cta span { transform: translateX(4px); }
 
-.product-card.sold-out {
-  pointer-events: none;
-}
+/* Sold out */
+.product-card.sold-out { pointer-events: none; }
 .product-card.sold-out .product-card__image img {
   filter: grayscale(1) brightness(0.4);
   opacity: 0.5;
 }
-.product-card.sold-out .product-card__tape {
-  opacity: 0.7;
-}
-.product-card.sold-out .product-card__tape-text {
+.product-card.sold-out .product-card__name {
   text-decoration: line-through;
-  color: #555;
+  color: var(--concrete-dark);
 }
+.product-card.sold-out .product-card__accent { background: var(--concrete-dark); }
 
 @media (max-width: 640px) {
-  .product-card__tape {
-    width: clamp(110px, 50%, 160px);
-    transform: rotate(-0.8deg);
-  }
-  .product-card:nth-child(even) .product-card__tape {
-    transform: rotate(0.6deg);
-  }
-  .product-card:hover .product-card__tape {
-    transform: rotate(-0.8deg) translateY(-2px) scale(1.03);
-  }
-  .product-card:nth-child(even):hover .product-card__tape {
-    transform: rotate(0.6deg) translateY(-2px) scale(1.03);
-  }
-  .product-card__tape-text { font-size: 10px; gap: 8px; letter-spacing: 1px; padding: 0 8px; }
-  .product-card__badge { font-size: 8px; padding: 2px 6px; letter-spacing: 1.2px; }
+  .product-card          { padding: 10px 8px 14px; }
+  .product-card__info    { gap: 8px; padding: 12px 2px 2px; }
+  .product-card__name    { font-size: 16px; letter-spacing: 2px; }
+  .product-card__price   { font-size: 13px; }
+  .product-card__accent  { width: 24px; }
+  .product-card__badge   { font-size: 8px; padding: 3px 8px; letter-spacing: 1.2px; }
 }
 
 /* ============================================
@@ -2057,21 +2108,9 @@ ul { list-style: none; }
   to { transform: scale(5); opacity: 0; }
 }
 
-/* Product card 3D shine layer */
-.product-card {
-  transform-style: preserve-3d;
-}
 /* will-change only on pointer:fine (mouse/trackpad) — wastes GPU memory on touch devices */
 @media (pointer: fine) {
-  .product-card {
-    will-change: transform;
-  }
-}
-.products-grid {
-  perspective: 1200px;
-}
-.product-card__shine {
-  display: none;
+  .product-card { will-change: transform; }
 }
 
 /* Text scramble chars */
@@ -2504,16 +2543,20 @@ body::after {
 }
 
 .product-detail {
-  padding-top: 80px; /* clears announcement bar + fixed header */
+  /* clears announcement bar (32px) + fixed header (top:32px, ~56px tall) with
+     generous breathing room so the first gallery image nunca queda cubierta */
+  padding: 148px 0 80px;
 }
 
 /* Two-column grid — gallery scrolls, info sticks */
 .product-detail__layout {
   display: grid;
   grid-template-columns: 55fr 45fr;
+  gap: 40px;
   align-items: start;
   max-width: 1440px;
   margin: 0 auto;
+  padding: 0 24px;
 }
 
 /* ── LEFT: Gallery column ── */
@@ -2521,12 +2564,12 @@ body::after {
   /* scrolls naturally alongside the page */
 }
 
-/* Desktop: stacked vertical images */
+/* Desktop: stacked vertical images — sin max-width porque ahora vive dentro
+   del grid y la columna ya fija el ancho */
 .pd-gallery-stack {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  max-width: 55vw;
 }
 
 /* Wrapper — collapses to the image's natural aspect ratio once loaded.
@@ -2571,13 +2614,50 @@ body::after {
 .pd-carousel-dots   { display: none; }
 .pd-carousel-counter{ display: none; } /* shown only inside @media (max-width: 768px) */
 
-/* ── RIGHT: Sticky info panel ── */
+/* ── RIGHT: Sticky info panel — premium DSTAR ── */
 .product-detail__info {
   position: sticky;
-  top: 96px;
-  padding: 40px 48px 56px 48px;
-  background: rgba(10, 10, 10, 0.95);
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  top: 120px;
+  padding: 44px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(160deg, rgba(18, 18, 18, 0.96), rgba(8, 8, 8, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+/* Red vertical stripe on the left edge — fades toward bottom */
+.product-detail__info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom,
+    var(--red) 0%,
+    var(--red) 35%,
+    transparent 100%);
+  z-index: 0;
+}
+/* Watermark "DSTAR // MX" bottom-right */
+.product-detail__info::after {
+  content: 'DSTAR // MX';
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(240, 237, 232, 0.14);
+  z-index: 0;
+  pointer-events: none;
+}
+/* All children sit above the pseudo-elements */
+.product-detail__info > * {
+  position: relative;
+  z-index: 1;
 }
 
 .product-detail__back {
@@ -2590,10 +2670,13 @@ body::after {
   color: var(--concrete);
   text-transform: uppercase;
   margin-bottom: 32px;
-  transition: color 0.25s;
+  transition: color 0.25s, transform 0.25s var(--ease);
   text-decoration: none;
 }
-.product-detail__back:hover { color: var(--white); }
+.product-detail__back:hover {
+  color: var(--white);
+  transform: translateX(-3px);
+}
 
 .product-detail__badge {
   display: inline-block;
@@ -2604,9 +2687,13 @@ body::after {
   color: var(--white);
   padding: 3px 10px;
   margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(230, 50, 50, 0.35);
 }
 
 .product-detail__drop {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 3px;
@@ -2614,21 +2701,32 @@ body::after {
   margin-bottom: 10px;
   text-transform: uppercase;
 }
+.product-detail__drop::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--red);
+}
 
 .product-detail__name {
   font-family: var(--font-display);
-  font-size: clamp(28px, 3.2vw, 52px);
+  font-size: clamp(30px, 3.4vw, 56px);
   letter-spacing: 4px;
-  line-height: 1;
+  line-height: 0.95;
   color: var(--white);
   margin-bottom: 20px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .product-detail__price {
+  display: inline-block;
   font-family: var(--font-heading);
   font-size: 28px;
   letter-spacing: 3px;
   color: var(--white);
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(240, 237, 232, 0.12);
   margin-bottom: 24px;
 }
 
@@ -2638,7 +2736,7 @@ body::after {
   line-height: 1.8;
   color: var(--concrete-light);
   margin-bottom: 32px;
-  border-left: 2px solid var(--concrete-dark);
+  border-left: 2px solid var(--red);
   padding-left: 16px;
 }
 
@@ -2689,15 +2787,23 @@ body::after {
   cursor: not-allowed;
 }
 
+/* ── Tablet (≤980px): colapsa a una sola columna ── */
+@media (max-width: 980px) {
+  .product-detail__layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
 /* ── Mobile (≤768px): carousel + stacked info ── */
 @media (max-width: 768px) {
   .product-detail {
-    padding-top: 56px;
-    padding-bottom: 60px;
+    padding: 128px 0 56px;
   }
 
   .product-detail__layout {
     display: block;
+    padding: 0;
   }
 
   /* Hide desktop stack, show carousel */
@@ -2713,20 +2819,26 @@ body::after {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     position: relative;
+    gap: 0;
+    background: transparent;
   }
   .pd-carousel::-webkit-scrollbar { display: none; }
 
+  /* Altura fija vía aspect-ratio 3/4 en TODOS los items (no solo loading) —
+     evita las "líneas negras" que aparecían al hacer swipe cuando cada
+     imagen tenía height:auto y alturas distintas. */
   .pd-carousel__item {
-    flex-shrink: 0;
-    width: 100vw;
+    flex: 0 0 100%;
+    width: 100%;
+    aspect-ratio: 3 / 4;
     overflow: hidden;
-    background: #0f0f0f;
+    background: transparent;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
     position: relative;
   }
-  /* Shimmer placeholder — same CLS-prevention trick as desktop. */
+  /* Shimmer placeholder — hereda aspect-ratio del padre */
   .pd-carousel__item--loading {
-    aspect-ratio: 3 / 4;
     background: linear-gradient(
       90deg,
       #141414 25%,
@@ -2738,20 +2850,26 @@ body::after {
   }
   .pd-carousel__item img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
   }
 
-  /* Image counter overlay */
+  /* Counter pill — blur + fondo translúcido en esquina sup. derecha */
   .pd-carousel-counter {
     display: block; /* override the desktop display:none */
     position: absolute;
     top: 14px;
     right: 16px;
+    background: rgba(10, 10, 10, 0.55);
+    padding: 4px 10px;
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     pointer-events: none;
     z-index: 2;
   }
@@ -2778,12 +2896,11 @@ body::after {
     width: 20px;
   }
 
-  /* Info: no sticky, transparent bg */
+  /* Info: no sticky, mantiene gradiente premium + stripe + watermark */
   .product-detail__info {
     position: static;
-    padding: 32px 20px 48px;
-    background: transparent;
-    border-left: none;
+    margin: 20px 12px 0;
+    padding: 32px 24px 44px;
   }
 
   .product-detail__back {

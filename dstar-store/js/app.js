@@ -251,6 +251,9 @@ function renderProducts() {
       ? `<span class="product-card__badge product-card__badge--${badgeVariant}">${badgeText}</span>`
       : '';
     const priceText = isSoldOut ? 'AGOTADO' : formatPrice(p.price);
+    const ctaHtml   = isSoldOut
+      ? ''
+      : '<span class="product-card__cta">VER PIEZA <span>→</span></span>';
 
     return `
       <${tag} class="product-card fade-in ${isSoldOut ? 'sold-out' : ''}"
@@ -263,11 +266,13 @@ function renderProducts() {
                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2020/svg%22 viewBox=%220 0 300 400%22%3E%3Crect fill=%22%23141414%22 width=%22300%22 height=%22400%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E'">
           ${badgeHtml}
         </div>
-        <div class="product-card__tape">
-          <span class="product-card__tape-text">
-            <span class="product-card__name">${p.name}</span>
-            <span class="product-card__tape-price">${priceText}</span>
-          </span>
+        <div class="product-card__info">
+          <span class="product-card__accent"></span>
+          <h3 class="product-card__name">${p.name}</h3>
+          <div class="product-card__meta">
+            <span class="product-card__price">${priceText}</span>
+            ${ctaHtml}
+          </div>
         </div>
       </${tag}>
     `;
@@ -1060,45 +1065,31 @@ function initTextScramble() {
 }
 
 // ============================================
-// PRODUCT CARD 3D TILT
+// PRODUCT CARD — spotlight que sigue al cursor vía CSS vars --mx/--my
 // ============================================
 function initCardTilt() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (!window.matchMedia('(pointer: fine)').matches) return;
 
   $$('.product-card:not(.sold-out)').forEach(card => {
-    // Inject shine layer
-    if (!card.querySelector('.product-card__shine')) {
-      const shine = document.createElement('div');
-      shine.className = 'product-card__shine';
-      card.prepend(shine);
-    }
-    const shine = card.querySelector('.product-card__shine');
-    const img = card.querySelector('.product-card__image img');
-
     let rafId = null;
-
-    card.addEventListener('mouseenter', () => {
-      card.style.transition = 'transform 0.12s ease';
-    });
 
     card.addEventListener('mousemove', (e) => {
       if (rafId) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
         const rect = card.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        card.style.transform = `perspective(800px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateZ(6px) translateY(-4px)`;
-        if (img) img.style.transform = `scale(1.04) translate(${x * 6}px, ${y * 6}px)`;
+        const mx = ((e.clientX - rect.left) / rect.width) * 100;
+        const my = ((e.clientY - rect.top)  / rect.height) * 100;
+        card.style.setProperty('--mx', mx + '%');
+        card.style.setProperty('--my', my + '%');
       });
     });
 
     card.addEventListener('mouseleave', () => {
       if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-      card.style.transition = 'transform 0.5s var(--ease)';
-      card.style.transform = '';
-      if (img) img.style.transform = '';
+      card.style.removeProperty('--mx');
+      card.style.removeProperty('--my');
     });
   });
 }
