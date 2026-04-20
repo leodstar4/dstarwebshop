@@ -2561,7 +2561,7 @@ body::after {
 .pd-gallery-img {
   width: 100%;
   overflow: hidden;
-  background: #0f0f0f;
+  background: transparent;
   display: block;
   cursor: zoom-in;
   position: relative;
@@ -2625,14 +2625,14 @@ body::after {
   border: 1px solid rgba(240, 237, 232, 0.12);
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(230, 50, 50, 0.1),
-    0 0 40px rgba(230, 50, 50, 0.12),
+    0 0 0 1px rgba(240, 237, 232, 0.08),
+    0 0 40px rgba(240, 237, 232, 0.10),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   animation:
-    panelScan 6s linear infinite,
-    redHalo   4s ease-in-out infinite;
+    panelScan  6s linear infinite,
+    whiteHalo  4s ease-in-out infinite;
 }
-/* Red vertical stripe (left edge) — flow loop de arriba a abajo */
+/* White vertical stripe (left edge) — flow loop de arriba a abajo */
 .product-detail__info::before {
   content: '';
   position: absolute;
@@ -2641,10 +2641,10 @@ body::after {
   bottom: 0;
   width: 3px;
   background-image: linear-gradient(180deg,
-    transparent 0%,
-    var(--red)  30%,
-    var(--red)  70%,
-    transparent 100%);
+    transparent       0%,
+    var(--white)     30%,
+    var(--white)     70%,
+    transparent     100%);
   background-size: 100% 200%;
   background-repeat: no-repeat;
   animation: stripeFlow 3s ease-in-out infinite;
@@ -2991,7 +2991,7 @@ body::after {
   height: 96px;
   overflow: hidden;
   cursor: pointer;
-  background: #141414;
+  background: transparent;
   border: 1px solid transparent;
   flex-shrink: 0;
   padding: 0;
@@ -3308,20 +3308,20 @@ body::after {
   to   { background-position: 0 0, 0 6px, 0 0; }
 }
 
-/* Halo rojo pulsante alrededor del panel */
-@keyframes redHalo {
+/* Halo blanco pulsante alrededor del panel */
+@keyframes whiteHalo {
   0%, 100% {
     box-shadow:
       0 40px 80px -20px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(230, 50, 50, 0.1),
-      0 0 40px rgba(230, 50, 50, 0.12),
+      0 0 0 1px rgba(240, 237, 232, 0.08),
+      0 0 40px rgba(240, 237, 232, 0.10),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   50% {
     box-shadow:
       0 40px 80px -20px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(230, 50, 50, 0.1),
-      0 0 80px rgba(230, 50, 50, 0.25),
+      0 0 0 1px rgba(240, 237, 232, 0.12),
+      0 0 80px rgba(240, 237, 232, 0.22),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 }
