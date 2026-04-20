@@ -2042,15 +2042,16 @@ ul { list-style: none; }
     transparent 80%
   );
   transform: skewX(-12deg);
-  transition: left 0s;
   pointer-events: none;
   z-index: 1;
+  /* Idle shimmer: cruza de izq a der cada 4s sin necesidad de hover */
+  animation: ctaShimmer 4s ease-in-out infinite;
 }
+/* Hover: re-dispara el shimmer inmediato para feedback */
 .product-modal__add:hover:not(:disabled)::before,
 .cart-drawer__checkout:hover:not(:disabled)::before,
 .product-detail__add:hover:not(:disabled)::before {
-  left: 160%;
-  transition: left 0.52s var(--ease);
+  animation: ctaShimmer 0.9s var(--ease) 1;
 }
 
 /* Active scale: feedback táctil */
@@ -2582,9 +2583,13 @@ body::after {
 }
 
 .pd-gallery-img img {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
+  max-height: 90vh;
+  object-fit: contain;
   display: block;
+  margin: 0 auto;
   transition: transform 0.6s var(--ease);
 }
 
@@ -2597,20 +2602,37 @@ body::after {
 .pd-carousel-dots   { display: none; }
 .pd-carousel-counter{ display: none; } /* shown only inside @media (max-width: 768px) */
 
-/* ── RIGHT: Sticky info panel — premium DSTAR ── */
+/* ── RIGHT: Sticky info panel — glass semi-transparente + FX ambientales ── */
 .product-detail__info {
   position: sticky;
   top: 120px;
   padding: 44px;
   overflow: hidden;
   isolation: isolate;
-  background: linear-gradient(160deg, rgba(18, 18, 18, 0.96), rgba(8, 8, 8, 0.98));
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  /* Layer order (paint top→bottom):
+     1. overlay oscuro sutil para legibilidad del texto
+     2. scanlines horizontales animadas verticalmente
+     3. gradiente base semi-transparente */
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+    repeating-linear-gradient(0deg,
+      rgba(240, 237, 232, 0.025) 0 1px,
+      transparent 1px 3px),
+    linear-gradient(160deg, rgba(14, 14, 14, 0.55), rgba(6, 6, 6, 0.7));
+  background-size: 100% 100%, 100% 6px, 100% 100%;
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(240, 237, 232, 0.12);
   box-shadow:
-    0 30px 60px -20px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 40px 80px -20px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(230, 50, 50, 0.1),
+    0 0 40px rgba(230, 50, 50, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation:
+    panelScan 6s linear infinite,
+    redHalo   4s ease-in-out infinite;
 }
-/* Red vertical stripe on the left edge — fades toward bottom */
+/* Red vertical stripe (left edge) — flow loop de arriba a abajo */
 .product-detail__info::before {
   content: '';
   position: absolute;
@@ -2618,13 +2640,17 @@ body::after {
   left: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(to bottom,
-    var(--red) 0%,
-    var(--red) 35%,
+  background-image: linear-gradient(180deg,
+    transparent 0%,
+    var(--red)  30%,
+    var(--red)  70%,
     transparent 100%);
+  background-size: 100% 200%;
+  background-repeat: no-repeat;
+  animation: stripeFlow 3s ease-in-out infinite;
   z-index: 0;
 }
-/* Watermark "DSTAR // MX" bottom-right */
+/* Watermark "DSTAR // MX" — parpadeo glitch */
 .product-detail__info::after {
   content: 'DSTAR // MX';
   position: absolute;
@@ -2633,9 +2659,11 @@ body::after {
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 3px;
-  color: rgba(240, 237, 232, 0.14);
+  color: rgba(240, 237, 232, 1);
+  opacity: 0.14;
   z-index: 0;
   pointer-events: none;
+  animation: glitchFade 4s ease-in-out infinite;
 }
 /* All children sit above the pseudo-elements */
 .product-detail__info > * {
@@ -2653,12 +2681,12 @@ body::after {
   color: var(--concrete);
   text-transform: uppercase;
   margin-bottom: 32px;
-  transition: color 0.25s, transform 0.25s var(--ease);
+  transition: color 0.25s;
   text-decoration: none;
+  animation: backBounce 2.5s ease-in-out infinite;
 }
 .product-detail__back:hover {
   color: var(--white);
-  transform: translateX(-3px);
 }
 
 .product-detail__badge {
@@ -2671,6 +2699,8 @@ body::after {
   padding: 3px 10px;
   margin-bottom: 16px;
   box-shadow: 0 4px 14px rgba(230, 50, 50, 0.35);
+  animation: limitedPulse 1.8s ease-in-out infinite;
+  transform-origin: center;
 }
 
 .product-detail__drop {
@@ -2699,7 +2729,7 @@ body::after {
   line-height: 0.95;
   color: var(--white);
   margin-bottom: 20px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
 .product-detail__price {
@@ -2711,6 +2741,7 @@ body::after {
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(240, 237, 232, 0.12);
   margin-bottom: 24px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
 .product-detail__desc {
@@ -2721,6 +2752,7 @@ body::after {
   margin-bottom: 32px;
   border-left: 2px solid var(--red);
   padding-left: 16px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
 .product-detail__size-label {
@@ -2729,6 +2761,7 @@ body::after {
   letter-spacing: 3px;
   color: var(--concrete);
   margin-bottom: 12px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
 .product-detail__sizes {
@@ -2744,6 +2777,7 @@ body::after {
   letter-spacing: 2px;
   color: var(--concrete);
   margin-bottom: 28px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 .product-detail__stock.product-modal__stock--urgent { color: var(--red); }
 
@@ -2988,10 +3022,13 @@ body::after {
 }
 
 #pdLbImg {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: calc(100vw - 140px);
+  max-height: calc(100vh - 40px);
+  width: auto;
+  height: auto;
   object-fit: contain;
   display: block;
+  margin: auto;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -3251,6 +3288,138 @@ body::after {
   .product-modal__add,
   .cart-drawer__checkout,
   .size-btn.active {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   PRODUCT PAGE — animaciones ambientales
+   ============================================ */
+
+/* Stripe roja vertical del info panel: baja en loop */
+@keyframes stripeFlow {
+  0%   { background-position: 0 -100%; }
+  100% { background-position: 0  100%; }
+}
+
+/* Scanlines del panel: scroll lento vertical */
+@keyframes panelScan {
+  from { background-position: 0 0, 0 0,   0 0; }
+  to   { background-position: 0 0, 0 6px, 0 0; }
+}
+
+/* Halo rojo pulsante alrededor del panel */
+@keyframes redHalo {
+  0%, 100% {
+    box-shadow:
+      0 40px 80px -20px rgba(0, 0, 0, 0.7),
+      0 0 0 1px rgba(230, 50, 50, 0.1),
+      0 0 40px rgba(230, 50, 50, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  50% {
+    box-shadow:
+      0 40px 80px -20px rgba(0, 0, 0, 0.7),
+      0 0 0 1px rgba(230, 50, 50, 0.1),
+      0 0 80px rgba(230, 50, 50, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* Watermark glitch fade */
+@keyframes glitchFade {
+  0%, 100% { opacity: 0.08; }
+  50%      { opacity: 0.20; }
+}
+
+/* Badge LIMITADO pulse constante */
+@keyframes limitedPulse {
+  0%, 100% {
+    box-shadow: 0 4px 14px rgba(230, 50, 50, 0.35);
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 24px 4px rgba(230, 50, 50, 0.7);
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+/* Size-btn idle breathe — border-color oscila */
+@keyframes sizeBreathe {
+  0%, 100% { border-color: rgba(255, 255, 255, 0.15); }
+  50%      { border-color: rgba(255, 255, 255, 0.35); }
+}
+.size-btn:not(:disabled):not(.active):not(:hover) {
+  animation: sizeBreathe 3s ease-in-out infinite;
+}
+
+/* Back link bounce horizontal sutil */
+@keyframes backBounce {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-2px); }
+}
+
+/* Shimmer diagonal del CTA — cruza izq a der */
+@keyframes ctaShimmer {
+  0%, 40%    { left: -80%; }
+  75%, 100%  { left: 160%; }
+}
+
+/* Name entrance blur→clear (corre en paralelo a la entrada GSAP de opacity+x) */
+@keyframes nameBlurClear {
+  from { filter: blur(8px); }
+  to   { filter: blur(0);   }
+}
+.page-product .product-detail__name {
+  animation: nameBlurClear 0.9s var(--ease) 0.65s both;
+}
+
+/* ── Mobile (≤768px): refuerzo de FX ambientales sobre el info panel ── */
+@media (max-width: 768px) {
+  /* Carrusel: fondo totalmente transparente para que se vea la pared */
+  .pd-carousel,
+  .pd-carousel__item { background: transparent !important; }
+
+  /* Imágenes: nunca desbordar el viewport en mobile */
+  .pd-carousel__item img {
+    max-width: 100%;
+    max-height: 100vh;
+    object-fit: cover;
+  }
+  #pdLbImg {
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px);
+  }
+
+  /* Texto: text-shadow más agresivo sobre fondo transparente */
+  .product-detail__name,
+  .product-detail__price,
+  .product-detail__desc,
+  .product-detail__size-label,
+  .product-detail__stock {
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95);
+  }
+
+  /* Animations ambientales activas en mobile */
+  .product-detail__badge { animation: limitedPulse 1.8s ease-in-out infinite; }
+  .product-detail__back  { animation: backBounce 2.5s ease-in-out infinite;  }
+}
+
+/* ── Reduced motion: desactivar todas las animaciones ambientales nuevas ── */
+@media (prefers-reduced-motion: reduce) {
+  .product-detail__info,
+  .product-detail__info::before,
+  .product-detail__info::after,
+  .product-detail__badge,
+  .product-detail__back,
+  .page-product .product-detail__name,
+  .size-btn,
+  .size-btn:not(:disabled):not(.active):not(:hover),
+  .product-modal__add::before,
+  .cart-drawer__checkout::before,
+  .product-detail__add::before {
     animation: none !important;
   }
 }
