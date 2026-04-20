@@ -2719,7 +2719,7 @@ body::after {
   display: inline-block;
   width: 24px;
   height: 1px;
-  background: var(--red);
+  background: var(--white);
 }
 
 .product-detail__name {
@@ -2750,7 +2750,7 @@ body::after {
   line-height: 1.8;
   color: var(--concrete-light);
   margin-bottom: 32px;
-  border-left: 2px solid var(--red);
+  border-left: 2px solid var(--white);
   padding-left: 16px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
