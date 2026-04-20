@@ -653,7 +653,7 @@ ul { list-style: none; }
 .product-card__accent {
   width: 32px;
   height: 2px;
-  background: var(--red);
+  background: var(--white);
   transition: width 0.55s var(--ease), background 0.55s var(--ease);
 }
 .product-card:hover .product-card__accent {
