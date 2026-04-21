@@ -286,8 +286,92 @@ function initAboutCounters() {
 function initLookbook() {
   const mm = gsap.matchMedia();
 
-  // ── MOBILE / TABLET ──────────────────────────────────────────────
-  mm.add('(max-width: 1023px)', () => {
+  // ── MOBILE ≤768px: GRID + LIGHTBOX ────────────────────────────────
+  mm.add('(max-width: 768px)', () => {
+    const track = document.querySelector('.lookbook__horiz-track');
+    if (!track) return;
+
+    const panels = Array.from(track.querySelectorAll('.lookbook-panel'));
+    if (!panels.length) return;
+
+    // Fade-in stagger on scroll into view
+    const fadeIO = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const idx = panels.indexOf(entry.target);
+        setTimeout(() => entry.target.classList.add('lb-in-mobile'), (idx % 6) * 70);
+        fadeIO.unobserve(entry.target);
+      });
+    }, { threshold: 0.12 });
+    panels.forEach(p => fadeIO.observe(p));
+
+    // Build fullscreen lightbox (once) — reusa las mismas imágenes pero pide w=1600
+    const lb = document.createElement('div');
+    lb.id = 'lookbookLightbox';
+    lb.innerHTML = `
+      <button id="lookbookLightbox__close" aria-label="Cerrar">✕</button>
+      <div id="lookbookLightbox__counter" aria-live="polite">1 / ${panels.length}</div>
+      <div id="lookbookLightbox__track">
+        ${panels.map((panel, i) => {
+          const img = panel.querySelector('img');
+          const src = img ? img.src.replace(/w_\d+/, 'w_1600') : '';
+          return `<div class="lookbook-lb__slide"><img src="${src}" alt="Lookbook ${i + 1}" loading="lazy" decoding="async" draggable="false"></div>`;
+        }).join('')}
+      </div>
+    `;
+    document.body.appendChild(lb);
+
+    const lbTrack = lb.querySelector('#lookbookLightbox__track');
+    const counter = lb.querySelector('#lookbookLightbox__counter');
+    const closeBtn = lb.querySelector('#lookbookLightbox__close');
+
+    function openAt(index) {
+      lb.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+      // Esperar a que el layout se aplique antes de scrollear
+      requestAnimationFrame(() => {
+        lbTrack.scrollLeft = index * lbTrack.offsetWidth;
+        counter.textContent = `${index + 1} / ${panels.length}`;
+      });
+    }
+    function closeLb() {
+      lb.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    panels.forEach((panel, i) => {
+      panel._lbHandler = () => openAt(i);
+      panel.addEventListener('click', panel._lbHandler);
+      panel.style.cursor = 'pointer';
+    });
+
+    closeBtn.addEventListener('click', closeLb);
+    lbTrack.addEventListener('scroll', () => {
+      const idx = Math.round(lbTrack.scrollLeft / lbTrack.offsetWidth);
+      counter.textContent = `${idx + 1} / ${panels.length}`;
+    }, { passive: true });
+    // Tap en slide pero fuera del IMG → cerrar (background oscuro)
+    lbTrack.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'IMG') closeLb();
+    });
+    // ESC para teclado en caso de debug desktop
+    const onKey = (e) => { if (e.key === 'Escape' && lb.classList.contains('is-open')) closeLb(); };
+    document.addEventListener('keydown', onKey);
+
+    return () => {
+      fadeIO.disconnect();
+      panels.forEach(p => {
+        if (p._lbHandler) p.removeEventListener('click', p._lbHandler);
+        p.classList.remove('lb-in-mobile');
+        p.style.cursor = '';
+      });
+      document.removeEventListener('keydown', onKey);
+      lb.remove();
+    };
+  });
+
+  // ── TABLET 769–1023: HORIZONTAL SCROLL con flechas + dots ─────────
+  mm.add('(min-width: 769px) and (max-width: 1023px)', () => {
     const wrap  = document.querySelector('.lookbook__horiz-wrap');
     const track = document.querySelector('.lookbook__horiz-track');
     if (!wrap || !track) return;
@@ -361,7 +445,6 @@ function initLookbook() {
 
     prevBtn.disabled = true;
 
-    // Caption reveal — threshold 0.25 (era 0.45, demasiado alto en móvil)
     panels.forEach(panel => {
       const caption = panel.querySelector('.lookbook-panel__caption');
       if (caption) gsap.set(caption, { opacity: 0, y: 18 });
@@ -378,7 +461,6 @@ function initLookbook() {
 
     panels.forEach(panel => captionObserver.observe(panel));
 
-    // Cleanup al salir del breakpoint
     return () => {
       captionObserver.disconnect();
       navContainer.parentNode?.removeChild(navContainer);

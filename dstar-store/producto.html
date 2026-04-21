@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
-  <!-- ?v=15 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
-  <link rel="stylesheet" href="css/style.css?v=15">
+  <!-- ?v=16 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
+  <link rel="stylesheet" href="css/style.css?v=16">
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body class="page-product">
@@ -122,6 +122,12 @@
     </div>
   </div>
 
+  <!-- STICKY CTA BAR (mobile ≤768px, shown when user scrolls past gallery) -->
+  <div class="pd-sticky-cta" id="pdStickyCta" aria-hidden="true">
+    <span class="pd-sticky-cta__price" id="pdStickyPrice">$0</span>
+    <button class="pd-sticky-cta__btn" id="pdStickyBtn" type="button">SELECCIONA TALLA</button>
+  </div>
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer__inner">
@@ -161,7 +167,7 @@
 
   <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
-  <script src="js/app.js?v=15"></script>
+  <script src="js/app.js?v=16"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js"></script>

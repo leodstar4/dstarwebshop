@@ -2320,26 +2320,149 @@ body::after {
   }
 }
 
-/* Mobile: scroll horizontal con panels 80vw + snap (hereda todo del desktop) */
+/* Mobile ≤768px: cuadrícula editorial 2/3 cols + tap-to-lightbox.
+   Overrides con !important porque los defaults del horiz-scroll
+   (display:flex, width:max-content, scroll-snap) ganan por cascada. */
 @media (max-width: 768px) {
   .lookbook__horiz-wrap {
-    height: 72vw;
-    min-height: unset;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: unset !important;
+    scroll-snap-type: none !important;
     cursor: default;
+    padding: 0 10px;
   }
   .lookbook__horiz-track {
-    /* Padding lateral = (100vw - 80vw) / 2 = 10vw para centrar primer/último panel */
-    padding: 0 10vw;
-    gap: 4px;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: auto;
+    gap: 3px !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
   }
   .lookbook-panel,
   .lookbook-panel:first-child {
-    width: 80vw;
-    height: 100%;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 3 / 4;
+    flex-shrink: unset !important;
+    scroll-snap-align: unset !important;
+    scroll-snap-stop: unset !important;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+    will-change: opacity, transform;
   }
-  .lookbook-panel__num { font-size: 44px; }
-  .lookbook__nav { padding: 12px 0 0; }
-  .lookbook__nav-arrow { width: 44px; height: 44px; font-size: 14px; }
+  .lookbook-panel.lb-in-mobile {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .lookbook-panel:active .lookbook-panel__img-wrap img {
+    transform: scale(1.03);
+  }
+  .lookbook-panel::after {
+    background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.08) 45%, transparent 75%);
+  }
+  .lookbook-panel__caption { bottom: 6px; left: 8px; gap: 6px; }
+  .lookbook-panel__num { font-size: 20px; letter-spacing: -1px; }
+  .lookbook-panel__text { display: none; }
+  /* Flechas/dots de horiz-scroll no aplican en grid */
+  .lookbook__nav { display: none !important; }
+}
+
+/* Mobile XS ≤640px: 2 columnas para que cada tile respire */
+@media (max-width: 640px) {
+  .lookbook__horiz-track {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px !important;
+  }
+  .lookbook-panel__num { font-size: 24px; }
+}
+
+/* ── Lookbook LIGHTBOX mobile (fullscreen con swipe + counter) ── */
+#lookbookLightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 8, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+}
+#lookbookLightbox.is-open { display: block; }
+#lookbookLightbox__close {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--white);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#lookbookLightbox__counter {
+  position: absolute;
+  top: max(22px, calc(env(safe-area-inset-top) + 6px));
+  left: 16px;
+  padding: 6px 12px;
+  background: rgba(10, 10, 10, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  color: var(--concrete-light);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  z-index: 10;
+  pointer-events: none;
+}
+#lookbookLightbox__track {
+  display: flex;
+  width: 100%;
+  height: 100dvh;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#lookbookLightbox__track::-webkit-scrollbar { display: none; }
+.lookbook-lb__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.lookbook-lb__slide img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: pinch-zoom;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lookbook-panel {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 /* ============================================
@@ -3382,11 +3505,15 @@ body::after {
   .pd-carousel,
   .pd-carousel__item { background: transparent !important; }
 
-  /* Imágenes: nunca desbordar el viewport en mobile */
+  /* Imagen COMPLETA (contain) — no recorta prenda, aspect-ratio 3/4 letterbox
+     sobre la pared de concreto transparente. Tap: cursor-zoom. */
+  .pd-carousel__item {
+    cursor: zoom-in;
+  }
   .pd-carousel__item img {
     max-width: 100%;
     max-height: 100vh;
-    object-fit: cover;
+    object-fit: contain !important;
   }
   #pdLbImg {
     max-width: calc(100vw - 40px);
@@ -3421,5 +3548,254 @@ body::after {
   .cart-drawer__checkout::before,
   .product-detail__add::before {
     animation: none !important;
+  }
+}
+
+/* ============================================
+   PRODUCT LIGHTBOX MOBILE — swipe fullscreen
+   (desktop sigue usando #pdLightbox con thumbs)
+   ============================================ */
+#pdLightboxMobile {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 8, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+}
+#pdLightboxMobile.is-open { display: block; }
+
+#pdLightboxMobile__close {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--white);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#pdLightboxMobile__counter {
+  position: absolute;
+  top: max(22px, calc(env(safe-area-inset-top) + 6px));
+  left: 16px;
+  padding: 6px 12px;
+  background: rgba(10, 10, 10, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  color: var(--concrete-light);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#pdLightboxMobile__track {
+  display: flex;
+  width: 100%;
+  height: 100dvh;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#pdLightboxMobile__track::-webkit-scrollbar { display: none; }
+
+.pd-lb-m__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.pd-lb-m__slide img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: pinch-zoom;
+}
+
+/* Desktop: nunca mostrar el mobile lightbox */
+@media (min-width: 769px) {
+  #pdLightboxMobile { display: none !important; }
+}
+
+/* ============================================
+   PRODUCT MOBILE UX — sticky CTA, size bigger,
+   back pill, swipe hint, label pulse
+   ============================================ */
+
+/* Sticky CTA bar — fixed bottom, visible solo ≤768px */
+.pd-sticky-cta {
+  display: none;
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 0;
+  z-index: 90;
+  padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: center;
+  gap: 12px;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+.pd-sticky-cta.is-visible {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.pd-sticky-cta__price {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--white);
+  flex-shrink: 0;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+.pd-sticky-cta__btn {
+  flex: 1 1 60%;
+  min-height: 48px;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--black);
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.25s var(--ease), transform 0.15s var(--ease);
+}
+.pd-sticky-cta__btn:active { transform: scale(0.97); background: var(--concrete-light); }
+
+/* Swipe hint debajo del carrusel mobile (oculto en desktop) */
+.pd-swipe-hint {
+  display: none;
+  padding: 8px 0 2px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--concrete);
+  opacity: 0.8;
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.pd-swipe-hint span + span {
+  display: inline-block;
+  margin-left: 8px;
+  animation: swipeHintArrow 1.6s ease-in-out infinite;
+}
+.pd-swipe-hint--gone {
+  opacity: 0 !important;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+@keyframes swipeHintArrow {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(6px); }
+}
+
+/* Size-label parpadea cuando no hay talla seleccionada (mobile-pitch) */
+@keyframes pdSizeLabelPulse {
+  0%, 100% { opacity: 0.6; letter-spacing: 3px; }
+  50%      { opacity: 1;   letter-spacing: 4px; color: var(--white); }
+}
+
+/* Check mark ✓ overlay en talla activa */
+.size-btn.active::before {
+  content: '✓';
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 9px;
+  color: var(--black);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  /* Sticky bar visible */
+  .pd-sticky-cta { display: flex; }
+
+  /* Reserva espacio al final del panel info para que el sticky no tape el
+     botón principal ni el stock. 80px cubre la altura de la barra + safe area. */
+  .product-detail__info {
+    padding-bottom: calc(44px + 80px + env(safe-area-inset-bottom));
+  }
+
+  /* Swipe hint visible */
+  .pd-swipe-hint { display: block; }
+
+  /* Size selector MÁS grande + gap */
+  .product-detail__sizes { gap: 10px; }
+  .size-btn {
+    min-width: 52px;
+    min-height: 52px;
+    font-size: 18px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Feedback scale al seleccionar (tiembla una vez) */
+  .size-btn.active.size-btn--just-picked {
+    animation: sizeJustPicked 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes sizeJustPicked {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+
+  /* Label parpadea mientras no haya talla seleccionada */
+  body.pd-needs-size .product-detail__size-label {
+    animation: pdSizeLabelPulse 2.1s ease-in-out infinite;
+  }
+
+  /* Back link más prominente: pill semi-transparente */
+  .product-detail__back {
+    display: inline-block;
+    padding: 8px 14px;
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--white);
+    margin-bottom: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-sticky-cta,
+  .pd-swipe-hint span + span,
+  body.pd-needs-size .product-detail__size-label,
+  .size-btn.active.size-btn--just-picked {
+    animation: none !important;
+    transition: none !important;
   }
 }

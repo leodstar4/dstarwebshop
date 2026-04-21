@@ -1145,6 +1145,72 @@ function initProductPage() {
   window._pdProduct      = p;
   window._pdSelectedSize = null;
   window._pdLightboxIndex = 0;
+
+  // ── MOBILE UX: sticky CTA bar + size-label pulse + smart-scroll ──
+  _pdInitMobileUX(p, isSoldOut);
+}
+
+// Sticky CTA: visible cuando el usuario hace scroll fuera de la galería.
+// Si no hay talla seleccionada: tap scrollea al size selector; si ya hay: agrega al carrito.
+function _pdInitMobileUX(p, isSoldOut) {
+  const sticky      = document.getElementById('pdStickyCta');
+  const stickyPrice = document.getElementById('pdStickyPrice');
+  const stickyBtn   = document.getElementById('pdStickyBtn');
+  const gallery     = document.querySelector('.product-detail__gallery');
+  if (!sticky || !stickyBtn) return;
+
+  // Precio
+  if (stickyPrice) stickyPrice.textContent = isSoldOut ? 'AGOTADO' : formatPrice(p.price);
+  if (isSoldOut) {
+    stickyBtn.disabled = true;
+    stickyBtn.textContent = 'AGOTADO';
+  }
+
+  // Marcar estado "falta talla"
+  document.body.classList.add('pd-needs-size');
+
+  stickyBtn.addEventListener('click', () => {
+    if (isSoldOut) return;
+    if (!window._pdSelectedSize) {
+      const sizes = document.querySelector('.product-detail__sizes');
+      if (sizes) {
+        sizes.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Flashea el label para dirigir la mirada
+        const label = document.querySelector('.product-detail__size-label');
+        if (label) {
+          label.style.transition = 'color 0.3s, text-shadow 0.3s';
+          label.style.color = '#fff';
+          label.style.textShadow = '0 0 18px rgba(255,255,255,0.4)';
+          setTimeout(() => {
+            label.style.color = '';
+            label.style.textShadow = '';
+          }, 1400);
+        }
+      }
+      return;
+    }
+    pdAddToCart();
+  });
+
+  // Mostrar sticky sólo en mobile y cuando el usuario haya scrolleado fuera de la galería
+  if (!gallery) {
+    sticky.classList.add('is-visible');
+    return;
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      // Cuando la galería YA no está mayormente visible, mostramos el sticky
+      if (e.intersectionRatio < 0.35) {
+        sticky.classList.add('is-visible');
+        sticky.setAttribute('aria-hidden', 'false');
+      } else {
+        sticky.classList.remove('is-visible');
+        sticky.setAttribute('aria-hidden', 'true');
+      }
+    });
+  }, { threshold: [0.35, 0.8] });
+  io.observe(gallery);
 }
 
 // ── Desktop: render all gallery images as a vertical stack ──
@@ -1208,9 +1274,11 @@ function _pdBuildCarousel(gallery, productName) {
   const dotsEl   = document.getElementById('pdCarouselDots');
   if (!carousel) return;
 
+  // w=1200 + dpr_auto: en retina @2-3x la pantalla recibe 1200×(dpr),
+  // suficientes píxeles para que el carrusel se vea nítido al contain
   carousel.innerHTML = gallery.map((src, i) => `
-    <div class="pd-carousel__item pd-carousel__item--loading">
-      <img src="${cdnOpt(src, 600)}" alt="${productName} — foto ${i + 1}"
+    <div class="pd-carousel__item pd-carousel__item--loading" data-index="${i}">
+      <img src="${cdnOpt(src, 1200)}" alt="${productName} — foto ${i + 1}"
            loading="${i === 0 ? 'eager' : 'lazy'}"
            fetchpriority="${i === 0 ? 'high' : 'auto'}"
            decoding="async">
@@ -1228,6 +1296,33 @@ function _pdBuildCarousel(gallery, productName) {
       img.addEventListener('error', done, { once: true });
     }
   });
+
+  // Tap en item: abre lightbox mobile en esa imagen
+  _pdBuildMobileLightbox(gallery, productName);
+  carousel.querySelectorAll('.pd-carousel__item').forEach(el => {
+    el.addEventListener('click', () => {
+      pdLightboxMobileOpen(parseInt(el.dataset.index));
+    });
+  });
+
+  // SWIPE HINT: muestra "SWIPE →" debajo del carrusel si hay más de una imagen;
+  // desaparece tras el primer scroll. Inserta una sola vez por carga de página.
+  if (gallery.length > 1) {
+    const galleryEl = carousel.parentElement;
+    if (galleryEl && !galleryEl.querySelector('.pd-swipe-hint')) {
+      const hint = document.createElement('div');
+      hint.className = 'pd-swipe-hint';
+      hint.innerHTML = '<span>SWIPE</span><span aria-hidden="true">→</span>';
+      // Insertar entre carrusel y dots
+      if (dotsEl && dotsEl.parentNode === galleryEl) {
+        galleryEl.insertBefore(hint, dotsEl);
+      } else {
+        galleryEl.appendChild(hint);
+      }
+      const killHint = () => hint.classList.add('pd-swipe-hint--gone');
+      carousel.addEventListener('scroll', killHint, { once: true, passive: true });
+    }
+  }
 
   // Image counter overlay (mobile only — desktop uses stacked gallery)
   const galleryEl = carousel.parentElement;
@@ -1394,9 +1489,88 @@ function pdLightboxGo(index) {
   }
 }
 
+// ── Mobile: build/open/close lightbox (swipe track fullscreen) ──
+function _pdBuildMobileLightbox(gallery, productName) {
+  // Idempotent: si ya existe, sólo re-sincroniza los slides al gallery actual
+  let lb = document.getElementById('pdLightboxMobile');
+  if (lb) lb.remove();
+
+  lb = document.createElement('div');
+  lb.id = 'pdLightboxMobile';
+  lb.innerHTML = `
+    <button id="pdLightboxMobile__close" aria-label="Cerrar">✕</button>
+    <div id="pdLightboxMobile__counter" aria-live="polite">1 / ${gallery.length}</div>
+    <div id="pdLightboxMobile__track">
+      ${gallery.map((src, i) => `
+        <div class="pd-lb-m__slide">
+          <img src="${cdnOpt(src, 1600, null, { limit: true })}"
+               alt="${productName} — foto ${i + 1}"
+               loading="lazy" decoding="async" draggable="false">
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.body.appendChild(lb);
+
+  const track   = lb.querySelector('#pdLightboxMobile__track');
+  const counter = lb.querySelector('#pdLightboxMobile__counter');
+  const closeBtn = lb.querySelector('#pdLightboxMobile__close');
+  const total = gallery.length;
+
+  closeBtn.addEventListener('click', pdLightboxMobileClose);
+  track.addEventListener('scroll', () => {
+    const idx = Math.round(track.scrollLeft / track.offsetWidth);
+    counter.textContent = `${idx + 1} / ${total}`;
+  }, { passive: true });
+  // Tap en slide fuera del IMG cierra
+  track.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'IMG') pdLightboxMobileClose();
+  });
+  // ESC
+  const onKey = (e) => {
+    if (e.key === 'Escape' && lb.classList.contains('is-open')) pdLightboxMobileClose();
+  };
+  document.addEventListener('keydown', onKey);
+  lb._pdKeyHandler = onKey;
+}
+
+function pdLightboxMobileOpen(index) {
+  const lb = document.getElementById('pdLightboxMobile');
+  if (!lb) return;
+  const track = lb.querySelector('#pdLightboxMobile__track');
+  const counter = lb.querySelector('#pdLightboxMobile__counter');
+  const total = track.children.length;
+  lb.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => {
+    track.scrollLeft = index * track.offsetWidth;
+    counter.textContent = `${index + 1} / ${total}`;
+  });
+}
+
+function pdLightboxMobileClose() {
+  const lb = document.getElementById('pdLightboxMobile');
+  if (!lb) return;
+  lb.classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+
 function pdSelectSize(size, btn) {
-  document.querySelectorAll('#pdSizes .size-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#pdSizes .size-btn').forEach(b => {
+    b.classList.remove('active');
+    b.classList.remove('size-btn--just-picked');
+  });
   btn.classList.add('active');
+  // Feedback mobile: scale-bounce una sola vez
+  btn.classList.add('size-btn--just-picked');
+  btn.addEventListener('animationend', () => btn.classList.remove('size-btn--just-picked'), { once: true });
+
+  // Ya hay talla: quitar parpadeo del label y actualizar sticky CTA
+  document.body.classList.remove('pd-needs-size');
+  const stickyBtn = document.getElementById('pdStickyBtn');
+  if (stickyBtn && !stickyBtn.disabled) {
+    stickyBtn.textContent = 'AGREGAR AL CARRITO';
+  }
   window._pdSelectedSize = size;
 
   const addBtn  = document.getElementById('pdAddBtn');
