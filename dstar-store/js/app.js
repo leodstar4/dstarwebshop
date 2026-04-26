@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollProgress();
     initRippleButtons();
     initProductPage();
+    initSoundToggle();
   } else {
     // ── Página principal ──
     initLoader();
@@ -168,6 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initMagneticCTA();
     initRippleButtons();
     initTextScramble();
+    initSoundToggle();
+    initSectionWhoosh();
+    initCardHoverScramble();
   }
 });
 
@@ -255,6 +259,13 @@ function renderProducts() {
       ? ''
       : '<span class="product-card__cta">VER PIEZA <span>→</span></span>';
 
+    const scarcityHtml = isSoldOut ? '' : `
+      <div class="product-card__scarcity product-card__scarcity--${p.stock <= 3 ? 'low' : 'medium'}">
+        <span class="product-card__scarcity-dot" aria-hidden="true"></span>
+        <span class="product-card__scarcity-text">QUEDAN ${p.stock} ${p.stock === 1 ? 'PIEZA' : 'PIEZAS'}</span>
+      </div>
+    `;
+
     return `
       <${tag} class="product-card fade-in ${isSoldOut ? 'sold-out' : ''}"
            data-product-index="${i}"
@@ -268,11 +279,12 @@ function renderProducts() {
         </div>
         <div class="product-card__info">
           <span class="product-card__accent"></span>
-          <h3 class="product-card__name">${p.name}</h3>
+          <h3 class="product-card__name" data-name="${p.name}">${p.name}</h3>
           <div class="product-card__meta">
             <span class="product-card__price">${priceText}</span>
             ${ctaHtml}
           </div>
+          ${scarcityHtml}
         </div>
       </${tag}>
     `;
@@ -468,6 +480,7 @@ function addToCartFromModal() {
 
   saveCart();
   updateCartUI();
+  DSTAR_SOUND.playClick();
 
   // Partícula voladora desde el botón al ícono del carrito
   launchCartParticle(addBtn);
@@ -1150,20 +1163,21 @@ function initProductPage() {
   _pdInitMobileUX(p, isSoldOut);
 }
 
-// Sticky CTA: visible cuando el usuario hace scroll fuera de la galería.
+// Sticky CTA: visible siempre desde load (mobile).
 // Si no hay talla seleccionada: tap scrollea al size selector; si ya hay: agrega al carrito.
 function _pdInitMobileUX(p, isSoldOut) {
   const sticky      = document.getElementById('pdStickyCta');
   const stickyPrice = document.getElementById('pdStickyPrice');
   const stickyBtn   = document.getElementById('pdStickyBtn');
-  const gallery     = document.querySelector('.product-detail__gallery');
+  const stickyText  = document.getElementById('pdStickyBtnText');
   if (!sticky || !stickyBtn) return;
 
   // Precio
   if (stickyPrice) stickyPrice.textContent = isSoldOut ? 'AGOTADO' : formatPrice(p.price);
   if (isSoldOut) {
     stickyBtn.disabled = true;
-    stickyBtn.textContent = 'AGOTADO';
+    if (stickyText) stickyText.textContent = 'AGOTADO';
+    else stickyBtn.textContent = 'AGOTADO';
   }
 
   // Marcar estado "falta talla"
@@ -1189,28 +1203,13 @@ function _pdInitMobileUX(p, isSoldOut) {
       }
       return;
     }
+    // Haptic en tap "agregar al carrito"
+    if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
     pdAddToCart();
   });
 
-  // Mostrar sticky sólo en mobile y cuando el usuario haya scrolleado fuera de la galería
-  if (!gallery) {
-    sticky.classList.add('is-visible');
-    return;
-  }
-
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      // Cuando la galería YA no está mayormente visible, mostramos el sticky
-      if (e.intersectionRatio < 0.35) {
-        sticky.classList.add('is-visible');
-        sticky.setAttribute('aria-hidden', 'false');
-      } else {
-        sticky.classList.remove('is-visible');
-        sticky.setAttribute('aria-hidden', 'true');
-      }
-    });
-  }, { threshold: [0.35, 0.8] });
-  io.observe(gallery);
+  // Sticky aria visible desde load — CSS @media max-width:768px controla display:flex
+  sticky.setAttribute('aria-hidden', 'false');
 }
 
 // ── Desktop: render all gallery images as a vertical stack ──
@@ -1561,15 +1560,36 @@ function pdSelectSize(size, btn) {
     b.classList.remove('size-btn--just-picked');
   });
   btn.classList.add('active');
-  // Feedback mobile: scale-bounce una sola vez
+  // Feedback mobile: scale-bounce + pulse-ring una sola vez
   btn.classList.add('size-btn--just-picked');
   btn.addEventListener('animationend', () => btn.classList.remove('size-btn--just-picked'), { once: true });
 
-  // Ya hay talla: quitar parpadeo del label y actualizar sticky CTA
+  // Haptic feedback al seleccionar talla (Android Chrome / FF; iOS Safari ignora)
+  if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+
+  // Ya hay talla: quitar parpadeo del label y actualizar sticky CTA con transición
   document.body.classList.remove('pd-needs-size');
-  const stickyBtn = document.getElementById('pdStickyBtn');
+  const stickyBtn  = document.getElementById('pdStickyBtn');
+  const stickyText = document.getElementById('pdStickyBtnText');
   if (stickyBtn && !stickyBtn.disabled) {
-    stickyBtn.textContent = 'AGREGAR AL CARRITO';
+    const wasNotReady = (stickyText ? stickyText.textContent : stickyBtn.textContent).trim() !== 'AGREGAR AL CARRITO';
+    if (stickyText && wasNotReady) {
+      stickyBtn.classList.add('is-swapping');
+      setTimeout(() => {
+        stickyText.textContent = 'AGREGAR AL CARRITO';
+        stickyBtn.classList.remove('is-swapping');
+        stickyBtn.classList.remove('is-ready');
+        // Retrigger pulse-ring
+        // eslint-disable-next-line no-unused-expressions
+        void stickyBtn.offsetWidth;
+        stickyBtn.classList.add('is-ready');
+        stickyBtn.addEventListener('animationend', () => stickyBtn.classList.remove('is-ready'), { once: true });
+      }, 220);
+    } else if (stickyText) {
+      stickyText.textContent = 'AGREGAR AL CARRITO';
+    } else {
+      stickyBtn.textContent = 'AGREGAR AL CARRITO';
+    }
   }
   window._pdSelectedSize = size;
 
@@ -1624,6 +1644,10 @@ function pdAddToCart() {
   saveCart();
   updateCartUI();
   showToast('¡Agregado al carrito!');
+  DSTAR_SOUND.playClick();
+
+  // Haptic feedback al confirmar agregado
+  if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
 
   // Abrir carrito
   const drawer  = document.getElementById('cartDrawer');
@@ -1633,4 +1657,171 @@ function pdAddToCart() {
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
+}
+
+// ============================================
+// SOUND SYSTEM — Web Audio API (opt-in, persisted)
+// ============================================
+const DSTAR_SOUND = (() => {
+  let ctx = null;
+  let enabled = localStorage.getItem('dstar_sound') === '1';
+  let lastWhoosh = 0;
+
+  function ensureCtx() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    return ctx;
+  }
+
+  function playClick() {
+    if (!enabled) return;
+    const c = ensureCtx();
+    if (!c) return;
+    if (c.state === 'suspended') c.resume();
+    const t = c.currentTime;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880, t);
+    osc.frequency.exponentialRampToValueAtTime(180, t + 0.07);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.18, t + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+    osc.connect(gain).connect(c.destination);
+    osc.start(t);
+    osc.stop(t + 0.1);
+  }
+
+  function playWhoosh() {
+    if (!enabled) return;
+    const now = performance.now();
+    if (now - lastWhoosh < 700) return;
+    lastWhoosh = now;
+    const c = ensureCtx();
+    if (!c) return;
+    if (c.state === 'suspended') c.resume();
+    const t = c.currentTime;
+    const dur = 0.45;
+    const buf = c.createBuffer(1, c.sampleRate * dur, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    }
+    const noise = c.createBufferSource();
+    noise.buffer = buf;
+    const filter = c.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(400, t);
+    filter.frequency.exponentialRampToValueAtTime(2400, t + dur);
+    filter.Q.value = 0.9;
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.06, t + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    noise.connect(filter).connect(gain).connect(c.destination);
+    noise.start(t);
+    noise.stop(t + dur);
+  }
+
+  function setEnabled(v) {
+    enabled = !!v;
+    localStorage.setItem('dstar_sound', enabled ? '1' : '0');
+    const btn = document.getElementById('soundToggle');
+    if (btn) {
+      btn.classList.toggle('is-on', enabled);
+      btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      btn.setAttribute('aria-label', enabled ? 'Desactivar sonido' : 'Activar sonido');
+    }
+    if (enabled) {
+      ensureCtx();
+      playClick();
+    }
+  }
+
+  function isEnabled() { return enabled; }
+
+  return { playClick, playWhoosh, setEnabled, isEnabled };
+})();
+
+function initSoundToggle() {
+  const btn = document.getElementById('soundToggle');
+  if (!btn) return;
+  if (DSTAR_SOUND.isEnabled()) {
+    btn.classList.add('is-on');
+    btn.setAttribute('aria-pressed', 'true');
+    btn.setAttribute('aria-label', 'Desactivar sonido');
+  }
+  btn.addEventListener('click', () => DSTAR_SOUND.setEnabled(!DSTAR_SOUND.isEnabled()));
+}
+
+function initSectionWhoosh() {
+  const sections = document.querySelectorAll('main section, section.drops, section.lookbook, section.about, section.blog, section.contact');
+  if (!sections.length) return;
+  // Skip first burst on initial load — wait until user starts scrolling
+  let armed = false;
+  setTimeout(() => { armed = true; }, 800);
+  const io = new IntersectionObserver((entries) => {
+    if (!armed) return;
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+        DSTAR_SOUND.playWhoosh();
+      }
+    });
+  }, { threshold: [0.25] });
+  sections.forEach(s => io.observe(s));
+}
+
+// ============================================
+// PRODUCT CARD HOVER — text scramble + image zoom (desktop)
+// ============================================
+function initCardHoverScramble() {
+  const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!isFinePointer || reduce || window.innerWidth <= 768) return;
+
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+
+  const CHARS = '!<>-_\\/[]{}=+*^?#ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const DURATION_MS = 300;
+  const FRAME_MS = 35;
+
+  function scramble(el) {
+    const target = el.dataset.name || el.textContent;
+    if (el.dataset.scrambling === '1') return;
+    el.dataset.scrambling = '1';
+    const start = performance.now();
+    const len = target.length;
+
+    function tick(now) {
+      const t = Math.min(1, (now - start) / DURATION_MS);
+      let out = '';
+      for (let i = 0; i < len; i++) {
+        const ch = target[i];
+        const reveal = i / len;
+        if (t >= reveal + 0.18 || ch === ' ') {
+          out += ch;
+        } else {
+          out += CHARS[Math.floor(Math.random() * CHARS.length)];
+        }
+      }
+      el.textContent = out;
+      if (t < 1) {
+        el._scrambleReq = setTimeout(() => requestAnimationFrame(tick), FRAME_MS);
+      } else {
+        el.textContent = target;
+        el.dataset.scrambling = '';
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  grid.addEventListener('mouseenter', (e) => {
+    const card = e.target.closest('.product-card:not(.sold-out)');
+    if (!card) return;
+    const nameEl = card.querySelector('.product-card__name');
+    if (nameEl) scramble(nameEl);
+  }, true);
 }

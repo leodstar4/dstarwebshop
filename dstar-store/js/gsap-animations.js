@@ -592,6 +592,7 @@ function initProductCardClick() {
       'z-index:99996', 'pointer-events:none',
       'text-align:center', 'padding:0 24px'
     ].join(';');
+    const nameText = nameEl ? (nameEl.dataset.name || nameEl.textContent) : '';
     label.innerHTML = `<span style="
       font-family:'Archivo Black',sans-serif;
       font-size:clamp(28px,7vw,88px);
@@ -599,7 +600,7 @@ function initProductCardClick() {
       color:#f0ede8;
       text-shadow:0 4px 60px rgba(0,0,0,0.9);
       line-height:1
-    ">${nameEl ? nameEl.textContent : ''}</span>`;
+    ">${nameText}</span>`;
     document.body.appendChild(label);
 
     // ── Velo negro final ──
@@ -791,6 +792,111 @@ function initButtonEffects() {
 }
 
 // ============================================
+// CUSTOM CURSOR — punto blanco con lerp sobre el grid de productos
+// + magnetic hover sobre hero/CTAs principales (desktop fine pointer)
+// ============================================
+function initCustomCursor() {
+  // Solo desktop con puntero fino y sin reduced-motion
+  const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduce        = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!isFinePointer || reduce || window.innerWidth <= 768) return;
+
+  // Solo crea el dot si la página tiene grid de productos
+  if (!document.getElementById('productsGrid')) return;
+
+  // Crear el dot
+  const dot = document.createElement('div');
+  dot.className = 'dstar-cursor';
+  dot.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(dot);
+  document.body.classList.add('dstar-cursor-active');
+
+  // Lerp toward target
+  let tx = window.innerWidth / 2, ty = window.innerHeight / 2;
+  let cx = tx, cy = ty;
+
+  // Track the mouse globally (so dot doesn't snap when entering grid)
+  document.addEventListener('mousemove', e => {
+    tx = e.clientX;
+    ty = e.clientY;
+  }, { passive: true });
+
+  // Mostrar dot solo sobre el grid de productos (spec del user)
+  const grid = document.getElementById('productsGrid');
+  if (grid) {
+    grid.addEventListener('mouseenter', () => dot.classList.add('is-active'));
+    grid.addEventListener('mouseleave', () => dot.classList.remove('is-active'));
+    // Crece sobre cada product-card
+    grid.addEventListener('mouseover', e => {
+      if (e.target.closest('.product-card')) dot.classList.add('is-grow');
+    });
+    grid.addEventListener('mouseout', e => {
+      if (e.target.closest('.product-card')) dot.classList.remove('is-grow');
+    });
+  }
+
+  // Render loop con lerp suave
+  const LERP = 0.18;
+  function render() {
+    cx += (tx - cx) * LERP;
+    cy += (ty - cy) * LERP;
+    dot.style.transform = `translate3d(${cx}px, ${cy}px, 0) translate(-50%, -50%)`;
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  // Hide on touch (some hybrid devices)
+  window.addEventListener('touchstart', () => {
+    dot.classList.remove('is-active');
+    document.body.classList.remove('dstar-cursor-active');
+  }, { once: true, passive: true });
+}
+
+// Hover magnético: el botón sigue el cursor cuando está cerca, máx 8px
+function initMagneticButtons() {
+  const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const reduce        = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!isFinePointer || reduce || window.innerWidth <= 768 || !window.gsap) return;
+
+  const MAX = 8; // px de desplazamiento máximo
+  const RADIUS_FACTOR = 1.6; // zona magnética = 1.6x el bounding-box
+
+  const selectors = '.hero__cta, .product-detail__add, .product-modal__add, .cart-drawer__checkout';
+  document.querySelectorAll(selectors).forEach(btn => {
+    let r = null;
+    function update() { r = btn.getBoundingClientRect(); }
+    update();
+    window.addEventListener('resize', update, { passive: true });
+    window.addEventListener('scroll', update, { passive: true });
+
+    document.addEventListener('mousemove', e => {
+      if (!r) return;
+      const cx = r.left + r.width  / 2;
+      const cy = r.top  + r.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const reachX = (r.width  / 2) * RADIUS_FACTOR;
+      const reachY = (r.height / 2) * RADIUS_FACTOR;
+      if (Math.abs(dx) < reachX && Math.abs(dy) < reachY) {
+        // Normalize → clamp a MAX px
+        const nx = Math.max(-1, Math.min(1, dx / reachX));
+        const ny = Math.max(-1, Math.min(1, dy / reachY));
+        gsap.to(btn, { x: nx * MAX, y: ny * MAX, duration: 0.32, ease: 'power2.out', overwrite: 'auto' });
+      } else if (btn._magActive) {
+        gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)', overwrite: 'auto' });
+        btn._magActive = false;
+      }
+      btn._magActive = (Math.abs(dx) < reachX && Math.abs(dy) < reachY);
+    }, { passive: true });
+
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)', overwrite: 'auto' });
+      btn._magActive = false;
+    });
+  });
+}
+
+// ============================================
 // INIT ALL
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -800,6 +906,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // ── Página de detalle de producto ──
         initProductPageEntry();
         initButtonEffects();
+        initCustomCursor();
+        initMagneticButtons();
       } else {
         // ── Página principal ──
         initHeroTagline();
@@ -813,6 +921,8 @@ document.addEventListener('DOMContentLoaded', () => {
         initLookbook();          // reemplaza initLookbookSnap + initLookbookMasonry
         initProductCardClick();
         initButtonEffects();
+        initCustomCursor();
+        initMagneticButtons();
         ScrollTrigger.refresh();
 
         // Segundo refresh cuando todas las imágenes lazy terminan de cargar

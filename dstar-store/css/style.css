@@ -24,6 +24,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 110px; /* fixed header (top:32px + ~70px height) — anchor targets land below it */
   -webkit-font-smoothing: antialiased;
 }
 
@@ -589,7 +590,7 @@ ul { list-style: none; }
   transition: transform 0.6s var(--ease), filter 0.6s var(--ease);
 }
 .product-card:hover .product-card__image img {
-  transform: scale(1.08);
+  transform: scale(1.05);
   filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.45));
 }
 
@@ -2540,16 +2541,18 @@ body::after {
     display: none !important;
   }
 
-  /* Entrance animation — JS adds .lb-in after IntersectionObserver fires */
+  /* Entrance animation — clip-path reveal L→R + soft fade */
   .lookbook-panel {
     opacity: 0;
-    transform: scale(0.95) translateY(28px);
-    transition: opacity 0.75s var(--ease), transform 0.75s var(--ease);
-    will-change: opacity, transform;
+    clip-path: inset(0 100% 0 0);
+    -webkit-clip-path: inset(0 100% 0 0);
+    transition: opacity 0.6s var(--ease), clip-path 0.95s var(--ease), -webkit-clip-path 0.95s var(--ease);
+    will-change: opacity, clip-path;
   }
   .lookbook-panel.lb-in {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    clip-path: inset(0 0 0 0);
+    -webkit-clip-path: inset(0 0 0 0);
   }
 
 }
@@ -3645,7 +3648,7 @@ body::after {
    back pill, swipe hint, label pulse
    ============================================ */
 
-/* Sticky CTA bar — fixed bottom, visible solo ≤768px */
+/* Sticky CTA bar — fixed bottom, visible solo ≤768px (siempre visible desde load) */
 .pd-sticky-cta {
   display: none;
   position: fixed;
@@ -3659,12 +3662,6 @@ body::after {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   align-items: center;
   gap: 12px;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  pointer-events: none;
-}
-.pd-sticky-cta.is-visible {
-  transform: translateY(0);
   pointer-events: auto;
 }
 .pd-sticky-cta__price {
@@ -3676,6 +3673,7 @@ body::after {
   text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 .pd-sticky-cta__btn {
+  position: relative;
   flex: 1 1 60%;
   min-height: 48px;
   font-family: var(--font-heading);
@@ -3686,9 +3684,25 @@ body::after {
   border: none;
   cursor: pointer;
   text-transform: uppercase;
+  overflow: hidden;
   transition: background 0.25s var(--ease), transform 0.15s var(--ease);
 }
 .pd-sticky-cta__btn:active { transform: scale(0.97); background: var(--concrete-light); }
+/* Texto interno animable: fade+slide al cambiar de "SELECCIONA TALLA" a "AGREGAR AL CARRITO" */
+.pd-sticky-cta__btn-text {
+  display: inline-block;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.pd-sticky-cta__btn.is-swapping .pd-sticky-cta__btn-text {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.pd-sticky-cta__btn.is-ready { animation: pdStickyReadyPulse 0.55s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes pdStickyReadyPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
+  60%  { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
 
 /* Swipe hint debajo del carrusel mobile (oculto en desktop) */
 .pd-swipe-hint {
@@ -3761,14 +3775,14 @@ body::after {
     position: relative;
   }
 
-  /* Feedback scale al seleccionar (tiembla una vez) */
+  /* Feedback scale + pulse-ring al seleccionar */
   .size-btn.active.size-btn--just-picked {
-    animation: sizeJustPicked 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: sizeJustPicked 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   @keyframes sizeJustPicked {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.12); }
-    100% { transform: scale(1); }
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,255,255,0.55); }
+    45%  { transform: scale(1.18); box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,255,255,0); }
   }
 
   /* Label parpadea mientras no haya talla seleccionada */
@@ -3794,8 +3808,137 @@ body::after {
   .pd-sticky-cta,
   .pd-swipe-hint span + span,
   body.pd-needs-size .product-detail__size-label,
-  .size-btn.active.size-btn--just-picked {
+  .size-btn.active.size-btn--just-picked,
+  .pd-sticky-cta__btn,
+  .pd-sticky-cta__btn-text {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ============================================
+   DESKTOP CUSTOM CURSOR — dot lerp sobre product grid
+   + crosshair sobre CTAs principales + magnetic hover
+   ============================================ */
+.dstar-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(180, 180, 180, 0.9);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate3d(-50%, -50%, 0);
+  opacity: 0;
+  transition: opacity 0.18s ease, width 0.22s ease, height 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+  mix-blend-mode: normal;
+  will-change: transform;
+}
+.dstar-cursor.is-active { opacity: 1; }
+.dstar-cursor.is-grow {
+  width: 22px;
+  height: 22px;
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.95);
+}
+/* Solo en desktop con puntero fino: ocultamos cursor nativo en grid + cambiamos a crosshair sobre CTAs */
+@media (hover: hover) and (pointer: fine) and (min-width: 769px) {
+  body.dstar-cursor-active .products-grid,
+  body.dstar-cursor-active .products-grid * { cursor: none; }
+
+  /* Crosshair sobre CTAs principales */
+  .hero__cta,
+  .product-detail__add,
+  .product-modal__add,
+  .cart-drawer__checkout,
+  .pd-sticky-cta__btn { cursor: crosshair; }
+}
+@media (max-width: 768px), (hover: none), (pointer: coarse) {
+  .dstar-cursor { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dstar-cursor { display: none !important; }
+}
+
+/* ============================================
+   SCARCITY INDICATOR — pulsing dot + tier color
+   ============================================ */
+.product-card__scarcity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  line-height: 1;
+}
+.product-card__scarcity-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: scarcityPulse 1.6s ease-out infinite;
+  flex-shrink: 0;
+}
+.product-card__scarcity--low    { color: var(--red,    #e53935); }
+.product-card__scarcity--medium { color: var(--orange, #ff8c1a); }
+@keyframes scarcityPulse {
+  0%   { box-shadow: 0 0 0 0   currentColor; opacity: 1; }
+  70%  { box-shadow: 0 0 0 8px transparent; opacity: 0.85; }
+  100% { box-shadow: 0 0 0 0   transparent; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-card__scarcity-dot { animation: none; }
+}
+@media (max-width: 768px) {
+  .product-card__scarcity { font-size: 9px; gap: 6px; }
+  .product-card__scarcity-dot { width: 6px; height: 6px; }
+}
+
+/* ============================================
+   SOUND TOGGLE — bottom-right opt-in
+   ============================================ */
+.sound-toggle {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 95;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 237, 232, 0.25);
+  background: rgba(10, 10, 10, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(240, 237, 232, 0.55);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease), background 0.25s var(--ease);
+  padding: 0;
+}
+.sound-toggle:hover {
+  color: var(--white);
+  border-color: rgba(240, 237, 232, 0.6);
+  transform: scale(1.06);
+}
+.sound-toggle.is-on {
+  color: var(--white);
+  border-color: var(--white);
+  background: rgba(20, 20, 20, 0.7);
+}
+.sound-toggle__on  { display: none; }
+.sound-toggle__off { display: block; }
+.sound-toggle.is-on .sound-toggle__on  { display: block; }
+.sound-toggle.is-on .sound-toggle__off { display: none; }
+@media (max-width: 768px) {
+  .sound-toggle { bottom: 12px; right: 12px; width: 34px; height: 34px; }
+  /* Don't overlap mobile sticky CTA on producto.html */
+  .page-product .sound-toggle { bottom: 86px; }
 }

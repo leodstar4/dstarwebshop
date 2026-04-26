@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
-  <!-- ?v=16 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
-  <link rel="stylesheet" href="css/style.css?v=16">
+  <!-- ?v=18 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
+  <link rel="stylesheet" href="css/style.css?v=18">
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body class="page-product">
@@ -125,7 +125,7 @@
   <!-- STICKY CTA BAR (mobile ≤768px, shown when user scrolls past gallery) -->
   <div class="pd-sticky-cta" id="pdStickyCta" aria-hidden="true">
     <span class="pd-sticky-cta__price" id="pdStickyPrice">$0</span>
-    <button class="pd-sticky-cta__btn" id="pdStickyBtn" type="button">SELECCIONA TALLA</button>
+    <button class="pd-sticky-cta__btn" id="pdStickyBtn" type="button"><span class="pd-sticky-cta__btn-text" id="pdStickyBtnText">SELECCIONA TALLA</span></button>
   </div>
 
   <!-- FOOTER -->
@@ -167,11 +167,23 @@
 
   <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
-  <script src="js/app.js?v=16"></script>
+  <button class="sound-toggle" id="soundToggle" aria-label="Activar sonido" aria-pressed="false">
+    <svg class="sound-toggle__on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    </svg>
+    <svg class="sound-toggle__off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <line x1="23" y1="9" x2="17" y2="15"/>
+      <line x1="17" y1="9" x2="23" y2="15"/>
+    </svg>
+  </button>
+
+  <script src="js/app.js?v=18"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js"></script>
-  <script src="js/gsap-animations.js?v=2"></script>
+  <script src="js/gsap-animations.js?v=4"></script>
   <script src="js/blog-transitions.js?v=2"></script>
 </body>
 </html>
