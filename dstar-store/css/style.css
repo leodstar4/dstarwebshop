@@ -26,18 +26,21 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 110px; /* fixed header (top:32px + ~70px height) — anchor targets land below it */
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 body {
   font-family: var(--font-mono);
   background-color: #7a7a74;
-  background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_1920/backwebpc_bvcu4q.webp');
+  background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_1920/imagen_sin_logo_uuh96t');
   background-size: cover;
   background-attachment: fixed;
   background-position: center top;
   background-repeat: no-repeat;
   color: var(--white);
   overflow-x: hidden;
+  overscroll-behavior-x: none;
   line-height: 1.5;
 }
 
@@ -55,9 +58,9 @@ body {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_1920/backwebpc_bvcu4q.webp');
+    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_1920/imagen_sin_logo_uuh96t');
     background-size: cover;
-    background-position: 50% 15%; /* portrait: keep ceiling lights + floor in frame */
+    background-position: 50% 15%;
     background-repeat: no-repeat;
     pointer-events: none;
     will-change: transform; /* own compositing layer — prevents repaint on scroll */
@@ -79,7 +82,7 @@ body {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_800/backcelular_cpimyk.webp');
+    background-image: url('https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_800/imagen2_sin_logocelll_bb5hwj');
     background-size: cover;
     background-position: center top;
     background-repeat: no-repeat;
@@ -2141,6 +2144,8 @@ body::after {
   scroll-snap-type: x mandatory;
   /* Evita que el scroll horizontal se escape al vertical */
   overscroll-behavior-x: contain;
+  /* Tell iOS/Android this container scrolls horizontally */
+  touch-action: pan-x;
   /* Ocultar scrollbar visual */
   scrollbar-width: none;
   /* Note: -webkit-overflow-scrolling: touch is deprecated — scroll-snap + overscroll handles this */
@@ -2541,18 +2546,16 @@ body::after {
     display: none !important;
   }
 
-  /* Entrance animation — clip-path reveal L→R + soft fade */
+  /* Entrance animation — fade + lift */
   .lookbook-panel {
     opacity: 0;
-    clip-path: inset(0 100% 0 0);
-    -webkit-clip-path: inset(0 100% 0 0);
-    transition: opacity 0.6s var(--ease), clip-path 0.95s var(--ease), -webkit-clip-path 0.95s var(--ease);
-    will-change: opacity, clip-path;
+    transform: translateY(28px);
+    transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);
+    will-change: opacity, transform;
   }
   .lookbook-panel.lb-in {
     opacity: 1;
-    clip-path: inset(0 0 0 0);
-    -webkit-clip-path: inset(0 0 0 0);
+    transform: translateY(0);
   }
 
 }
@@ -2956,6 +2959,7 @@ body::after {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    touch-action: pan-x;
     /* scroll-behavior:smooth intentionally omitted —
        combining it with scroll-snap-type on iOS Safari
        causes the carousel to mis-render and show blank frames */
@@ -3613,6 +3617,7 @@ body::after {
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
   scrollbar-width: none;
 }
 #pdLightboxMobile__track::-webkit-scrollbar { display: none; }
@@ -3663,6 +3668,12 @@ body::after {
   align-items: center;
   gap: 12px;
   pointer-events: auto;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.pd-sticky-cta--hidden {
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
 }
 .pd-sticky-cta__price {
   font-family: var(--font-heading);
@@ -3817,30 +3828,28 @@ body::after {
 }
 
 /* ============================================
-   DESKTOP CUSTOM CURSOR — dot lerp sobre product grid
+   DESKTOP CUSTOM CURSOR — estrella con lerp sobre product grid
    + crosshair sobre CTAs principales + magnetic hover
    ============================================ */
 .dstar-cursor {
   position: fixed;
   top: 0; left: 0;
-  width: 8px; height: 8px;
-  border-radius: 50%;
+  width: 22px; height: 22px;
   background: #fff;
-  border: 1px solid rgba(180, 180, 180, 0.9);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   pointer-events: none;
   z-index: 9999;
   transform: translate3d(-50%, -50%, 0);
   opacity: 0;
-  transition: opacity 0.18s ease, width 0.22s ease, height 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+  transition: opacity 0.18s ease, width 0.22s ease, height 0.22s ease, background 0.22s ease;
   mix-blend-mode: normal;
   will-change: transform;
 }
 .dstar-cursor.is-active { opacity: 1; }
 .dstar-cursor.is-grow {
-  width: 22px;
-  height: 22px;
-  background: rgba(255,255,255,0.18);
-  border-color: rgba(255,255,255,0.95);
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.75);
 }
 /* Solo en desktop con puntero fino: ocultamos cursor nativo en grid + cambiamos a crosshair sobre CTAs */
 @media (hover: hover) and (pointer: fine) and (min-width: 769px) {
@@ -3900,45 +3909,3 @@ body::after {
   .product-card__scarcity-dot { width: 6px; height: 6px; }
 }
 
-/* ============================================
-   SOUND TOGGLE — bottom-right opt-in
-   ============================================ */
-.sound-toggle {
-  position: fixed;
-  bottom: 18px;
-  right: 18px;
-  z-index: 95;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1px solid rgba(240, 237, 232, 0.25);
-  background: rgba(10, 10, 10, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: rgba(240, 237, 232, 0.55);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: color 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease), background 0.25s var(--ease);
-  padding: 0;
-}
-.sound-toggle:hover {
-  color: var(--white);
-  border-color: rgba(240, 237, 232, 0.6);
-  transform: scale(1.06);
-}
-.sound-toggle.is-on {
-  color: var(--white);
-  border-color: var(--white);
-  background: rgba(20, 20, 20, 0.7);
-}
-.sound-toggle__on  { display: none; }
-.sound-toggle__off { display: block; }
-.sound-toggle.is-on .sound-toggle__on  { display: block; }
-.sound-toggle.is-on .sound-toggle__off { display: none; }
-@media (max-width: 768px) {
-  .sound-toggle { bottom: 12px; right: 12px; width: 34px; height: 34px; }
-  /* Don't overlap mobile sticky CTA on producto.html */
-  .page-product .sound-toggle { bottom: 86px; }
-}

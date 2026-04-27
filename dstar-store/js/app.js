@@ -150,8 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initCart();
     initScrollProgress();
     initRippleButtons();
+    initTouchDirectionLock();
     initProductPage();
-    initSoundToggle();
   } else {
     // ── Página principal ──
     initLoader();
@@ -169,9 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initMagneticCTA();
     initRippleButtons();
     initTextScramble();
-    initSoundToggle();
-    initSectionWhoosh();
     initCardHoverScramble();
+    initTouchDirectionLock();
   }
 });
 
@@ -216,6 +215,28 @@ function initNav() {
     });
   });
 
+  // Smooth scroll para todos los anchor links — offset dinámico del header
+  document.addEventListener('click', e => {
+    const link = e.target.closest('a[href^="#"]');
+    if (!link) return;
+    const id = link.getAttribute('href').slice(1);
+    if (!id) return;
+    const target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+
+    // Cerrar mobile nav si está abierto
+    menuBtn.classList.remove('active');
+    mobileNav.classList.remove('open');
+    document.body.style.overflow = '';
+
+    // Offset = header height + top position + breathing room (works whether header is visible or hidden)
+    const headerEl = $('.header');
+    const offset = headerEl ? headerEl.offsetHeight + 48 : 116;
+    const top = target.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  });
+
   // Header scroll behavior
   let lastScroll = 0;
   const header = $('.header');
@@ -242,12 +263,10 @@ function renderProducts() {
     const isSoldOut = p.stock === 0 || p.badge === 'SOLDOUT';
     const delay = Math.min(i, 5) * 0.08;
 
-    const badgeVariant = isSoldOut          ? 'soldout' :
-                         p.badge === 'LIMITED' ? 'limited' :
-                         p.badge === 'NEW'     ? 'new'     : null;
-    const badgeText    = isSoldOut          ? 'AGOTADO' :
-                         p.badge === 'LIMITED' ? 'LIMITADO' :
-                         p.badge === 'NEW'     ? 'NUEVO'    : '';
+    const badgeVariant = isSoldOut      ? 'soldout' :
+                         p.badge === 'NEW' ? 'new'     : null;
+    const badgeText    = isSoldOut      ? 'AGOTADO' :
+                         p.badge === 'NEW' ? 'NUEVO'   : '';
 
     const tag   = isSoldOut ? 'div' : 'a';
     const href  = isSoldOut ? '' : `href="producto.html?id=${p.id}"`;
@@ -480,7 +499,6 @@ function addToCartFromModal() {
 
   saveCart();
   updateCartUI();
-  DSTAR_SOUND.playClick();
 
   // Partícula voladora desde el botón al ícono del carrito
   launchCartParticle(addBtn);
@@ -985,6 +1003,43 @@ function initMagneticCTA() {
 }
 
 // ============================================
+// TOUCH DIRECTION LOCK
+// Locks scroll to the primary axis once a swipe is detected.
+// Only activates after 12px total movement — genuine taps stay
+// well below this threshold and are never affected.
+// Horizontal swipes outside carousel/lookbook containers are
+// cancelled so the page can't shift sideways.
+// ============================================
+function initTouchDirectionLock() {
+  if (!('ontouchstart' in window)) return;
+  let startX = 0, startY = 0, dir = null;
+
+  document.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dir = null;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!e.cancelable || e.touches.length !== 1) return;
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    // 12px slop: below this the gesture is a tap — never cancel it
+    if (dx + dy < 12) return;
+    if (!dir) dir = dx > dy ? 'h' : 'v';
+    if (dir === 'h') {
+      const inHoriz = e.target.closest(
+        '.pd-carousel, .lookbook__horiz-wrap, #pdLightboxMobile__track'
+      );
+      if (!inHoriz) e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchend',   () => { dir = null; }, { passive: true });
+  document.addEventListener('touchcancel', () => { dir = null; }, { passive: true });
+}
+
+// ============================================
 // RIPPLE EFFECT (event delegation)
 // ============================================
 function initRippleButtons() {
@@ -1210,6 +1265,16 @@ function _pdInitMobileUX(p, isSoldOut) {
 
   // Sticky aria visible desde load — CSS @media max-width:768px controla display:flex
   sticky.setAttribute('aria-hidden', 'false');
+
+  // Hide sticky when the size selector is already on screen (avoids duplicate buttons).
+  // Shows again when user scrolls above or below the sizes section.
+  const sizesEl = document.querySelector('.product-detail__sizes');
+  if (sizesEl && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      sticky.classList.toggle('pd-sticky-cta--hidden', entries[0].isIntersecting);
+    }, { threshold: 0.1, rootMargin: '0px 0px -80px 0px' });
+    io.observe(sizesEl);
+  }
 }
 
 // ── Desktop: render all gallery images as a vertical stack ──
@@ -1644,7 +1709,6 @@ function pdAddToCart() {
   saveCart();
   updateCartUI();
   showToast('¡Agregado al carrito!');
-  DSTAR_SOUND.playClick();
 
   // Haptic feedback al confirmar agregado
   if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
@@ -1659,119 +1723,6 @@ function pdAddToCart() {
   }
 }
 
-// ============================================
-// SOUND SYSTEM — Web Audio API (opt-in, persisted)
-// ============================================
-const DSTAR_SOUND = (() => {
-  let ctx = null;
-  let enabled = localStorage.getItem('dstar_sound') === '1';
-  let lastWhoosh = 0;
-
-  function ensureCtx() {
-    if (ctx) return ctx;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return null;
-    ctx = new AC();
-    return ctx;
-  }
-
-  function playClick() {
-    if (!enabled) return;
-    const c = ensureCtx();
-    if (!c) return;
-    if (c.state === 'suspended') c.resume();
-    const t = c.currentTime;
-    const osc = c.createOscillator();
-    const gain = c.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(880, t);
-    osc.frequency.exponentialRampToValueAtTime(180, t + 0.07);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.18, t + 0.005);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
-    osc.connect(gain).connect(c.destination);
-    osc.start(t);
-    osc.stop(t + 0.1);
-  }
-
-  function playWhoosh() {
-    if (!enabled) return;
-    const now = performance.now();
-    if (now - lastWhoosh < 700) return;
-    lastWhoosh = now;
-    const c = ensureCtx();
-    if (!c) return;
-    if (c.state === 'suspended') c.resume();
-    const t = c.currentTime;
-    const dur = 0.45;
-    const buf = c.createBuffer(1, c.sampleRate * dur, c.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
-    }
-    const noise = c.createBufferSource();
-    noise.buffer = buf;
-    const filter = c.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(400, t);
-    filter.frequency.exponentialRampToValueAtTime(2400, t + dur);
-    filter.Q.value = 0.9;
-    const gain = c.createGain();
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.06, t + 0.08);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    noise.connect(filter).connect(gain).connect(c.destination);
-    noise.start(t);
-    noise.stop(t + dur);
-  }
-
-  function setEnabled(v) {
-    enabled = !!v;
-    localStorage.setItem('dstar_sound', enabled ? '1' : '0');
-    const btn = document.getElementById('soundToggle');
-    if (btn) {
-      btn.classList.toggle('is-on', enabled);
-      btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-      btn.setAttribute('aria-label', enabled ? 'Desactivar sonido' : 'Activar sonido');
-    }
-    if (enabled) {
-      ensureCtx();
-      playClick();
-    }
-  }
-
-  function isEnabled() { return enabled; }
-
-  return { playClick, playWhoosh, setEnabled, isEnabled };
-})();
-
-function initSoundToggle() {
-  const btn = document.getElementById('soundToggle');
-  if (!btn) return;
-  if (DSTAR_SOUND.isEnabled()) {
-    btn.classList.add('is-on');
-    btn.setAttribute('aria-pressed', 'true');
-    btn.setAttribute('aria-label', 'Desactivar sonido');
-  }
-  btn.addEventListener('click', () => DSTAR_SOUND.setEnabled(!DSTAR_SOUND.isEnabled()));
-}
-
-function initSectionWhoosh() {
-  const sections = document.querySelectorAll('main section, section.drops, section.lookbook, section.about, section.blog, section.contact');
-  if (!sections.length) return;
-  // Skip first burst on initial load — wait until user starts scrolling
-  let armed = false;
-  setTimeout(() => { armed = true; }, 800);
-  const io = new IntersectionObserver((entries) => {
-    if (!armed) return;
-    entries.forEach(entry => {
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
-        DSTAR_SOUND.playWhoosh();
-      }
-    });
-  }, { threshold: [0.25] });
-  sections.forEach(s => io.observe(s));
-}
 
 // ============================================
 // PRODUCT CARD HOVER — text scramble + image zoom (desktop)

@@ -94,7 +94,15 @@
         return;
       }
 
-      // All good — animate out then navigate
+      // On touch devices skip the exit animation — async GSAP navigation
+      // is unreliable on mobile after the gesture context expires.
+      // The enter animation (black overlay fade-in on arrival) still works.
+      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        sessionStorage.setItem(TRANSIT_FLAG, '1');
+        return; // native navigation takes over
+      }
+
+      // Desktop: animate out then navigate
       e.preventDefault();
       animatePageExit(href);
     });
