@@ -150,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initCart();
     initScrollProgress();
     initRippleButtons();
-    initTouchDirectionLock();
     initProductPage();
   } else {
     // ── Página principal ──
@@ -170,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initRippleButtons();
     initTextScramble();
     initCardHoverScramble();
-    initTouchDirectionLock();
   }
 });
 
@@ -1000,43 +998,6 @@ function initMagneticCTA() {
       active = false;
     }
   });
-}
-
-// ============================================
-// TOUCH DIRECTION LOCK
-// Locks scroll to the primary axis once a swipe is detected.
-// Only activates after 12px total movement — genuine taps stay
-// well below this threshold and are never affected.
-// Horizontal swipes outside carousel/lookbook containers are
-// cancelled so the page can't shift sideways.
-// ============================================
-function initTouchDirectionLock() {
-  if (!('ontouchstart' in window)) return;
-  let startX = 0, startY = 0, dir = null;
-
-  document.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    dir = null;
-  }, { passive: true });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!e.cancelable || e.touches.length !== 1) return;
-    const dx = Math.abs(e.touches[0].clientX - startX);
-    const dy = Math.abs(e.touches[0].clientY - startY);
-    // 12px slop: below this the gesture is a tap — never cancel it
-    if (dx + dy < 12) return;
-    if (!dir) dir = dx > dy ? 'h' : 'v';
-    if (dir === 'h') {
-      const inHoriz = e.target.closest(
-        '.pd-carousel, .lookbook__horiz-wrap, #pdLightboxMobile__track'
-      );
-      if (!inHoriz) e.preventDefault();
-    }
-  }, { passive: false });
-
-  document.addEventListener('touchend',   () => { dir = null; }, { passive: true });
-  document.addEventListener('touchcancel', () => { dir = null; }, { passive: true });
 }
 
 // ============================================

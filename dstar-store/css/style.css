@@ -328,6 +328,7 @@ ul { list-style: none; }
   opacity: 0;
   visibility: hidden;
   transition: all 0.4s var(--ease);
+  overscroll-behavior: none;
 }
 .mobile-nav.open { opacity: 1; visibility: visible; }
 .mobile-nav__inner { text-align: center; }
@@ -852,6 +853,8 @@ ul { list-style: none; }
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s var(--ease);
+  overscroll-behavior: none;
+  touch-action: none;
 }
 .cart-overlay.open { opacity: 1; visibility: visible; }
 
@@ -1038,6 +1041,7 @@ ul { list-style: none; }
   align-items: center;
   justify-content: center;
   visibility: hidden;
+  overscroll-behavior: none;
 }
 .product-modal.open { visibility: visible; }
 
@@ -3570,6 +3574,7 @@ body::after {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   z-index: 9999;
+  overscroll-behavior: none;
 }
 #pdLightboxMobile.is-open { display: block; }
 
