@@ -836,7 +836,7 @@ function initCustomCursor() {
   }
 
   // Render loop con lerp suave
-  const LERP = 0.18;
+  const LERP = 0.28;
   function render() {
     cx += (tx - cx) * LERP;
     cy += (ty - cy) * LERP;

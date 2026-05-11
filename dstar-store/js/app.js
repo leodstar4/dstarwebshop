@@ -153,33 +153,34 @@ document.addEventListener('DOMContentLoaded', () => {
     initProductPage();
   } else {
     // ── Página principal ──
+    // 1. Critical path: above-fold render + core interactivity
     initLoader();
     renderProducts();
-    renderLookbook();
-    renderBlog();
-    renderFAQ();
     updateCartUI();
     initNav();
     initCart();
-    initModal();
-    initScrollAnimations();
     initScrollProgress();
-    initHeroParallax();
-    initMagneticCTA();
-    initRippleButtons();
-    initTextScramble();
-    initCardHoverScramble();
+
+    // 2. Idle: below-fold content + decorative interactions
+    // (gsap-animations.js handles all GSAP/ScrollTrigger init in its own DOMContentLoaded)
+    const idle = window.requestIdleCallback
+      ? (cb) => requestIdleCallback(cb, { timeout: 1500 })
+      : (cb) => setTimeout(cb, 200);
+
+    idle(() => {
+      renderLookbook();
+      renderBlog();
+      renderFAQ();
+      initModal();
+      initMagneticCTA();
+      initRippleButtons();
+      initTextScramble();
+      initCardHoverScramble();
+    });
   }
 });
 
-// ============================================
-// BFCACHE — force reload on back/forward so GSAP entry animations re-run
-// ============================================
-window.addEventListener('pageshow', function (event) {
-  if (event.persisted) {
-    window.location.reload();
-  }
-});
+// bfcache: preserve instant back/forward — GSAP shows final state which is correct.
 
 // ============================================
 // LOADER
@@ -235,18 +236,24 @@ function initNav() {
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   });
 
-  // Header scroll behavior
+  // Header scroll behavior — rAF throttled + passive to avoid blocking scroll
   let lastScroll = 0;
+  let headerTicking = false;
   const header = $('.header');
   window.addEventListener('scroll', () => {
-    const currentScroll = window.scrollY;
-    if (currentScroll > 100) {
-      header.style.top = currentScroll > lastScroll ? '-100px' : '12px';
-    } else {
-      header.style.top = '32px';
-    }
-    lastScroll = currentScroll;
-  });
+    if (headerTicking) return;
+    headerTicking = true;
+    requestAnimationFrame(() => {
+      const currentScroll = window.scrollY;
+      if (currentScroll > 100) {
+        header.style.top = currentScroll > lastScroll ? '-100px' : '12px';
+      } else {
+        header.style.top = '32px';
+      }
+      lastScroll = currentScroll;
+      headerTicking = false;
+    });
+  }, { passive: true });
 }
 
 // ============================================
@@ -563,29 +570,36 @@ function openImageFullscreen(src, alt) {
   document.addEventListener('keydown', escHandler);
 }
 
-// Partícula voladora desde CTA al carrito
+// Partícula voladora desde CTA al carrito — reutiliza un único nodo DOM
+let _cartParticle = null;
 function launchCartParticle(originEl) {
   if (!window.gsap || !originEl) return;
   const cartBtn = $('#cartBtn');
   if (!cartBtn) return;
 
+  if (!_cartParticle) {
+    _cartParticle = document.createElement('div');
+    _cartParticle.className = 'cart-particle';
+    document.body.appendChild(_cartParticle);
+  }
+
   const startRect = originEl.getBoundingClientRect();
   const endRect   = cartBtn.getBoundingClientRect();
 
-  const particle = document.createElement('div');
-  particle.className = 'cart-particle';
-  particle.style.left = `${startRect.left + startRect.width / 2}px`;
-  particle.style.top  = `${startRect.top  + startRect.height / 2}px`;
-  document.body.appendChild(particle);
-
-  gsap.to(particle, {
-    left: endRect.left + endRect.width / 2,
-    top:  endRect.top  + endRect.height / 2,
-    scale: 0,
+  gsap.killTweensOf(_cartParticle);
+  gsap.set(_cartParticle, {
+    left: startRect.left + startRect.width / 2,
+    top:  startRect.top  + startRect.height / 2,
+    scale: 1,
+    opacity: 1,
+  });
+  gsap.to(_cartParticle, {
+    left:    endRect.left + endRect.width / 2,
+    top:     endRect.top  + endRect.height / 2,
+    scale:   0,
     opacity: 0.6,
     duration: 0.6,
-    ease: 'power3.in',
-    onComplete: () => particle.remove()
+    ease:    'power3.in',
   });
 }
 

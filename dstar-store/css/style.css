@@ -1125,10 +1125,11 @@ ul { list-style: none; }
   background: var(--red);
   color: var(--white);
   animation: badgeGlow 2.4s ease-in-out infinite;
+  will-change: opacity, transform;
 }
 @keyframes badgeGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(230,50,50,0); }
-  50%       { box-shadow: 0 0 14px 4px rgba(230,50,50,0.45); }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.82; transform: scale(1.04); }
 }
 
 /* Info panel */
@@ -1994,7 +1995,7 @@ ul { list-style: none; }
   position: relative;
   overflow: hidden;
 }
-/* Shimmer sweep */
+/* Shimmer sweep — uses transform (GPU composited, zero layout cost) */
 .hero__cta::before {
   content: '';
   position: absolute;
@@ -2005,10 +2006,11 @@ ul { list-style: none; }
   animation: shimmerSlide 3.5s ease-in-out infinite 3s;
   pointer-events: none;
   z-index: 1;
+  will-change: transform;
 }
 @keyframes shimmerSlide {
-  0%   { left: -100%; }
-  100% { left: 200%; }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(500%); }
 }
 /* Border pulse idle */
 .hero__cta::after {
@@ -2148,8 +2150,8 @@ body::after {
   scroll-snap-type: x mandatory;
   /* Evita que el scroll horizontal se escape al vertical */
   overscroll-behavior-x: contain;
-  /* Tell iOS/Android this container scrolls horizontally */
-  touch-action: pan-x;
+  /* Tell iOS/Android this container scrolls horizontally; pan-y lets vertical drag bubble to page */
+  touch-action: pan-x pan-y;
   /* Ocultar scrollbar visual */
   scrollbar-width: none;
   /* Note: -webkit-overflow-scrolling: touch is deprecated — scroll-snap + overscroll handles this */
@@ -2963,7 +2965,7 @@ body::after {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y;
     /* scroll-behavior:smooth intentionally omitted —
        combining it with scroll-snap-type on iOS Safari
        causes the carousel to mis-render and show blank frames */
@@ -3846,7 +3848,7 @@ body::after {
   z-index: 9999;
   transform: translate3d(-50%, -50%, 0);
   opacity: 0;
-  transition: opacity 0.18s ease, width 0.22s ease, height 0.22s ease, background 0.22s ease;
+  transition: opacity 0.15s ease, width 0.12s ease, height 0.12s ease, background 0.12s ease;
   mix-blend-mode: normal;
   will-change: transform;
 }
