@@ -1,17 +1,23 @@
 [build]
-  publish = "dstar-store"
+  publish = "."
   functions = "netlify/functions"
 
 [dev]
+  command = "npx http-server . -p 5173 -c-1 --cors -s"
+  targetPort = 5173
   port = 8888
 
 [build.environment]
   NODE_VERSION = "18"
 
-# Redirects para SPA (si después migras a SPA)
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/producto"
+  to = "/producto.html"
   status = 200
 
 # Headers de seguridad

@@ -1,146 +1,129 @@
 // ============================================
-// DSTAR — CREAR GUÍA DE ENVÍO EN SKYDROPX
+// DSTAR — CREAR GUÍA DE ENVÍO EN SKYDROPX PRO (API v2 / OAuth2)
 // ============================================
-// Recibe por POST: { cliente, carrier_id, parcel }
-// Crea el shipment en Skydropx y devuelve número de rastreo + URL de etiqueta.
+// Recibe por POST: { cliente, rate_id, parcel, total }
+// Crea el shipment en Skydropx Pro y devuelve tracking + URL de etiqueta.
 //
 // Variables de entorno necesarias en Netlify:
-//   SKYDROPX_API_KEY   = tu token de Skydropx
-//   CP_ORIGEN          = código postal del almacén
-//   DIRECCION_ORIGEN   = calle y número de origen
-//   TELEFONO_ORIGEN    = teléfono del remitente
-//   EMAIL_ORIGEN       = email del remitente
+//   SKYDROPX_CLIENT_ID, SKYDROPX_CLIENT_SECRET
+//   DIRECCION_ORIGEN, TELEFONO_ORIGEN, EMAIL_ORIGEN
+//   (opcionales) NOMBRE_ORIGEN, EMPRESA_ORIGEN, REFERENCIA_ORIGEN,
+//                SKYDROPX_CONSIGNMENT_NOTE, SKYDROPX_PACKAGE_TYPE
 // ============================================
 
+const SKYDROPX_BASE = 'https://pro.skydropx.com/api/v1';
+
+let _tokenCache = { token: null, exp: 0 };
+
+async function getSkydropxToken() {
+  const now = Date.now();
+  if (_tokenCache.token && now < _tokenCache.exp) return _tokenCache.token;
+
+  const client_id = process.env.SKYDROPX_CLIENT_ID;
+  const client_secret = process.env.SKYDROPX_CLIENT_SECRET;
+  if (!client_id || !client_secret) {
+    throw new Error('Skydropx no configurado: faltan SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET');
+  }
+
+  const res = await fetch(`${SKYDROPX_BASE}/oauth/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id, client_secret, grant_type: 'client_credentials' })
+  });
+  if (!res.ok) throw new Error(`Skydropx auth falló (${res.status})`);
+
+  const data = await res.json();
+  _tokenCache = { token: data.access_token, exp: now + ((data.expires_in || 7200) * 1000) - 60000 };
+  return _tokenCache.token;
+}
+
 exports.handler = async (event) => {
-  // Cabeceras CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
-  // Preflight CORS
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers, body: '' };
-  }
-
-  // Solo POST
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Método no permitido' })
-    };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
   }
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { cliente, carrier_id, parcel } = body;
+    const { cliente, rate_id, parcel, total } = body;
 
-    // Validar datos mínimos necesarios
-    if (!cliente || !carrier_id) {
+    if (!cliente || !rate_id) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Faltan datos: cliente y carrier_id son requeridos' })
+        body: JSON.stringify({ error: 'Faltan datos: cliente y rate_id son requeridos' })
       };
     }
 
-    // Leer variables de entorno del remitente (DSTAR)
-    const API_KEY    = process.env.SKYDROPX_API_KEY;
-    const CP_ORIGEN  = process.env.CP_ORIGEN;
-    const DIR_ORIGEN = process.env.DIRECCION_ORIGEN;
-    const TEL_ORIGEN = process.env.TELEFONO_ORIGEN;
-    const EMAIL_ORIG = process.env.EMAIL_ORIGEN;
+    const token = await getSkydropxToken();
 
-    if (!API_KEY || !CP_ORIGEN) {
-      console.error('crear-guia — faltan variables de entorno de Skydropx');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Servicio de envíos no configurado' })
-      };
-    }
-
-    // Dimensiones del paquete con defaults
-    const paquete = {
-      weight: parcel?.weight || 0.5,
-      height: parcel?.height || 15,
-      width:  parcel?.width  || 20,
-      length: parcel?.length || 5
-    };
-
-    // Construir el shipment para Skydropx
     const shipmentBody = {
-      // Dirección de origen — DSTAR Store
-      address_from: {
-        name:     'DSTAR Store',
-        company:  'DSTAR',
-        address1: DIR_ORIGEN || '',
-        zip:      CP_ORIGEN,
-        city:     'Toluca',
-        province: 'Estado de México',
-        country:  'MX',
-        phone:    TEL_ORIGEN || '',
-        email:    EMAIL_ORIG || ''
-      },
-      // Dirección de destino — datos del cliente
-      address_to: {
-        name:     cliente.nombre   || '',
-        address1: cliente.calle    || '',
-        address2: cliente.colonia  || '',
-        zip:      cliente.cp       || '',
-        city:     cliente.ciudad   || '',
-        province: cliente.estado   || '',
-        country:  'MX',
-        phone:    cliente.telefono || '',
-        email:    cliente.email    || ''
-      },
-      // Datos del paquete
-      parcel: paquete,
-      // Tarifa seleccionada por el cliente
-      carrier_account_id: carrier_id
+      shipment: {
+        rate_id,
+        address_from: {
+          street1: process.env.DIRECCION_ORIGEN || '',
+          name: process.env.NOMBRE_ORIGEN || 'DSTAR Store',
+          company: process.env.EMPRESA_ORIGEN || 'DSTAR',
+          phone: process.env.TELEFONO_ORIGEN || '',
+          email: process.env.EMAIL_ORIGEN || '',
+          reference: process.env.REFERENCIA_ORIGEN || 'Almacén DSTAR'
+        },
+        address_to: {
+          street1: [cliente.calle, cliente.colonia].filter(Boolean).join(', '),
+          name: cliente.nombre || '',
+          company: cliente.nombre || '-',
+          phone: cliente.telefono || '',
+          email: cliente.email || '',
+          reference: cliente.referencia || 'Sin referencia'
+        },
+        packages: [{
+          package_number: '1',
+          package_protected: false,
+          declared_value: Math.round(total || (parcel && parcel.declared_value) || 1000),
+          consignment_note: process.env.SKYDROPX_CONSIGNMENT_NOTE || '53102400',
+          package_type: process.env.SKYDROPX_PACKAGE_TYPE || '4G'
+        }]
+      }
     };
 
-    // Crear el envío en Skydropx
-    const skydropxResponse = await fetch('https://api.skydropx.com/v1/shipments', {
+    const skydropxResponse = await fetch(`${SKYDROPX_BASE}/shipments/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Token ${API_KEY}`
-      },
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(shipmentBody)
     });
 
+    const data = await skydropxResponse.json().catch(() => ({}));
     if (!skydropxResponse.ok) {
-      const errText = await skydropxResponse.text();
-      console.error('Skydropx error al crear guía:', errText);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Error al generar la guía de envío' })
-      };
+      console.error('Skydropx error al crear guía:', skydropxResponse.status, JSON.stringify(data).slice(0, 300));
+      return { statusCode: 502, headers, body: JSON.stringify({ error: 'Error al generar la guía de envío' }) };
     }
 
-    const data = await skydropxResponse.json();
-
-    // Extraer número de rastreo y URL de la etiqueta
-    const tracking_number = data.tracking_number || data.data?.attributes?.tracking_number || '';
-    const label_url       = data.label_url       || data.data?.attributes?.label_url       || '';
+    // Respuesta JSON:API — tracking/label viven en included[].attributes
+    const pkg = (data.included || []).find(
+      (i) => i && i.attributes && (i.attributes.tracking_number || i.attributes.label_url)
+    );
+    const attrs = pkg ? pkg.attributes : {};
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ tracking_number, label_url })
+      body: JSON.stringify({
+        tracking_number: attrs.tracking_number
+          || (data.data && data.data.attributes && data.data.attributes.master_tracking_number)
+          || '',
+        label_url: attrs.label_url || '',
+        tracking_url: attrs.tracking_url_provider || ''
+      })
     };
 
   } catch (error) {
-    console.error('crear-guia — error inesperado:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Error interno del servidor' })
-    };
+    console.error('crear-guia — error inesperado:', error.message);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Error interno del servidor' }) };
   }
 };

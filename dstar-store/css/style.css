@@ -26,7 +26,7 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 110px; /* fixed header (top:32px + ~70px height) — anchor targets land below it */
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip; /* clips horizontal overflow sin convertir el root en scroll container — preserva position:sticky */
   overscroll-behavior-x: none;
 }
 
@@ -39,7 +39,7 @@ body {
   background-position: center top;
   background-repeat: no-repeat;
   color: var(--white);
-  overflow-x: hidden;
+  overflow-x: clip; /* idem html: evita que body sea scroll container y rompa el sticky de .product-detail__info */
   overscroll-behavior-x: none;
   line-height: 1.5;
 }
@@ -2741,8 +2741,13 @@ body::after {
 .product-detail__info {
   position: sticky;
   top: 120px;
+  align-self: start;
+  /* fallback por si el grid padre cambiara; el panel queda fijo indefinidamente
+     mientras la galería (más alta) sigue scrolleando */
+  max-height: calc(100dvh - 120px);
   padding: 44px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   isolation: isolate;
   /* Layer order (paint top→bottom):
      1. overlay oscuro sutil para legibilidad del texto
@@ -2944,6 +2949,12 @@ body::after {
   .product-detail__layout {
     grid-template-columns: 1fr;
     gap: 28px;
+  }
+  /* En tablet/móvil el panel fluye normal — sin sticky (solo desktop ≥981px) */
+  .product-detail__info {
+    position: static;
+    max-height: none;
+    overflow: hidden;
   }
 }
 

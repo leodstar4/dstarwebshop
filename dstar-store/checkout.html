@@ -598,7 +598,7 @@
           <!-- Las tarifas se renderizan aquí dinámicamente -->
           <div id="tarifas-envio">
             <p class="tarifas-status">
-              Ingresa tu código postal para ver las opciones de envío disponibles.
+              Completa CP, estado, ciudad y colonia para ver las opciones de envío disponibles.
             </p>
           </div>
         </div><!-- /cardTarifas -->
@@ -666,7 +666,7 @@
     let cart = JSON.parse(localStorage.getItem('dstar_cart') || '[]');
 
     // Tarifa seleccionada por el usuario
-    let tarifaSeleccionada = null; // { carrier_id, precio, nombre }
+    let tarifaSeleccionada = null; // { rate_id, precio, nombre }
 
     // Subtotal calculado del carrito
     let subtotal = 0;
@@ -767,8 +767,16 @@
     // ============================================
     // COTIZAR ENVÍO — llamada a la Netlify Function
     // ============================================
-    async function cotizarEnvio(cp) {
+    async function cotizarEnvio() {
       const contenedor = document.getElementById('tarifas-envio');
+
+      // Skydropx Pro exige CP + estado + ciudad + colonia. Si falta algo,
+      // no cotizamos todavía (se reintenta al completar los campos).
+      const cp      = document.getElementById('cp').value.trim();
+      const estado  = document.getElementById('estado').value.trim();
+      const ciudad  = document.getElementById('ciudad').value.trim();
+      const colonia = document.getElementById('colonia').value.trim();
+      if (!/^\d{5}$/.test(cp) || !estado || !ciudad || !colonia) return;
 
       // Mostrar estado de carga
       contenedor.innerHTML = `<p class="tarifas-status">⟳ CALCULANDO ENVÍO...</p>`;
@@ -779,6 +787,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             cp_destino: cp,
+            estado, ciudad, colonia,
             // Dimensiones default del paquete DSTAR
             peso:  0.5,
             alto:  15,
@@ -832,19 +841,19 @@
 
       // Construir lista de opciones
       const lista = rates.map((rate, i) => {
-        // Extraer datos de la tarifa (estructura de Skydropx)
-        const carrierId    = rate.carrier_account_id || rate.id || `rate_${i}`;
-        const carrierName  = rate.carrier            || 'Carrier';
-        const serviceName  = rate.service_level_name || rate.service || '';
-        const precio       = parseFloat(rate.total_price || rate.price || 0);
-        const dias         = rate.days               || rate.estimated_days || '?';
+        // Estructura normalizada que devuelve cotizar-envio (Skydropx Pro)
+        const rateId       = rate.rate_id || `rate_${i}`;
+        const carrierName  = rate.carrier || 'Paquetería';
+        const serviceName  = rate.service || '';
+        const precio       = parseFloat(rate.price || 0);
+        const dias         = (rate.days !== null && rate.days !== undefined) ? rate.days : '?';
 
         return `
-          <label class="tarifa-opcion" data-carrier-id="${carrierId}" data-precio="${precio}">
+          <label class="tarifa-opcion" data-rate-id="${rateId}" data-precio="${precio}">
             <input
               type="radio"
               name="tarifa"
-              value="${carrierId}"
+              value="${rateId}"
               data-precio="${precio}"
               data-nombre="${carrierName} — ${serviceName}"
             >
@@ -872,9 +881,9 @@
 
           // Guardar tarifa seleccionada en estado
           tarifaSeleccionada = {
-            carrier_id: e.target.value,
-            precio:     parseFloat(e.target.dataset.precio),
-            nombre:     e.target.dataset.nombre
+            rate_id: e.target.value,
+            precio:  parseFloat(e.target.dataset.precio),
+            nombre:  e.target.dataset.nombre
           };
 
           // Recalcular y mostrar el total
@@ -897,24 +906,22 @@
     // Cuando el usuario sale del campo CP con 5 dígitos,
     // se dispara automáticamente la cotización de envío.
     document.addEventListener('DOMContentLoaded', () => {
+      // La cotización Pro necesita CP + estado + ciudad + colonia.
+      // Reintentamos al salir de cualquiera de esos campos; cotizarEnvio()
+      // se auto-cancela si todavía falta alguno.
+      ['cp', 'estado', 'ciudad', 'colonia'].forEach((id) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.addEventListener('blur', () => cotizarEnvio());
+      });
+
+      // Enter dentro del CP también dispara el blur
       const cpInput = document.getElementById('cp');
-      if (!cpInput) return;
-
-      cpInput.addEventListener('blur', () => {
-        const cp = cpInput.value.trim();
-        // Solo cotizar si son exactamente 5 dígitos numéricos
-        if (/^\d{5}$/.test(cp)) {
-          cotizarEnvio(cp);
-        }
-      });
-
-      // También cotizar al presionar Enter dentro del campo CP
-      cpInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          cpInput.blur();
-        }
-      });
+      if (cpInput) {
+        cpInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); cpInput.blur(); }
+        });
+      }
     });
 
     // ============================================
@@ -1029,7 +1036,7 @@
             body: JSON.stringify({
               items,
               cliente,
-              carrier_id: tarifaSeleccionada.carrier_id,
+              rate_id: tarifaSeleccionada.rate_id,
               parcel,
               total
             })

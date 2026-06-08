@@ -11,3 +11,9 @@ node_modules/
 
 # Claude Code local settings
 .claude/
+
+# Artefactos de test / build (no van al repo)
+dstar-store/test-results/
+dstar-store/playwright-report/
+dstar-store/email-preview.html
+dstar-store/dist/

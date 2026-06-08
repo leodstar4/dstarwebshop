@@ -153,24 +153,25 @@ document.addEventListener('DOMContentLoaded', () => {
     initProductPage();
   } else {
     // ── Página principal ──
-    // 1. Critical path: above-fold render + core interactivity
+    // 1. Critical path: renders + core interactivity
+    // renderLookbook/Blog/FAQ corren SYNC aquí para que GSAP los encuentre
+    // cuando initFadeIns/initLookbook/initBlogReveal corran en el rAF de gsap-animations.js
     initLoader();
     renderProducts();
+    renderLookbook();
+    renderBlog();
+    renderFAQ();
     updateCartUI();
     initNav();
     initCart();
     initScrollProgress();
 
-    // 2. Idle: below-fold content + decorative interactions
-    // (gsap-animations.js handles all GSAP/ScrollTrigger init in its own DOMContentLoaded)
+    // 2. Idle: interactions decorativas (no bloquean el render crítico)
     const idle = window.requestIdleCallback
       ? (cb) => requestIdleCallback(cb, { timeout: 1500 })
       : (cb) => setTimeout(cb, 200);
 
     idle(() => {
-      renderLookbook();
-      renderBlog();
-      renderFAQ();
       initModal();
       initMagneticCTA();
       initRippleButtons();
@@ -697,39 +698,15 @@ function saveCart() {
 // ============================================
 // CHECKOUT (Mercado Pago)
 // ============================================
-async function handleCheckout() {
-  const btn = $('#checkoutBtn');
-  btn.disabled = true;
-  btn.textContent = 'PROCESANDO...';
-
-  try {
-    const response = await fetch(CONFIG.checkoutEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: cart.map(item => ({
-          title: `${item.name} — Talla ${item.size}`,
-          unit_price: item.price,
-          quantity: item.qty,
-          currency_id: CONFIG.currency
-        }))
-      })
-    });
-
-    const data = await response.json();
-    
-    if (data.init_point) {
-      // Redirigir a Mercado Pago
-      window.location.href = data.init_point;
-    } else {
-      throw new Error('No se pudo crear la preferencia de pago');
-    }
-  } catch (error) {
-    console.error('Checkout error:', error);
-    showToast('ERROR AL PROCESAR — INTENTA DE NUEVO');
-    btn.disabled = false;
-    btn.textContent = 'PAGAR CON MERCADO PAGO';
+function handleCheckout() {
+  // El carrito lleva a la página de checkout completa, donde se capturan
+  // los datos de envío, se cotiza con Skydropx y se crea la preferencia de
+  // pago (mp-preference). El pago directo desde el drawer queda deprecado.
+  if (!cart || cart.length === 0) {
+    showToast('TU CARRITO ESTÁ VACÍO');
+    return;
   }
+  window.location.href = 'checkout.html';
 }
 
 // ============================================

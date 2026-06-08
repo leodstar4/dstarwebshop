@@ -2,7 +2,7 @@
 // DSTAR — CREAR PREFERENCIA DE MERCADO PAGO
 // (con soporte de envío y metadata de Skydropx)
 // ============================================
-// Recibe por POST: { items, cliente, carrier_id, parcel, total }
+// Recibe por POST: { items, cliente, rate_id, parcel, total }
 // Crea la preferencia en MercadoPago y guarda en metadata los datos
 // necesarios para generar la guía de envío automáticamente en el webhook.
 //
@@ -34,7 +34,7 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { items, cliente, carrier_id, parcel, total } = body;
+    const { items, cliente, rate_id, parcel, total } = body;
 
     // Validar datos mínimos
     if (!items || items.length === 0) {
@@ -44,7 +44,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({ error: 'El carrito está vacío' })
       };
     }
-    if (!cliente || !carrier_id) {
+    if (!cliente || !rate_id) {
       return {
         statusCode: 400,
         headers,
@@ -83,11 +83,17 @@ exports.handler = async (event) => {
         phone: { number: cliente.telefono || '' }
       },
 
-      // Metadatos — se usan en el webhook para generar la guía automáticamente
+      // Metadatos — se usan en el webhook para generar la guía y el correo
       metadata: {
         cliente,
-        carrier_id,
-        parcel: parcel || { weight: 0.5, height: 15, width: 20, length: 5 }
+        rate_id,
+        parcel: parcel || { weight: 0.5, height: 15, width: 20, length: 5 },
+        order_items: mpItems.map((i) => ({
+          title: i.title,
+          quantity: i.quantity,
+          unit_price: i.unit_price
+        })),
+        order_total: total || null
       },
 
       // URLs de retorno después del pago
