@@ -13,6 +13,15 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
+  // Servidor estático para los tests — las Netlify Functions se mockean
+  // por test con page.route(), así que no necesitamos netlify dev aquí.
+  webServer: {
+    command: 'npx http-server . -p 8888 -c-1 --silent',
+    url: 'http://localhost:8888',
+    reuseExistingServer: !process.env.CI,
+    timeout: 30000,
+  },
+
   projects: [
     {
       name: 'Desktop',

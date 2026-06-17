@@ -121,9 +121,7 @@ function cdnOpt(url, w, h, { limit = false } = {}) {
 // ============================================
 const CONFIG = {
   freeShippingThreshold: 999,
-  currency: 'MXN',
-  // Cambia esta URL cuando tengas tu Netlify Function de Mercado Pago
-  checkoutEndpoint: '/.netlify/functions/create-preference'
+  currency: 'MXN'
 };
 
 // ============================================

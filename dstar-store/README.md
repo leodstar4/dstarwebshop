@@ -26,7 +26,10 @@ dstar-store/
 │       └── ...
 └── netlify/
     └── functions/
-        └── create-preference.js  ← Función serverless para Mercado Pago
+        ├── mp-preference.js  ← Crea la preferencia de pago en Mercado Pago
+        ├── mp-webhook.js     ← Webhook: genera guía Skydropx + correo al aprobar
+        ├── cotizar-envio.js  ← Cotiza tarifas de envío (Skydropx Pro)
+        └── crear-guia.js     ← Genera la guía de envío (Skydropx Pro)
 ```
 
 ---

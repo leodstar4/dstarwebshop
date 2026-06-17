@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "npx netlify-cli dev",
-    "deploy": "npx netlify-cli deploy --prod"
+    "deploy": "npx netlify-cli deploy --prod",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
   },
   "dependencies": {
     "cloudinary": "^2.9.0",
@@ -14,6 +16,8 @@
     "nodemailer": "^6.9.16"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "http-server": "^14.1.1",
     "netlify-cli": "^24.11.1",
     "sharp": "^0.34.5"
   }

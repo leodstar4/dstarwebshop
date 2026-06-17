@@ -250,10 +250,14 @@
       border: 1px solid #2a2a2a;
       background: var(--dark-2);
       cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color 0.2s var(--ease), background 0.2s var(--ease), transform 0.4s var(--ease);
       border-radius: 2px;
     }
     .tarifa-opcion:hover { border-color: var(--concrete-dark); }
+    .tarifa-opcion:active {
+      transform: scale(0.99);
+      transition: transform 0.1s var(--ease);
+    }
     .tarifa-opcion.selected {
       border-color: var(--red);
       background: rgba(230, 50, 50, 0.06);
@@ -366,7 +370,15 @@
     .price-row--total .price-value {
       font-size: 36px;
       color: var(--red);
+      transform-origin: right center;
     }
+    /* Feedback inmediato: el total late brevemente al actualizarse */
+    @keyframes totalPulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.07); }
+      100% { transform: scale(1); }
+    }
+    .price-value--pulse { animation: totalPulse 0.4s var(--ease); }
 
     /* Botón PAGAR */
     .btn-pagar {
@@ -381,14 +393,18 @@
       border: none;
       cursor: pointer;
       margin-top: 20px;
-      transition: background 0.2s, transform 0.1s;
+      /* Press rápido / release suave (timing asimétrico) */
+      transition: background 0.2s var(--ease), transform 0.45s var(--ease);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
     }
     .btn-pagar:hover { background: #cc2020; }
-    .btn-pagar:active { transform: scale(0.99); }
+    .btn-pagar:active {
+      transform: scale(0.97);
+      transition: transform 0.1s var(--ease);
+    }
     .btn-pagar:disabled {
       background: var(--concrete-dark);
       cursor: not-allowed;
@@ -446,9 +462,13 @@
       color: var(--white);
       border: var(--border);
       padding: 12px 28px;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s var(--ease), transform 0.4s var(--ease);
     }
     .btn-volver:hover { border-color: var(--concrete); }
+    .btn-volver:active {
+      transform: scale(0.97);
+      transition: transform 0.1s var(--ease);
+    }
 
     /* ============================================
        TOAST de error / info
@@ -596,7 +616,7 @@
           <h2 class="section-title">Opciones de envío</h2>
 
           <!-- Las tarifas se renderizan aquí dinámicamente -->
-          <div id="tarifas-envio">
+          <div id="tarifas-envio" aria-live="polite" aria-busy="false">
             <p class="tarifas-status">
               Completa CP, estado, ciudad y colonia para ver las opciones de envío disponibles.
             </p>
@@ -636,8 +656,8 @@
           </div>
 
           <!-- Botón principal de pago -->
-          <button class="btn-pagar" id="btnPagar" type="button">
-            <div class="btn-pagar__spinner"></div>
+          <button class="btn-pagar" id="btnPagar" type="button" aria-label="Pagar con Mercado Pago">
+            <div class="btn-pagar__spinner" aria-hidden="true"></div>
             <span class="btn-pagar__text">PAGAR</span>
           </button>
 
@@ -653,7 +673,7 @@
   </main>
 
   <!-- Toast de mensajes -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="assertive"></div>
 
   <!-- ============================================
        JAVASCRIPT — Lógica del checkout
@@ -671,9 +691,17 @@
     // Subtotal calculado del carrito
     let subtotal = 0;
 
+    // Respeta la preferencia del usuario de reducir movimiento
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     // ============================================
     // UTILIDADES
     // ============================================
+    // Peso estimado del paquete según unidades en el carrito (streetwear ~0.4kg/u)
+    function calcularPeso() {
+      const unidades = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+      return Math.max(0.5, Math.round(unidades * 0.4 * 10) / 10);
+    }
     // Formatear precio en MXN — igual que en app.js
     function formatPrice(n) {
       return new Intl.NumberFormat('es-MX', {
@@ -779,6 +807,7 @@
       if (!/^\d{5}$/.test(cp) || !estado || !ciudad || !colonia) return;
 
       // Mostrar estado de carga
+      contenedor.setAttribute('aria-busy', 'true');
       contenedor.innerHTML = `<p class="tarifas-status">⟳ CALCULANDO ENVÍO...</p>`;
 
       try {
@@ -788,8 +817,8 @@
           body: JSON.stringify({
             cp_destino: cp,
             estado, ciudad, colonia,
-            // Dimensiones default del paquete DSTAR
-            peso:  0.5,
+            // Dimensiones default del paquete DSTAR; el peso escala con las unidades
+            peso:  calcularPeso(),
             alto:  15,
             ancho: 20,
             largo: 5
@@ -807,6 +836,7 @@
 
         // Si Skydropx no devuelve tarifas para ese CP
         if (rates.length === 0) {
+          contenedor.setAttribute('aria-busy', 'false');
           contenedor.innerHTML = `
             <p class="tarifas-error">
               No hay opciones de envío disponibles para ese código postal.<br>
@@ -820,7 +850,7 @@
         renderTarifas(rates);
 
       } catch (err) {
-        console.error('cotizarEnvio — error:', err);
+        contenedor.setAttribute('aria-busy', 'false');
         contenedor.innerHTML = `
           <p class="tarifas-error">
             No se pudieron obtener las tarifas. Verifica tu CP e intenta de nuevo.
@@ -856,6 +886,7 @@
               value="${rateId}"
               data-precio="${precio}"
               data-nombre="${carrierName} — ${serviceName}"
+              aria-label="${carrierName} ${serviceName}, ${formatPrice(precio)}"
             >
             <div class="tarifa-info">
               <div class="tarifa-nombre">${carrierName}</div>
@@ -868,7 +899,8 @@
         `;
       }).join('');
 
-      contenedor.innerHTML = `<div class="tarifas-lista">${lista}</div>`;
+      contenedor.setAttribute('aria-busy', 'false');
+      contenedor.innerHTML = `<div class="tarifas-lista" role="radiogroup" aria-label="Opciones de envío disponibles">${lista}</div>`;
 
       // Escuchar selección de tarifa
       contenedor.querySelectorAll('input[type="radio"]').forEach(radio => {
@@ -888,11 +920,21 @@
 
           // Recalcular y mostrar el total
           actualizarTotal();
+
+          // Feedback inmediato: el total late al sumar el envío
+          const totalEl = document.getElementById('totalDisplay');
+          if (totalEl && !prefersReducedMotion) {
+            totalEl.classList.remove('price-value--pulse');
+            void totalEl.offsetWidth; // reinicia la animación
+            totalEl.classList.add('price-value--pulse');
+            totalEl.addEventListener('animationend',
+              () => totalEl.classList.remove('price-value--pulse'), { once: true });
+          }
         });
       });
 
-      // Animar entrada de las opciones con GSAP
-      if (window.gsap) {
+      // Animar entrada de las opciones con GSAP (salvo reduced-motion)
+      if (window.gsap && !prefersReducedMotion) {
         gsap.fromTo('.tarifa-opcion',
           { opacity: 0, y: 12 },
           { opacity: 1, y: 0, duration: 0.35, stagger: 0.07, ease: 'power2.out' }
@@ -931,33 +973,44 @@
       const campos = ['nombre', 'email', 'telefono', 'calle', 'colonia', 'cp', 'ciudad', 'estado'];
       let valido = true;
 
+      // Marca un campo como inválido (visual + accesible)
+      const marcarError = (input) => {
+        input.classList.add('input-error');
+        input.setAttribute('aria-invalid', 'true');
+        valido = false;
+      };
+
       // Limpiar errores anteriores
       campos.forEach(id => {
-        document.getElementById(id)?.classList.remove('input-error');
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.classList.remove('input-error');
+        input.removeAttribute('aria-invalid');
       });
 
       // Validar cada campo requerido
       campos.forEach(id => {
         const input = document.getElementById(id);
         if (!input) return;
-        if (!input.value.trim()) {
-          input.classList.add('input-error');
-          valido = false;
-        }
+        if (!input.value.trim()) marcarError(input);
       });
 
-      // Validar formato de email básico
+      // Validar formato de email
       const emailInput = document.getElementById('email');
-      if (emailInput && emailInput.value && !emailInput.value.includes('@')) {
-        emailInput.classList.add('input-error');
-        valido = false;
+      if (emailInput && emailInput.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+        marcarError(emailInput);
+      }
+
+      // Validar teléfono — 10 dígitos
+      const telInput = document.getElementById('telefono');
+      if (telInput && telInput.value && !/^\d{10}$/.test(telInput.value.replace(/\D/g, ''))) {
+        marcarError(telInput);
       }
 
       // Validar CP — exactamente 5 dígitos
       const cpInput = document.getElementById('cp');
       if (cpInput && !/^\d{5}$/.test(cpInput.value.trim())) {
-        cpInput.classList.add('input-error');
-        valido = false;
+        marcarError(cpInput);
       }
 
       return valido;
@@ -1009,8 +1062,8 @@
           estado:   document.getElementById('estado').value.trim()
         };
 
-        // 5. Dimensiones del paquete — defaults estándar DSTAR
-        const parcel = { weight: 0.5, height: 15, width: 20, length: 5 };
+        // 5. Dimensiones del paquete — el peso escala con las unidades
+        const parcel = { weight: calcularPeso(), height: 15, width: 20, length: 5 };
 
         // 6. Calcular total final
         const total = subtotal + tarifaSeleccionada.precio;
@@ -1077,8 +1130,8 @@
       // Renderizar resumen del pedido
       renderOrderSummary();
 
-      // Animación de entrada con GSAP para las secciones
-      if (window.gsap) {
+      // Animación de entrada con GSAP para las secciones (salvo reduced-motion)
+      if (window.gsap && !prefersReducedMotion) {
         // Las tarjetas entran desde abajo escalonadas
         gsap.fromTo(
           '.checkout-card',
