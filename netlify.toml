@@ -1,0 +1,6 @@
+# El sitio vive en el subdirectorio dstar-store/.
+# Netlify usa este archivo (en la raíz del repo) solo para ubicar la base;
+# el resto de la configuración (publish, functions, redirects, headers)
+# se lee desde dstar-store/netlify.toml.
+[build]
+  base = "dstar-store"

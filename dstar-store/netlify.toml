@@ -1,6 +1,10 @@
 [build]
   publish = "."
   functions = "netlify/functions"
+  # Sitio estático: se sirve el código directo, sin compilar.
+  # El command explícito evita que Netlify autodetecte vite.config.mjs
+  # e intente correr "vite build" (vite no está instalado → fallaría).
+  command = "echo 'no build step — sitio estático'"
 
 [dev]
   command = "npx http-server . -p 5173 -c-1 --cors -s"
