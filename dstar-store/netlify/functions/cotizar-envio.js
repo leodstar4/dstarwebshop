@@ -20,21 +20,29 @@ async function getSkydropxToken() {
   const now = Date.now();
   if (_tokenCache.token && now < _tokenCache.exp) return _tokenCache.token;
 
-  const client_id = process.env.SKYDROPX_CLIENT_ID;
-  const client_secret = process.env.SKYDROPX_CLIENT_SECRET;
+  // Sanitiza: quita espacios, saltos de línea y comillas accidentales que se
+  // cuelan al pegar en el dashboard (causa típica de 401 invalid_client).
+  const clean = (v) => (v == null ? '' : String(v).trim().replace(/^["']|["']$/g, ''));
+  const client_id = clean(process.env.SKYDROPX_CLIENT_ID);
+  const client_secret = clean(process.env.SKYDROPX_CLIENT_SECRET);
   if (!client_id || !client_secret) {
     throw new Error('Skydropx no configurado: faltan SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET');
   }
 
   const res = await fetch(`${SKYDROPX_BASE}/oauth/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ client_id, client_secret, grant_type: 'client_credentials' })
   });
 
   if (!res.ok) {
     const txt = await res.text();
-    throw new Error(`Skydropx auth falló (${res.status}): ${txt.slice(0, 200)}`);
+    // Log completo para diagnóstico (sin exponer el secreto): el error_description
+    // de Skydropx suele decir exactamente qué credencial está mal.
+    console.error(
+      `Skydropx auth falló (${res.status}) — client_id_len=${client_id.length} secret_len=${client_secret.length} body=${txt}`
+    );
+    throw new Error(`Skydropx auth falló (${res.status}): ${txt}`);
   }
 
   const data = await res.json();

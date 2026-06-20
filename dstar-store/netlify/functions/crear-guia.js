@@ -19,18 +19,25 @@ async function getSkydropxToken() {
   const now = Date.now();
   if (_tokenCache.token && now < _tokenCache.exp) return _tokenCache.token;
 
-  const client_id = process.env.SKYDROPX_CLIENT_ID;
-  const client_secret = process.env.SKYDROPX_CLIENT_SECRET;
+  const clean = (v) => (v == null ? '' : String(v).trim().replace(/^["']|["']$/g, ''));
+  const client_id = clean(process.env.SKYDROPX_CLIENT_ID);
+  const client_secret = clean(process.env.SKYDROPX_CLIENT_SECRET);
   if (!client_id || !client_secret) {
     throw new Error('Skydropx no configurado: faltan SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET');
   }
 
   const res = await fetch(`${SKYDROPX_BASE}/oauth/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ client_id, client_secret, grant_type: 'client_credentials' })
   });
-  if (!res.ok) throw new Error(`Skydropx auth falló (${res.status})`);
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error(
+      `Skydropx auth falló (${res.status}) — client_id_len=${client_id.length} secret_len=${client_secret.length} body=${txt}`
+    );
+    throw new Error(`Skydropx auth falló (${res.status}): ${txt}`);
+  }
 
   const data = await res.json();
   _tokenCache = { token: data.access_token, exp: now + ((data.expires_in || 7200) * 1000) - 60000 };
