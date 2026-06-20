@@ -1091,6 +1091,9 @@
               cliente,
               rate_id: tarifaSeleccionada.rate_id,
               parcel,
+              // Costo del envío — se cobra junto con la prenda en el mismo pago
+              envio: tarifaSeleccionada.precio,
+              envio_nombre: tarifaSeleccionada.nombre,
               total
             })
           });

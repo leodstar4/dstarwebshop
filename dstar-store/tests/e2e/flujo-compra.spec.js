@@ -201,13 +201,16 @@ test.describe('Checkout', () => {
         })
       })
     );
-    await page.route('**/.netlify/functions/mp-preference', (route) =>
+    // Captura el body enviado para verificar que el envío se cobra en el pago
+    let prefBody = null;
+    await page.route('**/.netlify/functions/mp-preference', (route) => {
+      prefBody = route.request().postDataJSON();
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ id: 'pref_test', init_point: '/gracias.html?payment_id=demo' })
-      })
-    );
+      });
+    });
 
     await gotoCheckoutConCarrito(page);
     await page.fill('#nombre', 'Juan Perez');
@@ -227,6 +230,11 @@ test.describe('Checkout', () => {
     await page.waitForURL(/gracias\.html/, { timeout: 8000 });
     const cart = await page.evaluate(() => localStorage.getItem('dstar_cart'));
     expect(cart).toBeNull();
+
+    // El costo del envío se envía para cobrarse junto con la prenda
+    expect(prefBody).not.toBeNull();
+    expect(prefBody.envio).toBe(150);
+    expect(prefBody.total).toBe(1798 + 150); // subtotal (899*2) + envío
   });
 });
 

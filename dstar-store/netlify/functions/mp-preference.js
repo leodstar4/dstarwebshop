@@ -34,7 +34,7 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { items, cliente, rate_id, parcel, total } = body;
+    const { items, cliente, rate_id, parcel, total, envio, envio_nombre } = body;
 
     // Validar datos mínimos
     if (!items || items.length === 0) {
@@ -71,6 +71,18 @@ exports.handler = async (event) => {
       quantity:   item.quantity   || item.qty,
       currency_id: 'MXN'
     }));
+
+    // Cobrar el envío en el mismo pago: se agrega como un ítem más de la
+    // preferencia. Sin esto, MercadoPago solo cobraría las prendas.
+    const costoEnvio = Number(envio) || 0;
+    if (costoEnvio > 0) {
+      mpItems.push({
+        title:       envio_nombre ? `Envío — ${envio_nombre}` : 'Envío',
+        unit_price:  costoEnvio,
+        quantity:    1,
+        currency_id: 'MXN'
+      });
+    }
 
     // Construir la preferencia de pago
     const preference = {
