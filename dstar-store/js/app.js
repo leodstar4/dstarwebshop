@@ -88,7 +88,7 @@ const PRODUCTS = [
     id: 'dstar-apnm-shirt-01',
     name: 'BENDECIDO',
     drop: 'EL ANIMAL PRINT NUNCA MUERE',
-    price: 300,
+    price: 350,
     description: 'Long sleeve del drop El Animal Print Nunca Muere. Pieza limitada DSTAR.',
     image: 'https://res.cloudinary.com/dflyysqln/image/upload/bendecido_shkmci.webp',
     gallery: [
