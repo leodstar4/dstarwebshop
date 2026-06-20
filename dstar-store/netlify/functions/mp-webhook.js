@@ -230,27 +230,31 @@ async function enviarCorreoConfirmacion({ cliente, guia, items, total, paymentId
   });
 
   const fromName = process.env.EMPRESA_ORIGEN || 'DSTAR';
-  const html = buildEmailHtml({ cliente, guia, items, total, paymentId });
+
+  // El cliente recibe solo el rastreo; la etiqueta para despachar (label_url)
+  // va únicamente en la copia interna de la tienda.
+  const htmlCliente = buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiqueta: false });
+  const htmlTienda  = buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiqueta: true });
 
   // 1) Al cliente
   await transporter.sendMail({
     from: `"${fromName}" <${user}>`,
     to: cliente.email,
     subject: 'Tu pedido DSTAR está confirmado 🖤',
-    html
+    html: htmlCliente
   });
 
-  // 2) Copia interna a la tienda (notificación de venta)
+  // 2) Copia interna a la tienda (notificación de venta + etiqueta para imprimir)
   const storeEmail = process.env.EMAIL_ORIGEN || user;
   await transporter.sendMail({
     from: `"${fromName}" <${user}>`,
     to: storeEmail,
     subject: `Nueva venta — ${cliente.nombre || 'Cliente'} · ${cliente.ciudad || ''} ${cliente.cp || ''}`.trim(),
-    html
+    html: htmlTienda
   }).catch((e) => console.error('mp-webhook — no se pudo enviar copia a la tienda:', e.message));
 }
 
-function buildEmailHtml({ cliente, guia, items, total, paymentId }) {
+function buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiqueta }) {
   const rows = (items || []).map((it) => `
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #2a2a2a;color:#f0ede8;font-size:14px;">
@@ -273,8 +277,9 @@ function buildEmailHtml({ cliente, guia, items, total, paymentId }) {
   const trackBtn = guia.tracking_url
     ? `<a href="${esc(guia.tracking_url)}" style="display:inline-block;background:#e63232;color:#fff;text-decoration:none;font-size:13px;letter-spacing:2px;padding:14px 28px;border-radius:2px;margin:4px 8px 4px 0;">RASTREAR PEDIDO</a>`
     : '';
-  const labelBtn = guia.label_url
-    ? `<a href="${esc(guia.label_url)}" style="display:inline-block;background:#141414;color:#f0ede8;text-decoration:none;font-size:13px;letter-spacing:2px;padding:14px 28px;border-radius:2px;border:1px solid #2a2a2a;margin:4px 0;">VER GUÍA DE ENVÍO</a>`
+  // La etiqueta para imprimir solo se incluye en la copia de la tienda.
+  const labelBtn = (incluirEtiqueta && guia.label_url)
+    ? `<a href="${esc(guia.label_url)}" style="display:inline-block;background:#141414;color:#f0ede8;text-decoration:none;font-size:13px;letter-spacing:2px;padding:14px 28px;border-radius:2px;border:1px solid #2a2a2a;margin:4px 0;">VER GUÍA DE ENVÍO (IMPRIMIR)</a>`
     : '';
 
   return `<!DOCTYPE html>
