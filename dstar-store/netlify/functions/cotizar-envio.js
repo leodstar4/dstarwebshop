@@ -10,69 +10,35 @@
 //   CP_ORIGEN, ORIGEN_ESTADO, ORIGEN_MUNICIPIO, ORIGEN_COLONIA = dirección del almacén
 // ============================================
 
-const SKYDROPX_BASE = 'https://pro.skydropx.com/api/v1';
-
-// Cache del token a nivel de módulo — se reutiliza mientras la instancia esté
-// caliente (el token vive 2h). Evita re-autenticar en cada request.
-let _tokenCache = { token: null, exp: 0 };
-
-async function getSkydropxToken() {
-  const now = Date.now();
-  if (_tokenCache.token && now < _tokenCache.exp) return _tokenCache.token;
-
-  // Sanitiza: quita espacios, saltos de línea y comillas accidentales que se
-  // cuelan al pegar en el dashboard (causa típica de 401 invalid_client).
-  const clean = (v) => (v == null ? '' : String(v).trim().replace(/^["']|["']$/g, ''));
-  const client_id = clean(process.env.SKYDROPX_CLIENT_ID);
-  const client_secret = clean(process.env.SKYDROPX_CLIENT_SECRET);
-  if (!client_id || !client_secret) {
-    throw new Error('Skydropx no configurado: faltan SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET');
-  }
-
-  const res = await fetch(`${SKYDROPX_BASE}/oauth/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ client_id, client_secret, grant_type: 'client_credentials' })
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    // Log completo para diagnóstico (sin exponer el secreto): el error_description
-    // de Skydropx suele decir exactamente qué credencial está mal.
-    console.error(
-      `Skydropx auth falló (${res.status}) — client_id_len=${client_id.length} secret_len=${client_secret.length} body=${txt}`
-    );
-    throw new Error(`Skydropx auth falló (${res.status}): ${txt}`);
-  }
-
-  const data = await res.json();
-  _tokenCache = {
-    token: data.access_token,
-    exp: now + ((data.expires_in || 7200) * 1000) - 60000 // 1 min de margen
-  };
-  return _tokenCache.token;
-}
+const { SKYDROPX_BASE, getSkydropxToken } = require('../lib/skydropx');
+const { str } = require('../lib/validate');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 exports.handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  };
+  const headers = { 'Content-Type': 'application/json' };
 
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
   }
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { cp_destino, estado, ciudad, colonia, peso, alto, ancho, largo } = body;
+    let body;
+    try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
+    const cp_destino = str(body.cp_destino, 5);
+    const estado = str(body.estado, 60);
+    const ciudad = str(body.ciudad, 80);
+    const colonia = str(body.colonia, 80);
+    const clamp = (v, min, max, def) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
+    };
+    const peso = clamp(body.peso, 0.1, 10, 0.5);
+    const alto = clamp(body.alto, 1, 60, 10);
+    const ancho = clamp(body.ancho, 1, 60, 20);
+    const largo = clamp(body.largo, 1, 60, 20);
 
-    // La API Pro EXIGE estado/municipio/colonia además del CP
-    if (!cp_destino || !estado || !ciudad || !colonia) {
+    if (!/^\d{5}$/.test(cp_destino) || !estado || !ciudad || !colonia) {
       return {
         statusCode: 400,
         headers,
@@ -109,10 +75,10 @@ exports.handler = async (event) => {
           area_level3: colonia
         },
         parcels: [{
-          length: Math.round(largo || 20),
-          width: Math.round(ancho || 20),
-          height: Math.round(alto || 10),
-          weight: peso || 0.5
+          length: Math.round(largo),
+          width: Math.round(ancho),
+          height: Math.round(alto),
+          weight: peso
         }]
       }
     };

@@ -12,7 +12,7 @@
   port = 8888
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "22"
 
 [[redirects]]
   from = "/api/*"
@@ -31,7 +31,7 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://sdk.mercadopago.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com https:; connect-src 'self' https://api.mercadopago.com https://res.cloudinary.com"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://sdk.mercadopago.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com https:; connect-src 'self' https://api.mercadopago.com https://res.cloudinary.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self' https://*.mercadopago.com https://*.mercadopago.com.mx"
 
 # Cache para assets estáticos.
 # IMPORTANTE: NO usar "immutable" en JS/CSS porque los archivos se actualizan con cada
@@ -53,6 +53,23 @@
   for = "/*.woff2"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/assets/brand/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
 
 # HTML siempre fresco
 [[headers]]

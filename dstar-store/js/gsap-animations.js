@@ -39,22 +39,9 @@ function initHeroTagline() {
       duration: isMobile ? 0.55 : 0.65,
       stagger: isMobile ? 0.035 : 0.045,
       ease: 'power3.out',
-      delay: 2.3,
+      delay: 0.75,
       onStart() {
         tagline.style.opacity = '1';
-      },
-      onComplete() {
-        // Breathing sutil — solo en desktop para no afectar rendimiento móvil
-        if (!isMobile) {
-          gsap.to(tagline, {
-            scale: 1.006,
-            duration: 3.5,
-            ease: 'sine.inOut',
-            yoyo: true,
-            repeat: -1,
-            transformOrigin: 'center center'
-          });
-        }
       }
     }
   );
@@ -199,10 +186,11 @@ function initSectionLines() {
 function initScrollProgress() {
   const bar = document.getElementById('scrollProgress');
   if (!bar) return;
-  bar.style.transition = 'none'; // GSAP owns this now
+  bar.style.transition = 'none';
+  gsap.set(bar, { scaleX: 0, transformOrigin: '0 50%' });
 
   gsap.to(bar, {
-    width: '100%',
+    scaleX: 1,
     ease: 'none',
     scrollTrigger: { start: 0, end: 'max', scrub: 0.2 }
   });
@@ -554,6 +542,8 @@ function initProductCardClick() {
   document.addEventListener('click', function (e) {
     const card = e.target.closest('a.product-card:not(.sold-out)');
     if (!card) return;
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -573,11 +563,13 @@ function initProductCardClick() {
     // ── Clon de la imagen que se va a expandir ──
     const clone = document.createElement('div');
     clone.dataset.pdTransit = '1';
+    const startClip = `inset(${rect.top}px ${vw - rect.right}px ${vh - rect.bottom}px ${rect.left}px)`;
     clone.style.cssText = [
-      'position:fixed',
-      `top:${rect.top}px`, `left:${rect.left}px`,
-      `width:${rect.width}px`, `height:${rect.height}px`,
-      `background:url("${img.src}") center/cover no-repeat`,
+      'position:fixed', 'inset:0',
+      'background-color:#0a0a0a',
+      `background-image:url("${encodeURI(img.currentSrc || img.src)}")`,
+      'background-position:center', 'background-size:contain', 'background-repeat:no-repeat',
+      `clip-path:${startClip}`,
       'z-index:99995', 'pointer-events:none'
     ].join(';');
     document.body.appendChild(clone);
@@ -593,14 +585,10 @@ function initProductCardClick() {
       'text-align:center', 'padding:0 24px'
     ].join(';');
     const nameText = nameEl ? (nameEl.dataset.name || nameEl.textContent) : '';
-    label.innerHTML = `<span style="
-      font-family:'Archivo Black',sans-serif;
-      font-size:clamp(28px,7vw,88px);
-      letter-spacing:6px;
-      color:#f0ede8;
-      text-shadow:0 4px 60px rgba(0,0,0,0.9);
-      line-height:1
-    ">${nameText}</span>`;
+    const labelText = document.createElement('span');
+    labelText.style.cssText = "font-family:'Archivo Black',sans-serif;font-size:clamp(28px,7vw,88px);letter-spacing:6px;color:#f0ede8;text-shadow:0 4px 60px rgba(0,0,0,0.9);line-height:1";
+    labelText.textContent = nameText;
+    label.appendChild(labelText);
     document.body.appendChild(label);
 
     // ── Velo negro final ──
@@ -629,10 +617,7 @@ function initProductCardClick() {
 
     // 3. Expansión de la imagen al viewport completo
     tl.to(clone, {
-      top:    0,
-      left:   0,
-      width:  vw,
-      height: vh,
+      clipPath: 'inset(0px 0px 0px 0px)',
       duration: 0.7,
       ease: 'expo.inOut'
     }, 0.06);
@@ -646,11 +631,10 @@ function initProductCardClick() {
 
   }, true); // capture phase → antes que blog-transitions
 
-  // pageshow — force reload on bfcache restore so GSAP entry animations re-run
   window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-      window.location.reload();
-    }
+    if (!event.persisted) return;
+    document.querySelectorAll('[data-pd-transit], #dstarPageFade').forEach(el => el.remove());
+    gsap.set('.product-card', { clearProps: 'opacity,scale,transform' });
   });
 }
 
@@ -811,14 +795,13 @@ function initCustomCursor() {
   document.body.appendChild(dot);
   document.body.classList.add('dstar-cursor-active');
 
-  // Lerp toward target
-  let tx = window.innerWidth / 2, ty = window.innerHeight / 2;
-  let cx = tx, cy = ty;
+  gsap.set(dot, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  const moveX = gsap.quickTo(dot, 'x', { duration: 0.25, ease: 'power3.out' });
+  const moveY = gsap.quickTo(dot, 'y', { duration: 0.25, ease: 'power3.out' });
 
-  // Track the mouse globally (so dot doesn't snap when entering grid)
   document.addEventListener('mousemove', e => {
-    tx = e.clientX;
-    ty = e.clientY;
+    moveX(e.clientX);
+    moveY(e.clientY);
   }, { passive: true });
 
   // Mostrar dot solo sobre el grid de productos (spec del user)
@@ -834,16 +817,6 @@ function initCustomCursor() {
       if (e.target.closest('.product-card')) dot.classList.remove('is-grow');
     });
   }
-
-  // Render loop con lerp suave
-  const LERP = 0.28;
-  function render() {
-    cx += (tx - cx) * LERP;
-    cy += (ty - cy) * LERP;
-    dot.style.transform = `translate3d(${cx}px, ${cy}px, 0) translate(-50%, -50%)`;
-    requestAnimationFrame(render);
-  }
-  requestAnimationFrame(render);
 
   // Hide on touch (some hybrid devices)
   window.addEventListener('touchstart', () => {
@@ -861,16 +834,16 @@ function initMagneticButtons() {
   const MAX = 8; // px de desplazamiento máximo
   const RADIUS_FACTOR = 1.6; // zona magnética = 1.6x el bounding-box
 
-  const selectors = '.hero__cta, .product-detail__add, .product-modal__add, .cart-drawer__checkout';
+  const selectors = '.hero__cta, .product-detail__add, .cart-drawer__checkout';
   document.querySelectorAll(selectors).forEach(btn => {
     let r = null;
-    function update() { r = btn.getBoundingClientRect(); }
-    update();
-    window.addEventListener('resize', update, { passive: true });
-    window.addEventListener('scroll', update, { passive: true });
+    const invalidate = () => { r = null; };
+    window.addEventListener('resize', invalidate, { passive: true });
+    window.addEventListener('scroll', invalidate, { passive: true });
 
     document.addEventListener('mousemove', e => {
-      if (!r) return;
+      if (!r) r = btn.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
       const cx = r.left + r.width  / 2;
       const cy = r.top  + r.height / 2;
       const dx = e.clientX - cx;

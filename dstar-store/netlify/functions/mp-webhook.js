@@ -1,141 +1,116 @@
 // ============================================
 // DSTAR — WEBHOOK DE MERCADO PAGO
 // ============================================
-// Recibe notificaciones de MercadoPago cuando un pago cambia de estado.
-// Si el pago es aprobado, genera automáticamente la guía de envío con
-// Skydropx Pro (API v2 / OAuth2) usando el rate_id guardado en la metadata.
+// Si el pago está aprobado y el monto coincide con el calculado al crear la
+// preferencia, genera la guía en Skydropx y envía el correo. Cada pago se
+// procesa una sola vez (registro en Netlify Blobs).
 //
-// Configurar esta URL en MercadoPago como notification_url:
-//   https://tu-sitio.netlify.app/.netlify/functions/mp-webhook
-//
-// Variables de entorno necesarias:
-//   MP_ACCESS_TOKEN
+// Variables de entorno:
+//   MP_ACCESS_TOKEN, MP_WEBHOOK_SECRET (clave secreta de webhooks en el panel de MP)
 //   SKYDROPX_CLIENT_ID, SKYDROPX_CLIENT_SECRET
-//   CP_ORIGEN, DIRECCION_ORIGEN, TELEFONO_ORIGEN, EMAIL_ORIGEN
-//   (opcionales) NOMBRE_ORIGEN, EMPRESA_ORIGEN, REFERENCIA_ORIGEN,
-//                SKYDROPX_CONSIGNMENT_NOTE, SKYDROPX_PACKAGE_TYPE
+//   DIRECCION_ORIGEN, TELEFONO_ORIGEN, EMAIL_ORIGEN, GMAIL_USER, GMAIL_APP_PASSWORD
 // ============================================
 
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { SKYDROPX_BASE, getSkydropxToken } = require('../lib/skydropx');
+const { openStore } = require('../lib/orders-store');
 
-const SKYDROPX_BASE = 'https://pro.skydropx.com/api/v1';
+const headers = { 'Content-Type': 'application/json' };
+const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify(body) });
+const STALE_MS = 5 * 60 * 1000;
 
-let _tokenCache = { token: null, exp: 0 };
-
-async function getSkydropxToken() {
-  const now = Date.now();
-  if (_tokenCache.token && now < _tokenCache.exp) return _tokenCache.token;
-
-  const clean = (v) => (v == null ? '' : String(v).trim().replace(/^["']|["']$/g, ''));
-  const client_id = clean(process.env.SKYDROPX_CLIENT_ID);
-  const client_secret = clean(process.env.SKYDROPX_CLIENT_SECRET);
-  if (!client_id || !client_secret) {
-    throw new Error('Skydropx no configurado: faltan SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET');
+function firmaValida(event, dataId) {
+  const secret = process.env.MP_WEBHOOK_SECRET;
+  if (!secret) {
+    console.warn('mp-webhook — MP_WEBHOOK_SECRET no configurado; no se verifica la firma');
+    return true;
   }
-
-  const res = await fetch(`${SKYDROPX_BASE}/oauth/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ client_id, client_secret, grant_type: 'client_credentials' })
-  });
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error(
-      `Skydropx auth falló (${res.status}) — client_id_len=${client_id.length} secret_len=${client_secret.length} body=${txt}`
-    );
-    throw new Error(`Skydropx auth falló (${res.status}): ${txt}`);
-  }
-
-  const data = await res.json();
-  _tokenCache = { token: data.access_token, exp: now + ((data.expires_in || 7200) * 1000) - 60000 };
-  return _tokenCache.token;
+  const h = Object.fromEntries(Object.entries(event.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
+  const parts = Object.fromEntries(String(h['x-signature'] || '').split(',').map((p) => p.trim().split('=')));
+  if (!parts.ts || !parts.v1) return false;
+  const id = /^[a-z0-9]+$/i.test(dataId) ? String(dataId).toLowerCase() : dataId;
+  let manifest = `id:${id};`;
+  if (h['x-request-id']) manifest += `request-id:${h['x-request-id']};`;
+  manifest += `ts:${parts.ts};`;
+  const esperado = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
+  const a = Buffer.from(esperado);
+  const b = Buffer.from(String(parts.v1));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 exports.handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json'
-  };
-
-  // MercadoPago puede enviar GET para verificar el endpoint
-  if (event.httpMethod === 'GET') {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
-  }
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-  }
+  if (event.httpMethod === 'GET') return reply(200, { ok: true });
+  if (event.httpMethod !== 'POST') return reply(405, { error: 'Method Not Allowed' });
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { type, data } = body;
+    let body;
+    try { body = JSON.parse(event.body || '{}'); } catch { return reply(400, { error: 'JSON inválido' }); }
 
-    if (type !== 'payment') {
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, skipped: `tipo ignorado: ${type}` }) };
-    }
+    const qs = event.queryStringParameters || {};
+    if ((body.type || qs.type) !== 'payment') return reply(200, { ok: true });
 
-    const paymentId = data?.id;
-    if (!paymentId) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Falta data.id en el webhook' }) };
-    }
+    const paymentId = String(qs['data.id'] || (body.data && body.data.id) || '');
+    if (!/^\d{1,20}$/.test(paymentId)) return reply(400, { error: 'id inválido' });
+    if (!firmaValida(event, paymentId)) return reply(401, { error: 'Firma inválida' });
 
     const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
     if (!MP_TOKEN) {
       console.error('mp-webhook — falta MP_ACCESS_TOKEN');
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'MP no configurado' }) };
+      return reply(500, { error: 'MP no configurado' });
     }
 
-    // Consultar los detalles del pago
+    const store = openStore(event);
+    const previo = await store.get(paymentId);
+    if (previo && (previo.status === 'done' || (previo.status === 'processing' && Date.now() - previo.at < STALE_MS))) {
+      return reply(200, { ok: true });
+    }
+
     const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: { 'Authorization': `Bearer ${MP_TOKEN}`, 'Content-Type': 'application/json' }
     });
     if (!mpResponse.ok) {
-      const errText = await mpResponse.text();
-      console.error('Error consultando pago MP:', errText.slice(0, 200));
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'No se pudo consultar el pago' }) };
+      console.error('mp-webhook — error consultando pago', paymentId, mpResponse.status);
+      return reply(500, { error: 'No se pudo consultar el pago' });
     }
 
     const payment = await mpResponse.json();
+    if (payment.status !== 'approved') return reply(200, { ok: true });
 
-    if (payment.status !== 'approved') {
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, skipped: `estado ignorado: ${payment.status}` }) };
-    }
-
-    // Metadata guardada al crear la preferencia
-    const { cliente, rate_id, parcel, order_items, order_total } = payment.metadata || {};
+    const { cliente, rate_id, parcel, order_items, expected_total } = payment.metadata || {};
     if (!cliente || !rate_id) {
-      console.error('mp-webhook — metadata incompleta:', payment.metadata);
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, skipped: 'metadata de envío incompleta' }) };
+      console.error('mp-webhook — metadata incompleta en pago', paymentId);
+      return reply(200, { ok: true });
     }
 
-    const guiaResult = await crearGuiaSkydropx({ cliente, rate_id, parcel, total: payment.transaction_amount });
+    const pagado = Number(payment.transaction_amount);
+    if (payment.currency_id !== 'MXN' || !Number.isFinite(Number(expected_total)) || pagado + 0.01 < Number(expected_total)) {
+      console.error(`mp-webhook — monto no coincide en pago ${paymentId}: pagado=${pagado} esperado=${expected_total} moneda=${payment.currency_id}. Revisar a mano.`);
+      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true });
+      return reply(200, { ok: true });
+    }
 
-    // Enviar correo de agradecimiento con guía + rastreo. NUNCA debe romper
-    // el webhook: el pago y la guía ya se procesaron. Si falla, solo se loguea.
+    await store.set(paymentId, { status: 'processing', at: Date.now() });
+
+    let guiaResult;
     try {
-      await enviarCorreoConfirmacion({
-        cliente,
-        guia: guiaResult,
-        items: order_items || [],
-        total: order_total || payment.transaction_amount,
-        paymentId
-      });
+      guiaResult = await crearGuiaSkydropx({ cliente, rate_id, parcel, total: pagado });
+    } catch (err) {
+      await store.set(paymentId, { status: 'failed', at: Date.now() });
+      throw err;
+    }
+    await store.set(paymentId, { status: 'done', at: Date.now(), tracking: guiaResult.tracking_number || '' });
+
+    try {
+      await enviarCorreoConfirmacion({ cliente, guia: guiaResult, items: order_items || [], total: pagado, paymentId });
     } catch (mailErr) {
       console.error('mp-webhook — fallo al enviar correo (no crítico):', mailErr.message);
     }
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        ok: true,
-        tracking_number: guiaResult.tracking_number,
-        label_url: guiaResult.label_url
-      })
-    };
-
+    return reply(200, { ok: true });
   } catch (error) {
     console.error('mp-webhook — error inesperado:', error.message);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Error interno del servidor' }) };
+    return reply(500, { error: 'Error interno del servidor' });
   }
 };
 

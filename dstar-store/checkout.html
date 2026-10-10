@@ -6,10 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSTAR — Checkout</title>
   <meta name="description" content="Completa tu pedido DSTAR — envío a todo México.">
-  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp">
-
-  <!-- Preload del logo — evita el parpadeo / retraso al aparecer -->
-  <link rel="preload" as="image" href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" type="image/webp">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DSTAR">
 
   <!-- Fonts: Bebas Neue (números/precios), Space Mono (labels/texto), Archivo Black (títulos) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,19 +75,26 @@
       left: 50%;
       transform: translateX(-50%);
       width: calc(100% - 40px);
-      max-width: 1400px;
-      background: rgba(10,10,10,0.85);
-      backdrop-filter: blur(12px);
-      border: var(--border);
-      border-radius: 2px;
+      max-width: 1200px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 42%, rgba(255,255,255,0) 100%), rgba(16,16,16,0.46);
+      -webkit-backdrop-filter: blur(16px) saturate(1.7);
+      backdrop-filter: blur(16px) saturate(1.7);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 22px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 12px 40px rgba(0,0,0,0.38);
       z-index: 1000;
-      transition: top 0.35s var(--ease);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .header--scrolled { transform: translateX(-50%) translateY(-20px); }
+    .header--hidden { transform: translateX(-50%) translateY(calc(-100% - 48px)); }
+    @media (max-width: 768px) {
+      .header { width: calc(100% - 20px); border-radius: 18px; }
     }
     .header__inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 28px;
+      padding: 10px 22px;
     }
     .header__logo {
       font-family: var(--font-heading);
@@ -92,12 +103,11 @@
       letter-spacing: 4px;
     }
     .header__logo img {
-      height: 32px;
+      height: 36px;
       width: auto;
-      filter: brightness(1.8);
-      transition: filter 0.3s;
+      transition: filter 0.3s var(--ease);
     }
-    .header__logo img:hover { filter: brightness(2.2); }
+    .header__logo img:hover { filter: brightness(1.25); }
     .header__nav { display: flex; gap: 32px; }
     .header__link {
       font-family: var(--font-mono);
@@ -225,7 +235,6 @@
        ============================================ */
     #tarifas-envio {
       min-height: 48px;
-      transition: all 0.3s;
     }
     .tarifas-status {
       font-family: var(--font-mono);
@@ -515,7 +524,7 @@
   <header class="header" id="header">
     <div class="header__inner">
       <a href="index.html" class="header__logo">
-        <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR" onerror="this.style.display='none';this.parentElement.textContent='DSTAR'">
+        <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="28px" width="28" height="40" alt="DSTAR" loading="eager" decoding="async" onerror="this.style.display='none';this.parentElement.textContent='DSTAR'">
       </a>
       <nav class="header__nav">
         <a href="index.html#drops"    class="header__link">DROPS</a>
@@ -678,15 +687,18 @@
   <!-- ============================================
        JAVASCRIPT — Lógica del checkout
        ============================================ -->
+  <script src="js/products-data.js?v=1"></script>
+  <script src="js/cart-store.js?v=1"></script>
   <script>
     // ============================================
     // ESTADO GLOBAL DEL CHECKOUT
     // ============================================
-    // Leer el carrito del localStorage (mismo key que app.js)
-    let cart = JSON.parse(localStorage.getItem('dstar_cart') || '[]');
+    let cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
 
-    // Tarifa seleccionada por el usuario
-    let tarifaSeleccionada = null; // { rate_id, precio, nombre }
+    let tarifaSeleccionada = null;
+    let quotationId = null;
+    let cotizacionSeq = 0;
+    let ultimaClaveCotizada = '';
 
     // Subtotal calculado del carrito
     let subtotal = 0;
@@ -702,6 +714,12 @@
       const unidades = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
       return Math.max(0.5, Math.round(unidades * 0.4 * 10) / 10);
     }
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     // Formatear precio en MXN — igual que en app.js
     function formatPrice(n) {
       return new Intl.NumberFormat('es-MX', {
@@ -752,13 +770,14 @@
         <div class="order-item">
           <img
             class="order-item__image"
-            src="${item.image}"
-            alt="${item.name}"
+            src="${escapeHtml(item.image)}"
+            alt="${escapeHtml(item.name)}"
+            loading="lazy" decoding="async"
             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 80%22%3E%3Crect fill=%22%23141414%22 width=%2264%22 height=%2280%22/%3E%3C/svg%3E'"
           >
           <div class="order-item__info">
-            <div class="order-item__name">${item.name}</div>
-            <div class="order-item__meta">TALLA: ${item.size} &nbsp;·&nbsp; QTY: ${item.qty}</div>
+            <div class="order-item__name">${escapeHtml(item.name)}</div>
+            <div class="order-item__meta">TALLA: ${escapeHtml(item.size)} &nbsp;·&nbsp; QTY: ${item.qty}</div>
           </div>
           <div class="order-item__price">${formatPrice(item.price * item.qty)}</div>
         </div>
@@ -804,9 +823,27 @@
       const estado  = document.getElementById('estado').value.trim();
       const ciudad  = document.getElementById('ciudad').value.trim();
       const colonia = document.getElementById('colonia').value.trim();
-      if (!/^\d{5}$/.test(cp) || !estado || !ciudad || !colonia) return;
+      const clave = [cp, estado, ciudad, colonia].join('|').toLowerCase();
+      if (!/^\d{5}$/.test(cp) || !estado || !ciudad || !colonia) {
+        if (ultimaClaveCotizada) {
+          ultimaClaveCotizada = '';
+          cotizacionSeq++;
+          tarifaSeleccionada = null;
+          quotationId = null;
+          actualizarTotal();
+          contenedor.setAttribute('aria-busy', 'false');
+          contenedor.innerHTML = '<p class="tarifas-status">Completa tu dirección con un CP válido de 5 dígitos para ver las opciones de envío.</p>';
+        }
+        return;
+      }
+      if (clave === ultimaClaveCotizada) return;
+      ultimaClaveCotizada = clave;
+      const seq = ++cotizacionSeq;
+      tarifaSeleccionada = null;
+      quotationId = null;
+      actualizarTotal();
 
-      // Mostrar estado de carga
+      contenedor.style.minHeight = contenedor.offsetHeight + 'px';
       contenedor.setAttribute('aria-busy', 'true');
       contenedor.innerHTML = `<p class="tarifas-status">⟳ CALCULANDO ENVÍO...</p>`;
 
@@ -826,12 +863,13 @@
         });
 
         const data = await response.json();
+        if (seq !== cotizacionSeq) return;
 
-        // Error de la función
         if (!response.ok) {
           throw new Error(data.error || 'Error al obtener tarifas');
         }
 
+        quotationId = data.quotation_id || null;
         const rates = data.rates || [];
 
         // Si Skydropx no devuelve tarifas para ese CP
@@ -850,6 +888,8 @@
         renderTarifas(rates);
 
       } catch (err) {
+        if (seq !== cotizacionSeq) return;
+        ultimaClaveCotizada = '';
         contenedor.setAttribute('aria-busy', 'false');
         contenedor.innerHTML = `
           <p class="tarifas-error">
@@ -872,11 +912,12 @@
       // Construir lista de opciones
       const lista = rates.map((rate, i) => {
         // Estructura normalizada que devuelve cotizar-envio (Skydropx Pro)
-        const rateId       = rate.rate_id || `rate_${i}`;
-        const carrierName  = rate.carrier || 'Paquetería';
-        const serviceName  = rate.service || '';
-        const precio       = parseFloat(rate.price || 0);
-        const dias         = (rate.days !== null && rate.days !== undefined) ? rate.days : '?';
+        const rateId       = escapeHtml(rate.rate_id || `rate_${i}`);
+        const carrierName  = escapeHtml(rate.carrier || 'Paquetería');
+        const serviceName  = escapeHtml(rate.service || '');
+        const precio       = Number(parseFloat(rate.price || 0)) || 0;
+        const dias         = Number(rate.days);
+        const diasTexto    = Number.isFinite(dias) && dias > 0 ? ` &nbsp;·&nbsp; ${dias} ${dias === 1 ? 'DÍA HÁBIL' : 'DÍAS HÁBILES'}` : '';
 
         return `
           <label class="tarifa-opcion" data-rate-id="${rateId}" data-precio="${precio}">
@@ -891,7 +932,7 @@
             <div class="tarifa-info">
               <div class="tarifa-nombre">${carrierName}</div>
               <div class="tarifa-detalle">
-                ${serviceName}${dias !== '?' ? ` &nbsp;·&nbsp; ${dias} DÍA${dias === '1' ? '' : 'S'} HÁBILES` : ''}
+                ${serviceName}${diasTexto}
               </div>
             </div>
             <div class="tarifa-precio">${formatPrice(precio)}</div>
@@ -899,6 +940,7 @@
         `;
       }).join('');
 
+      contenedor.style.minHeight = '';
       contenedor.setAttribute('aria-busy', 'false');
       contenedor.innerHTML = `<div class="tarifas-lista" role="radiogroup" aria-label="Opciones de envío disponibles">${lista}</div>`;
 
@@ -1062,49 +1104,36 @@
           estado:   document.getElementById('estado').value.trim()
         };
 
-        // 5. Dimensiones del paquete — el peso escala con las unidades
-        const parcel = { weight: calcularPeso(), height: 15, width: 20, length: 5 };
-
-        // 6. Calcular total final
-        const total = subtotal + tarifaSeleccionada.precio;
-
-        // 7. Mostrar estado de carga en el botón
+        // 5. Mostrar estado de carga en el botón
         btnPagar.disabled = true;
         btnPagar.classList.add('loading');
         btnPagar.querySelector('.btn-pagar__text').textContent = 'PROCESANDO...';
 
         try {
-          // 8. Mapear los items del carrito al formato esperado por mp-preference
-          const items = cart.map(item => ({
-            title:      `${item.name} — Talla ${item.size}`,
-            unit_price: item.price,
-            quantity:   item.qty,
-            currency_id: 'MXN'
-          }));
+          // 6. Mapear los items del carrito al formato esperado por mp-preference
+          const items = cart.map(item => ({ id: item.id, size: item.size, qty: item.qty }));
 
-          // 9. Crear la preferencia de MercadoPago via Netlify Function
+          // 7. Crear la preferencia de MercadoPago via Netlify Function
           const response = await fetch('/.netlify/functions/mp-preference', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               items,
               cliente,
-              rate_id: tarifaSeleccionada.rate_id,
-              parcel,
-              // Costo del envío — se cobra junto con la prenda en el mismo pago
-              envio: tarifaSeleccionada.precio,
-              envio_nombre: tarifaSeleccionada.nombre,
-              total
+              quotation_id: quotationId,
+              rate_id: tarifaSeleccionada.rate_id
             })
           });
 
           const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.error || 'Error al crear el pago');
+            const error = new Error(data.error || 'Error al crear el pago');
+            error.visible = response.status === 400 && data.error;
+            throw error;
           }
 
-          // 10. Redirigir al checkout de MercadoPago
+          // 8. Redirigir al checkout de MercadoPago
           if (data.init_point) {
             window.location.href = data.init_point;
           } else {
@@ -1112,8 +1141,11 @@
           }
 
         } catch (err) {
-          console.error('btnPagar — error:', err);
-          showToast('ERROR AL PROCESAR EL PAGO — INTENTA DE NUEVO', true);
+          showToast(err.visible ? String(err.visible).toUpperCase() : 'ERROR AL PROCESAR EL PAGO — INTENTA DE NUEVO', true);
+          if (err.visible && /tarifa|envío/i.test(err.visible)) {
+            ultimaClaveCotizada = '';
+            cotizarEnvio();
+          }
 
           // Restaurar el botón
           btnPagar.disabled = false;
@@ -1121,6 +1153,20 @@
           btnPagar.querySelector('.btn-pagar__text').textContent = 'PAGAR';
         }
       });
+    });
+
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted) return;
+      const btn = document.getElementById('btnPagar');
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        const text = btn.querySelector('.btn-pagar__text');
+        if (text) text.textContent = 'PAGAR';
+      }
+      cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
+      renderOrderSummary();
+      actualizarTotal();
     });
 
     // ============================================
@@ -1146,15 +1192,18 @@
       // Header scroll hide/show — igual que en el sitio principal
       let lastScroll = 0;
       const header = document.getElementById('header');
+      let ticking = false;
       window.addEventListener('scroll', () => {
-        const current = window.scrollY;
-        if (current > 80) {
-          header.style.top = current > lastScroll ? '-100px' : '12px';
-        } else {
-          header.style.top = '32px';
-        }
-        lastScroll = current;
-      });
+        if (ticking || !header) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          const current = window.scrollY;
+          header.classList.toggle('header--scrolled', current > 80);
+          header.classList.toggle('header--hidden', current > 80 && current > lastScroll);
+          lastScroll = current;
+          ticking = false;
+        });
+      }, { passive: true });
     });
   </script>
 

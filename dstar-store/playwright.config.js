@@ -11,6 +11,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:8888',
     trace: 'on-first-retry',
+    serviceWorkers: 'block',
   },
 
   // Servidor estático para los tests — las Netlify Functions se mockean

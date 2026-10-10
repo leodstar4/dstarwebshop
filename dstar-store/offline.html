@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSTAR — Sin conexión</title>
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+  <style>
+    :root { --black: #0a0a0a; --white: #f0ede8; --concrete: #8a8a83; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Courier New', monospace;
+      text-align: center;
+    }
+    .offline__logo { height: 120px; width: auto; margin: 0 auto 32px; }
+    .offline__title { font-size: 22px; letter-spacing: 6px; margin-bottom: 12px; }
+    .offline__text { color: var(--concrete); font-size: 13px; line-height: 1.7; max-width: 320px; margin: 0 auto 28px; }
+    .offline__btn {
+      min-height: 48px;
+      padding: 0 28px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--white);
+      font: inherit;
+      letter-spacing: 3px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="offline__logo" src="/assets/brand/logo-240.webp" width="166" height="240" alt="DSTAR" decoding="async">
+    <h1 class="offline__title">SIN CONEXIÓN</h1>
+    <p class="offline__text">No hay internet en este momento. Tu carrito sigue guardado; vuelve a intentarlo cuando tengas señal.</p>
+    <button class="offline__btn" type="button" aria-label="Reintentar cargar la página" onclick="location.reload()">REINTENTAR</button>
+  </main>
+</body>
+</html>

@@ -21,7 +21,7 @@
 ## Optimizaciones obligatorias
 - Mobile-first CSS (base = mobile, media queries para desktop)
 - Imágenes: siempre `loading="lazy"` y `decoding="async"`
-- backdrop-filter solo en desktop (desactivar en mobile para rendimiento)
+- backdrop-filter (liquid glass) solo en elementos chicos y fijos de navegación: header, menú móvil, carrito, toast y barra de compra fija. Nunca en superficies grandes que scrollean (secciones, cards, paneles); en desktop se permite además en `.product-detail__info`
 - font-display: swap en todas las fuentes
 
 ## Comandos

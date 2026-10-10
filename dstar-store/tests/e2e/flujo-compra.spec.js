@@ -104,12 +104,12 @@ test.describe('Checkout', () => {
   // Carrito de prueba con la misma forma que guarda app.js
   const seedCart = [
     {
-      id: 'test-1',
-      name: 'HOODIE PHANTOM',
-      price: 899,
-      image: 'https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto/placeholder.webp',
+      id: 'dstar-bts-jort-01',
+      name: 'OVER AS F**K',
+      price: 500,
+      image: 'https://res.cloudinary.com/dflyysqln/image/upload/overasdosvistas_lwrtst.webp',
       size: 'M',
-      qty: 2
+      qty: 1
     }
   ];
 
@@ -130,9 +130,8 @@ test.describe('Checkout', () => {
   test('renderiza el resumen del pedido con subtotal correcto', async ({ page }) => {
     await gotoCheckoutConCarrito(page);
     await expect(page.locator('.order-item')).toHaveCount(1);
-    // 899 * 2 = 1798
-    await expect(page.locator('#subtotalDisplay')).toContainText('1,798');
-    await expect(page.locator('#totalDisplay')).toContainText('1,798');
+    await expect(page.locator('#subtotalDisplay')).toContainText('500');
+    await expect(page.locator('#totalDisplay')).toContainText('500');
   });
 
   test('PAGAR sin completar el formulario marca errores accesibles', async ({ page }) => {
@@ -185,8 +184,7 @@ test.describe('Checkout', () => {
     await expect(opcion).toBeVisible({ timeout: 8000 });
     await opcion.locator('input[type="radio"]').check();
 
-    // Subtotal 1798 + envío 150 = 1948
-    await expect(page.locator('#totalDisplay')).toContainText('1,948');
+    await expect(page.locator('#totalDisplay')).toContainText('650');
     await expect(page.locator('#envioDisplay')).toContainText('150');
   });
 
@@ -208,7 +206,7 @@ test.describe('Checkout', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ id: 'pref_test', init_point: '/gracias.html?payment_id=demo' })
+        body: JSON.stringify({ id: 'pref_test', init_point: '/gracias.html?payment_id=demo&collection_status=approved' })
       });
     });
 
@@ -233,8 +231,10 @@ test.describe('Checkout', () => {
 
     // El costo del envío se envía para cobrarse junto con la prenda
     expect(prefBody).not.toBeNull();
-    expect(prefBody.envio).toBe(150);
-    expect(prefBody.total).toBe(1798 + 150); // subtotal (899*2) + envío
+    expect(prefBody.items).toEqual([{ id: 'dstar-bts-jort-01', size: 'M', qty: 1 }]);
+    expect(prefBody.quotation_id).toBe('q_test');
+    expect(prefBody.rate_id).toBe('r1');
+    expect(prefBody.envio).toBeUndefined();
   });
 });
 

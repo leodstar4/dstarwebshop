@@ -6,13 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSTAR</title>
   <meta name="description" content="Pieza limitada DSTAR — streetwear exclusivo hecho en México.">
-  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DSTAR">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
   <!-- ?v=18 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
-  <link rel="stylesheet" href="css/style.css?v=21">
+  <link rel="stylesheet" href="css/style.css?v=22">
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body class="page-product">
@@ -22,13 +29,13 @@
   <!-- ANNOUNCEMENT BAR -->
   <div class="announcement-bar">
     <div class="announcement-bar__track">
-      <span>ENVÍO GRATIS EN COMPRAS MAYORES A $999 MXN</span>
+      <span>ENVÍOS A TODO MÉXICO</span>
       <span>★</span>
       <span>PIEZAS LIMITADAS</span>
       <span>★</span>
       <span>TODO CON AMOR</span>
       <span>★</span>
-      <span>ENVÍO GRATIS EN COMPRAS MAYORES A $999 MXN</span>
+      <span>ENVÍOS A TODO MÉXICO</span>
       <span>★</span>
       <span>PIEZAS LIMITADAS</span>
       <span>★</span>
@@ -41,7 +48,7 @@
   <header class="header">
     <div class="header__inner">
       <a href="/" class="header__logo">
-        <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR">
+        <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="28px" width="28" height="40" alt="DSTAR" loading="eager" decoding="async">
       </a>
       <nav class="header__nav" id="mainNav">
         <a href="/#drops" class="header__link">DROPS</a>
@@ -59,7 +66,7 @@
           </svg>
           <span class="cart-btn__count" id="cartCount">0</span>
         </button>
-        <button class="menu-btn" id="menuBtn" aria-label="Menú">
+        <button class="menu-btn" id="menuBtn" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileNav">
           <span></span><span></span><span></span>
         </button>
       </div>
@@ -67,7 +74,7 @@
   </header>
 
   <!-- MOBILE NAV -->
-  <div class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav" id="mobileNav" role="dialog" aria-modal="true" aria-label="Menú de navegación">
     <div class="mobile-nav__inner">
       <a href="/#drops" class="mobile-nav__link" data-close-nav>DROPS</a>
       <a href="/#lookbook" class="mobile-nav__link" data-close-nav>LOOKBOOK</a>
@@ -132,7 +139,7 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer__inner">
-      <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR" class="footer__logo">
+      <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="40px" width="39" height="56" alt="DSTAR" class="footer__logo" loading="lazy" decoding="async">
       <div class="footer__links">
         <a href="/#drops">Drops</a>
         <a href="/#lookbook">Lookbook</a>
@@ -161,19 +168,21 @@
         <span>TOTAL</span>
         <span id="cartTotal">$0</span>
       </div>
-      <p class="cart-drawer__shipping-note">Envío gratis en compras +$999 MXN</p>
+      <p class="cart-drawer__shipping-note">El envío se calcula al pagar</p>
       <button class="cart-drawer__checkout" id="checkoutBtn">CONTINUAR AL PAGO</button>
     </div>
   </div>
 
   <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js"></script>
-  <script src="js/app.js?v=22"></script>
-  <script src="js/gsap-animations.js?v=4"></script>
-  <script src="js/blog-transitions.js?v=3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
+  <script src="js/products-data.js?v=1" defer></script>
+  <script src="js/cart-store.js?v=1" defer></script>
+  <script src="js/app.js?v=23" defer></script>
+  <script src="js/gsap-animations.js?v=5" defer></script>
+  <script src="js/blog-transitions.js?v=4" defer></script>
 </body>
 </html>
 

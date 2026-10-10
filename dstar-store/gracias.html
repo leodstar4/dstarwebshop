@@ -6,10 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSTAR — Orden Confirmada</title>
   <meta name="description" content="Tu pedido DSTAR fue confirmado. Gracias por tu compra.">
-  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp">
-
-  <!-- Preload del logo — carga inmediata sin parpadeo -->
-  <link rel="preload" as="image" href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" type="image/webp">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DSTAR">
 
   <!-- Fonts: Bebas Neue, Space Mono, Archivo Black -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
 
   <!-- GSAP desde CDN — animación de entrada -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
 
   <style>
     /* ============================================
@@ -271,20 +275,16 @@
        ============================================ -->
   <script>
     // ============================================
-    // LIMPIAR EL CARRITO
-    // La compra fue completada — eliminar carrito del localStorage.
-    // Esto se hace al cargar la página de confirmación para que
-    // la próxima visita a la tienda empiece desde cero.
-    // ============================================
-    localStorage.removeItem('dstar_cart');
-
-    // ============================================
     // MOSTRAR REFERENCIA DEL PEDIDO
     // MercadoPago agrega ?payment_id=... en la URL al redirigir.
     // Lo mostramos de forma ornamental para que el cliente
     // pueda referenciarlo en soporte.
     // ============================================
     const urlParams  = new URLSearchParams(window.location.search);
+    const estadoPago = urlParams.get('collection_status') || urlParams.get('status');
+    if (estadoPago === 'approved') {
+      try { localStorage.removeItem('dstar_cart'); } catch {}
+    }
     const paymentId  = urlParams.get('payment_id') || urlParams.get('collection_id');
     const pedidoEl   = document.getElementById('pedidoId');
     if (paymentId && pedidoEl) {

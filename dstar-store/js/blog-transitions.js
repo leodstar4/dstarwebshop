@@ -72,6 +72,7 @@
     document.addEventListener('click', function (e) {
       const link = e.target.closest('a[href]');
       if (!link) return;
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
       const href = link.getAttribute('href');
 
@@ -221,8 +222,9 @@
     var bar = document.getElementById('scrollProgress');
     if (!bar || !window.ScrollTrigger) return;
     bar.style.transition = 'none';
+    gsap.set(bar, { scaleX: 0, transformOrigin: '0 50%' });
     gsap.to(bar, {
-      width: '100%',
+      scaleX: 1,
       ease: 'none',
       scrollTrigger: { start: 0, end: 'max', scrub: 0 }
     });
@@ -243,16 +245,11 @@
     if (parseFloat(window.getComputedStyle(cards[0]).opacity) === 0) return;
   }
 
-  // ============================================
-  // BFCACHE FIX — force a clean reload on back/forward navigation.
-  // GSAP sets elements to opacity:0 for entry animations at page load;
-  // on bfcache restore the DOM is frozen in that state and animations
-  // never re-run. A reload is the only reliable fix across all browsers.
-  // ============================================
   window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-      window.location.reload();
-    }
+    if (!event.persisted) return;
+    sessionStorage.removeItem(TRANSIT_FLAG);
+    var cover = document.getElementById(OVERLAY_ID);
+    if (cover && cover.parentNode) cover.parentNode.removeChild(cover);
   });
 
   // ============================================

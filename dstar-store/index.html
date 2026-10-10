@@ -2,18 +2,21 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <!-- Preconnect + preload del logo lo más arriba posible: el browser inicia
-       la conexión TCP/TLS a Cloudinary y descarga el logo antes de procesar
-       cualquier otro recurso (fonts, CSS, etc.) -->
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-  <link rel="preload" as="image" type="image/webp"
-        href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp"
-        fetchpriority="high">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preload" as="image" type="image/webp" href="/assets/brand/logo-480.webp" imagesrcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" imagesizes="(min-width: 768px) 200px, 140px" fetchpriority="high">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSTAR</title>
   <meta name="description" content="DSTAR — Piezas limitadas. Todo con amor. Streetwear exclusivo hecho en México.">
-  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_64/logo3ddd123_ueu676.webp">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DSTAR">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,8 +24,20 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
 
-  <!-- ?v=18 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
-  <link rel="stylesheet" href="css/style.css?v=21">
+  <style>
+    html, body { margin: 0; background: #0a0a0a; }
+    .loader { position: fixed; inset: 0; z-index: 9999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.6s; }
+    .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader.hidden .loader__logo, .loader.hidden .loader__fill { animation: none; }
+    .loader__logo { display: block; height: clamp(140px, 28dvh, 280px); width: auto; animation: pulse 1.5s ease-in-out infinite; }
+    .loader__bar { width: 120px; height: 2px; background: #5c5c57; border-radius: 2px; overflow: hidden; }
+    .loader__fill { height: 100%; background: #f0ede8; transform-origin: 0 50%; animation: loadBar 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+    @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .loader__logo, .loader__fill { animation: none; } }
+  </style>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=22" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="css/style.css?v=22"></noscript>
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body>
@@ -31,21 +46,20 @@
 
   <!-- LOADER -->
   <div id="loader" class="loader">
-    <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR" class="loader__logo"
-         fetchpriority="high" loading="eager" decoding="sync">
+    <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="(min-width: 768px) 200px, 140px" width="193" height="280" alt="DSTAR" class="loader__logo" fetchpriority="high" loading="eager" decoding="sync">
     <div class="loader__bar"><div class="loader__fill"></div></div>
   </div>
 
   <!-- ANNOUNCEMENT BAR -->
   <div class="announcement-bar">
     <div class="announcement-bar__track">
-      <span>ENVÍO GRATIS EN COMPRAS MAYORES A $999 MXN</span>
+      <span>ENVÍOS A TODO MÉXICO</span>
       <span>★</span>
       <span>PIEZAS LIMITADAS</span>
       <span>★</span>
       <span>TODO CON AMOR</span>
       <span>★</span>
-      <span>ENVÍO GRATIS EN COMPRAS MAYORES A $999 MXN</span>
+      <span>ENVÍOS A TODO MÉXICO</span>
       <span>★</span>
       <span>PIEZAS LIMITADAS</span>
       <span>★</span>
@@ -58,7 +72,7 @@
   <header class="header">
     <div class="header__inner">
       <a href="/" class="header__logo">
-        <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR">
+        <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="28px" width="28" height="40" alt="DSTAR" loading="eager" decoding="async">
       </a>
       <nav class="header__nav" id="mainNav">
         <a href="#drops" class="header__link">DROPS</a>
@@ -77,7 +91,7 @@
           </svg>
           <span class="cart-btn__count" id="cartCount">0</span>
         </button>
-        <button class="menu-btn" id="menuBtn" aria-label="Menú">
+        <button class="menu-btn" id="menuBtn" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileNav">
           <span></span><span></span><span></span>
         </button>
       </div>
@@ -85,7 +99,7 @@
   </header>
 
   <!-- MOBILE NAV -->
-  <div class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav" id="mobileNav" role="dialog" aria-modal="true" aria-label="Menú de navegación">
     <div class="mobile-nav__inner">
       <a href="#drops" class="mobile-nav__link" data-close-nav>DROPS</a>
       <a href="#lookbook" class="mobile-nav__link" data-close-nav>LOOKBOOK</a>
@@ -104,8 +118,8 @@
   <section class="hero">
     <div class="hero__bg"></div>
     <div class="hero__content">
-      <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR" class="hero__logo">
-      <p class="hero__tagline">TODO<br>CON AMOR</p>
+      <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="(min-width: 768px) 280px, 200px" width="276" height="400" alt="DSTAR" class="hero__logo" loading="eager" decoding="async">
+      <h1 class="hero__tagline">TODO<br>CON AMOR</h1>
       <a href="#drops" class="hero__cta">VER DROPS</a>
     </div>
     <div class="hero__scroll-indicator">
@@ -159,7 +173,7 @@
           </p>
         </div>
         <div class="about__stamp">
-          <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR">
+          <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="100px" width="97" height="140" alt="" aria-hidden="true" loading="lazy" decoding="async">
         </div>
       </div>
     </div>
@@ -223,7 +237,7 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer__inner">
-      <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_100,w_600/logo3ddd123_ueu676.webp" alt="DSTAR" class="footer__logo">
+      <img src="/assets/brand/logo-240.webp" srcset="/assets/brand/logo-120.webp 120w, /assets/brand/logo-240.webp 240w, /assets/brand/logo-480.webp 480w, /assets/brand/logo-960.webp 960w" sizes="40px" width="39" height="56" alt="DSTAR" class="footer__logo" loading="lazy" decoding="async">
       <div class="footer__links">
         <a href="#drops">Drops</a>
         <a href="#lookbook">Lookbook</a>
@@ -255,30 +269,8 @@
         <span>TOTAL</span>
         <span id="cartTotal">$0</span>
       </div>
-      <p class="cart-drawer__shipping-note">Envío gratis en compras +$999 MXN</p>
+      <p class="cart-drawer__shipping-note">El envío se calcula al pagar</p>
       <button class="cart-drawer__checkout" id="checkoutBtn">CONTINUAR AL PAGO</button>
-    </div>
-  </div>
-
-  <!-- PRODUCT MODAL -->
-  <div class="product-modal" id="productModal">
-    <div class="product-modal__overlay" id="modalOverlay"></div>
-    <div class="product-modal__content">
-      <button class="product-modal__close" id="modalClose">✕</button>
-      <div class="product-modal__image">
-        <img id="modalImage" src="" alt="">
-        <span class="product-modal__badge" id="modalBadge"></span>
-      </div>
-      <div class="product-modal__info">
-        <h2 class="product-modal__name" id="modalName"></h2>
-        <p class="product-modal__price" id="modalPrice"></p>
-        <p class="product-modal__desc" id="modalDesc"></p>
-        <div class="product-modal__sizes" id="modalSizes">
-          <!-- Sizes injected by JS -->
-        </div>
-        <p class="product-modal__stock" id="modalStock"></p>
-        <button class="product-modal__add" id="modalAddBtn">AGREGAR AL CARRITO</button>
-      </div>
     </div>
   </div>
 
@@ -288,12 +280,14 @@
   </div>
 
   <!-- GSAP (local) -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js"></script>
-  <script src="js/app.js?v=22"></script>
-  <script src="js/gsap-animations.js?v=4"></script>
-  <script src="js/blog-transitions.js?v=3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
+  <script src="js/products-data.js?v=1" defer></script>
+  <script src="js/cart-store.js?v=1" defer></script>
+  <script src="js/app.js?v=23" defer></script>
+  <script src="js/gsap-animations.js?v=5" defer></script>
+  <script src="js/blog-transitions.js?v=4" defer></script>
 </body>
 </html>
 

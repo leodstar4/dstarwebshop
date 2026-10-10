@@ -28,8 +28,7 @@ dstar-store/
     └── functions/
         ├── mp-preference.js  ← Crea la preferencia de pago en Mercado Pago
         ├── mp-webhook.js     ← Webhook: genera guía Skydropx + correo al aprobar
-        ├── cotizar-envio.js  ← Cotiza tarifas de envío (Skydropx Pro)
-        └── crear-guia.js     ← Genera la guía de envío (Skydropx Pro)
+        └── cotizar-envio.js  ← Cotiza tarifas de envío (Skydropx Pro)
 ```
 
 ---
@@ -187,7 +186,6 @@ Para saber cuándo un pago se completó (especialmente pagos en OXXO que no son 
 Para una marca pequeña de streetwear en México:
 - **Envío estándar**: $99-149 MXN (Estafeta/Redpack, 3-5 días)
 - **Envío express**: $149-199 MXN (FedEx/DHL, 1-3 días)
-- **Envío gratis**: en compras mayores a $999 MXN (tú absorbes el costo)
 
 ---
 

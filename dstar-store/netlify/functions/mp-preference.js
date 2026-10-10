@@ -1,168 +1,88 @@
 // ============================================
 // DSTAR — CREAR PREFERENCIA DE MERCADO PAGO
-// (con soporte de envío y metadata de Skydropx)
 // ============================================
-// Recibe por POST: { items, cliente, rate_id, parcel, total }
-// Crea la preferencia en MercadoPago y guarda en metadata los datos
-// necesarios para generar la guía de envío automáticamente en el webhook.
+// Recibe por POST: { items: [{ id, size, qty }], cliente, quotation_id, rate_id }
+// Precios, stock y costo de envío se calculan aquí; nada de eso se acepta del navegador.
 //
-// Variables de entorno necesarias en Netlify:
-//   MP_ACCESS_TOKEN = tu access token de MercadoPago
-//   URL_SITIO       = https://tu-sitio.netlify.app
+// Variables de entorno: MP_ACCESS_TOKEN, URL_SITIO (o URL que define Netlify)
 // ============================================
+
+const { validarCliente, construirPedido, str } = require('../lib/validate');
+const { getRatePrice } = require('../lib/skydropx');
+
+const headers = { 'Content-Type': 'application/json' };
+const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify(body) });
 
 exports.handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  };
-
-  // Preflight CORS
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers, body: '' };
-  }
-
-  // Solo POST
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Método no permitido' })
-    };
-  }
+  if (event.httpMethod !== 'POST') return reply(405, { error: 'Método no permitido' });
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { items, cliente, rate_id, parcel, total, envio, envio_nombre } = body;
+    let body;
+    try { body = JSON.parse(event.body || '{}'); } catch { return reply(400, { error: 'JSON inválido' }); }
 
-    // Validar datos mínimos
-    if (!items || items.length === 0) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'El carrito está vacío' })
-      };
-    }
-    if (!cliente || !rate_id) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Faltan datos del cliente o del envío' })
-      };
-    }
+    const pedido = construirPedido(body.items);
+    if (pedido.error) return reply(400, { error: pedido.error });
+
+    const { cliente, errores } = validarCliente(body.cliente);
+    if (errores.length) return reply(400, { error: 'Datos del cliente inválidos', campos: errores });
+
+    const quotationId = str(body.quotation_id, 64);
+    const rateId = str(body.rate_id, 64);
+    if (!quotationId || !rateId) return reply(400, { error: 'Selecciona una opción de envío' });
 
     const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
-    const URL_SITIO = process.env.URL_SITIO || 'https://dstar.netlify.app';
-
-    if (!MP_TOKEN) {
-      console.error('mp-preference — falta MP_ACCESS_TOKEN');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Pagos no configurados' })
-      };
+    const URL_SITIO = (process.env.URL_SITIO || process.env.URL || '').replace(/\/$/, '');
+    if (!MP_TOKEN || !URL_SITIO) {
+      console.error('mp-preference — falta MP_ACCESS_TOKEN o URL_SITIO');
+      return reply(500, { error: 'Pagos no configurados' });
     }
 
-    // Mapear los items del carrito al formato de MercadoPago
-    const mpItems = items.map(item => ({
-      title:      item.title      || `${item.name} — Talla ${item.size}`,
-      unit_price: item.unit_price || item.price,
-      quantity:   item.quantity   || item.qty,
-      currency_id: 'MXN'
-    }));
+    const envio = await getRatePrice(quotationId, rateId);
+    if (!envio) return reply(400, { error: 'La tarifa de envío expiró, vuelve a cotizar' });
 
-    // Cobrar el envío en el mismo pago: se agrega como un ítem más de la
-    // preferencia. Sin esto, MercadoPago solo cobraría las prendas.
-    const costoEnvio = Number(envio) || 0;
-    if (costoEnvio > 0) {
-      mpItems.push({
-        title:       envio_nombre ? `Envío — ${envio_nombre}` : 'Envío',
-        unit_price:  costoEnvio,
-        quantity:    1,
-        currency_id: 'MXN'
-      });
+    const mpItems = pedido.items.map(({ id, ...i }) => i);
+    if (envio.price > 0) {
+      mpItems.push({ title: envio.name ? `Envío — ${envio.name}` : 'Envío', unit_price: envio.price, quantity: 1, currency_id: 'MXN' });
     }
+    const total = Math.round((pedido.subtotal + envio.price) * 100) / 100;
+    const totalUnidades = pedido.items.reduce((s, i) => s + i.quantity, 0);
 
-    // Construir la preferencia de pago
     const preference = {
       items: mpItems,
-
-      // Datos del pagador
-      payer: {
-        name:  cliente.nombre   || '',
-        email: cliente.email    || '',
-        phone: { number: cliente.telefono || '' }
-      },
-
-      // Metadatos — se usan en el webhook para generar la guía y el correo
+      payer: { name: cliente.nombre, email: cliente.email, phone: { number: cliente.telefono } },
       metadata: {
         cliente,
-        rate_id,
-        parcel: parcel || { weight: 0.5, height: 15, width: 20, length: 5 },
-        order_items: mpItems.map((i) => ({
-          title: i.title,
-          quantity: i.quantity,
-          unit_price: i.unit_price
-        })),
-        order_total: total || null
+        rate_id: rateId,
+        parcel: { weight: Math.max(0.5, Math.round(totalUnidades * 4) / 10), height: 15, width: 20, length: 5 },
+        order_items: mpItems.map((i) => ({ title: i.title, quantity: i.quantity, unit_price: i.unit_price })),
+        expected_total: total
       },
-
-      // URLs de retorno después del pago
       back_urls: {
         success: `${URL_SITIO}/gracias.html`,
-        failure: `${URL_SITIO}/checkout.html`,
-        pending: `${URL_SITIO}/checkout.html`
+        failure: `${URL_SITIO}/error-pago.html`,
+        pending: `${URL_SITIO}/pago-pendiente.html`
       },
       auto_return: 'approved',
-
-      // URL para recibir el webhook de pago aprobado
       notification_url: `${URL_SITIO}/.netlify/functions/mp-webhook`,
-
-      // Referencia interna
       statement_descriptor: 'DSTAR',
-      external_reference:   `dstar_${Date.now()}`
+      external_reference: `dstar_${Date.now()}`
     };
 
-    // Crear la preferencia en MercadoPago
     const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MP_TOKEN}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MP_TOKEN}` },
       body: JSON.stringify(preference)
     });
 
     if (!mpResponse.ok) {
-      const errData = await mpResponse.text();
-      console.error('MercadoPago error al crear preferencia:', errData);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Error al crear la preferencia de pago' })
-      };
+      console.error('MercadoPago error al crear preferencia:', mpResponse.status, (await mpResponse.text()).slice(0, 200));
+      return reply(500, { error: 'Error al crear la preferencia de pago' });
     }
 
     const mpData = await mpResponse.json();
-
-    // Devolver el link de pago al frontend
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        id:                 mpData.id,
-        init_point:         mpData.init_point,          // URL de producción
-        sandbox_init_point: mpData.sandbox_init_point   // URL de pruebas
-      })
-    };
-
+    return reply(200, { id: mpData.id, init_point: mpData.init_point, total });
   } catch (error) {
-    console.error('mp-preference — error inesperado:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Error interno del servidor' })
-    };
+    console.error('mp-preference — error inesperado:', error.message);
+    return reply(500, { error: 'Error interno del servidor' });
   }
 };
