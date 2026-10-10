@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preload" as="image" type="image/avif" href="/assets/brand/logo-3d-480.avif?v=2" media="(max-width: 767px) and (prefers-reduced-motion: no-preference)" fetchpriority="high">
-  <link rel="preload" as="image" type="image/avif" href="/assets/brand/logo-3d-720.avif?v=1" media="(min-width: 768px) and (prefers-reduced-motion: no-preference)" fetchpriority="high">
+  <link rel="preload" as="image" type="image/avif" href="/assets/brand/logo-3d-480.avif?v=3" media="(max-width: 767px) and (prefers-reduced-motion: no-preference)" fetchpriority="high">
+  <link rel="preload" as="image" type="image/avif" href="/assets/brand/logo-3d-720.avif?v=2" media="(min-width: 768px) and (prefers-reduced-motion: no-preference)" fetchpriority="high">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSTAR</title>
   <meta name="description" content="DSTAR — Piezas limitadas. Todo con amor. Streetwear exclusivo hecho en México.">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png?v=2">
@@ -25,7 +25,9 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
 
+  <script>document.documentElement.classList.add('css-pending')</script>
   <style>
+    .css-pending body > :not(#loader) { visibility: hidden; }
     body { margin: 0; background: #0a0a0a; }
     .loader { position: fixed; inset: 0; z-index: 9999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.6s; }
     .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -37,7 +39,7 @@
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=24" media="print" onload="this.media='all'">
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=24" media="print" onload="this.media='all';document.documentElement.classList.remove('css-pending')">
   <noscript><link rel="stylesheet" href="css/style.css?v=24"></noscript>
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
@@ -49,12 +51,34 @@
   <div id="loader" class="loader">
     <picture class="logo-3d">
       <source media="(prefers-reduced-motion: reduce)" type="image/webp" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 192px, 130px">
-      <source media="(min-width: 768px)" type="image/avif" srcset="/assets/brand/logo-3d-720.avif?v=1">
-      <source type="image/avif" srcset="/assets/brand/logo-3d-480.avif?v=2">
+      <source media="(min-width: 768px)" type="image/avif" srcset="/assets/brand/logo-3d-720.avif?v=2">
+      <source type="image/avif" srcset="/assets/brand/logo-3d-480.avif?v=3">
       <img src="/assets/brand/logo-3d-poster-640.webp?v=1" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 192px, 130px" width="192" height="280" alt="DSTAR" class="loader__logo" fetchpriority="high" loading="eager" decoding="async">
     </picture>
     <div class="loader__bar"><div class="loader__fill"></div></div>
   </div>
+  <script>
+    (function () {
+      var loader = document.getElementById('loader');
+      var hide = function () { document.documentElement.classList.remove('css-pending'); loader.classList.add('hidden'); };
+      var wait = function (el, ms) {
+        return new Promise(function (resolve) {
+          if (!el) return resolve();
+          el.addEventListener('load', resolve, { once: true });
+          el.addEventListener('error', resolve, { once: true });
+          setTimeout(resolve, ms);
+        });
+      };
+      var logo = loader.querySelector('img');
+      var css = document.getElementById('mainCss');
+      Promise.all([
+        new Promise(function (resolve) { setTimeout(resolve, 450); }),
+        logo && !logo.complete ? wait(logo, 1500) : null,
+        css && css.media !== 'all' ? wait(css, 2500) : null
+      ]).then(hide);
+      setTimeout(hide, 3000);
+    })();
+  </script>
 
   <!-- ANNOUNCEMENT BAR -->
   <div class="announcement-bar">
@@ -126,8 +150,8 @@
     <div class="hero__content">
       <picture class="logo-3d">
         <source media="(prefers-reduced-motion: reduce)" type="image/webp" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 274px, 220px">
-        <source media="(min-width: 768px)" type="image/avif" srcset="/assets/brand/logo-3d-720.avif?v=1">
-        <source type="image/avif" srcset="/assets/brand/logo-3d-480.avif?v=2">
+        <source media="(min-width: 768px)" type="image/avif" srcset="/assets/brand/logo-3d-720.avif?v=2">
+        <source type="image/avif" srcset="/assets/brand/logo-3d-480.avif?v=3">
         <img src="/assets/brand/logo-3d-poster-640.webp?v=1" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 274px, 220px" width="274" height="400" alt="DSTAR" class="hero__logo" loading="eager" decoding="async">
       </picture>
       <h1 class="hero__tagline">TODO<br>CON AMOR</h1>
@@ -296,8 +320,8 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
   <script src="js/products-data.js?v=1" defer></script>
   <script src="js/cart-store.js?v=1" defer></script>
-  <script src="js/app.js?v=25" defer></script>
-  <script src="js/gsap-animations.js?v=5" defer></script>
+  <script src="js/app.js?v=27" defer></script>
+  <script src="js/gsap-animations.js?v=6" defer></script>
   <script src="js/blog-transitions.js?v=4" defer></script>
 </body>
 </html>

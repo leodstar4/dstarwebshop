@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Critical path: renders + core interactivity
     // renderLookbook/Blog/FAQ corren SYNC aquí para que GSAP los encuentre
     // cuando initFadeIns/initLookbook/initBlogReveal corran en el rAF de gsap-animations.js
-    initLoader();
     renderProducts();
     renderLookbook();
     renderBlog();
@@ -76,29 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-
-// ============================================
-// LOADER
-// ============================================
-function initLoader() {
-  const loader = $('#loader');
-  if (!loader) return;
-  const hide = () => loader.classList.add('hidden');
-  const logo = loader.querySelector('img');
-  const minDelay = new Promise((resolve) => setTimeout(resolve, 450));
-  const logoReady = logo && !logo.complete
-    ? Promise.race([
-        new Promise((resolve) => { logo.addEventListener('load', resolve, { once: true }); logo.addEventListener('error', resolve, { once: true }); }),
-        new Promise((resolve) => setTimeout(resolve, 1500))
-      ])
-    : Promise.resolve();
-  const css = document.getElementById('mainCss');
-  const cssReady = css && css.media !== 'all'
-    ? new Promise((resolve) => { css.addEventListener('load', resolve, { once: true }); css.addEventListener('error', resolve, { once: true }); })
-    : Promise.resolve();
-  Promise.all([minDelay, logoReady, cssReady]).then(hide);
-  setTimeout(hide, 4000);
-}
 
 // ============================================
 // NAV
@@ -418,7 +394,7 @@ const BLOG_POSTS = [
     date: 'FEB 2026',
     category: 'CULTURA',
     excerpt: 'Qué está pasando con el streetwear nacional. Las marcas, los colectivos y los espacios que están definiendo la moda de la calle.',
-    image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/blog/post-02.webp',
+    image: 'https://res.cloudinary.com/dflyysqln/image/upload/blog02_ayh36o.jpg',
   },
   {
     slug: 'como-cuidar-tu-ropa',
@@ -474,12 +450,14 @@ function renderLookbook() {
   // Horizontal track layout
   grid.className = 'lookbook__horiz-track';
 
-  // Primera imagen: carga eager (visible de inmediato). Las demás: lazy.
   grid.innerHTML = LOOKBOOK.map((item, i) => `
     <div class="lookbook-panel">
       <div class="lookbook-panel__img-wrap">
-        <img src="${cdnOpt(item.image, 900)}" alt="${item.caption}"
-             loading="${i === 0 ? 'eager' : 'lazy'}"
+        <img src="${cdnOpt(item.image, 600)}"
+             srcset="${cdnOpt(item.image, 400)} 400w, ${cdnOpt(item.image, 600)} 600w, ${cdnOpt(item.image, 900)} 900w"
+             sizes="(min-width: 1024px) 540px, (min-width: 768px) 30vw, 48vw"
+             alt="${item.caption}"
+             loading="lazy"
              decoding="async"
              onerror="this.parentElement.style.background='var(--dark)'">
       </div>

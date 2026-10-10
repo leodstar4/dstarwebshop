@@ -13,6 +13,8 @@ function initHeroTagline() {
 
   const tagline = document.querySelector('.hero__tagline');
   if (!tagline) return;
+  const loader = document.getElementById('loader');
+  if (loader && loader.classList.contains('hidden')) return;
 
   const isMobile = window.innerWidth <= 768;
 
