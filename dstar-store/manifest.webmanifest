@@ -12,12 +12,12 @@
   "theme_color": "#0a0a0a",
   "categories": ["shopping", "lifestyle"],
   "icons": [
-    { "src": "/assets/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/assets/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/assets/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/assets/brand/icon-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/brand/icon-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/brand/icon-maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Drops", "url": "/#drops", "icons": [{ "src": "/assets/brand/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Carrito", "url": "/checkout.html", "icons": [{ "src": "/assets/brand/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Drops", "url": "/#drops", "icons": [{ "src": "/assets/brand/icon-192.png?v=2", "sizes": "192x192" }] },
+    { "name": "Carrito", "url": "/checkout.html", "icons": [{ "src": "/assets/brand/icon-192.png?v=2", "sizes": "192x192" }] }
   ]
 }

@@ -72,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     idle(() => {
       initRippleButtons();
       initTextScramble();
-      initCardHover();
       initGlassLight();
     });
   }
@@ -178,21 +177,18 @@ function renderProducts() {
     const isSoldOut = p.stock === 0 || p.badge === 'SOLDOUT';
     const delay = Math.min(i, 5) * 0.08;
     const name = escapeHtml(p.name);
-    const index = String(i + 1).padStart(2, '0');
-    const alt = !isSoldOut && p.gallery && p.gallery[0] ? cdnOpt(p.gallery[0], 600, null, { limit: true }) : '';
 
     const badgeHtml = isSoldOut
       ? '<span class="product-card__badge product-card__badge--soldout">AGOTADO</span>'
       : p.badge === 'NEW' ? '<span class="product-card__badge product-card__badge--new">NUEVO</span>' : '';
 
-    const sizesHtml = (p.sizes || []).map(size => {
-      const out = isSoldOut || (p.sizesStock && !p.sizesStock[size]);
-      return `<li class="product-card__size${out ? ' product-card__size--out' : ''}"${out ? ' aria-label="Talla ' + escapeHtml(size) + ' agotada"' : ''}>${escapeHtml(size)}</li>`;
-    }).join('');
+    const ctaHtml = isSoldOut ? '' : '<span class="product-card__cta">VER PIEZA <span aria-hidden="true">→</span></span>';
 
-    const stockHtml = isSoldOut
-      ? '<span class="product-card__stock">SIN PIEZAS</span>'
-      : `<span class="product-card__stock${p.stock <= 2 ? ' product-card__stock--low' : ''}">${p.stock} ${p.stock === 1 ? 'PIEZA' : 'PIEZAS'}</span>`;
+    const scarcityHtml = isSoldOut ? '' : `
+          <div class="product-card__scarcity product-card__scarcity--${p.stock <= 3 ? 'low' : 'medium'}">
+            <span class="product-card__scarcity-dot" aria-hidden="true"></span>
+            <span>QUEDAN ${p.stock} ${p.stock === 1 ? 'PIEZA' : 'PIEZAS'}</span>
+          </div>`;
 
     const tag = isSoldOut ? 'div' : 'a';
     const attrs = isSoldOut
@@ -200,28 +196,23 @@ function renderProducts() {
       : `href="producto.html?id=${encodeURIComponent(p.id)}" aria-label="${name}, ${formatPrice(p.price)}"`;
 
     return `
-      <${tag} class="product-card fade-in${isSoldOut ? ' sold-out' : ''}${alt ? ' product-card--has-alt' : ''}"
+      <${tag} class="product-card fade-in${isSoldOut ? ' sold-out' : ''}"
            data-product-index="${i}"
            style="--stagger-delay: ${delay}s"
            ${attrs}>
         <div class="product-card__image">
-          <img class="product-card__main" src="${cdnOpt(p.image, 600, null, { limit: true })}" alt="${name}"
-               width="600" height="750" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"
-               onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 400%22%3E%3Crect fill=%22%23141414%22 width=%22300%22 height=%22400%22/%3E%3C/svg%3E'">
-          ${alt ? `<img class="product-card__alt" data-src="${alt}" alt="" aria-hidden="true" width="600" height="750" decoding="async">` : ''}
-          <span class="product-card__index" aria-hidden="true">N°${index}</span>
+          <img src="${cdnOpt(p.image, 600, null, { limit: true })}" alt="${name}"
+               width="600" height="800" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"
+               onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 400%22/%3E'">
           ${badgeHtml}
         </div>
         <div class="product-card__info">
-          <span class="product-card__drop">${escapeHtml(p.drop || 'DSTAR')}</span>
+          <span class="product-card__accent" aria-hidden="true"></span>
           <h3 class="product-card__name" data-name="${name}">${name}</h3>
           <div class="product-card__meta">
-            <div>
-              <ul class="product-card__sizes" aria-label="Tallas">${sizesHtml}</ul>
-            </div>
-            <span class="product-card__price">${isSoldOut ? 'AGOTADO' : formatPrice(p.price).replace(' MXN', '')}</span>
-          </div>
-          ${stockHtml}
+            <span class="product-card__price">${isSoldOut ? 'AGOTADO' : formatPrice(p.price)}</span>
+            ${ctaHtml}
+          </div>${scarcityHtml}
         </div>
       </${tag}>
     `;
@@ -1288,19 +1279,6 @@ function pdAddToCart() {
 // ============================================
 // PRODUCT CARD HOVER — foto real de la prenda (desktop)
 // ============================================
-function initCardHover() {
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  const grid = document.getElementById('productsGrid');
-  if (!grid) return;
-  grid.addEventListener('pointerenter', (e) => {
-    const card = e.target.closest && e.target.closest('.product-card--has-alt');
-    const alt = card && card.querySelector('.product-card__alt[data-src]');
-    if (!alt) return;
-    alt.src = alt.dataset.src;
-    alt.removeAttribute('data-src');
-  }, true);
-}
-
 // ============================================
 // LIQUID GLASS — reflejo que sigue al puntero en el header (desktop)
 // ============================================

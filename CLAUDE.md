@@ -15,7 +15,7 @@
 - Todo JS debe ser vanilla, sin TypeScript
 - Las animaciones deben respetar `prefers-reduced-motion`
 - Los targets táctiles mínimos: 44x44px
-- Usa `100dvh` en vez de `100vh` para altura completa
+- Usa `100svh` para el hero y secciones de pantalla completa (no cambia al ocultarse la barra del navegador, evita tirones al hacer scroll) y `100dvh` solo en overlays fijos (lightbox, menú); nunca `100vh`
 - Siempre incluye `aria-*` attributes en elementos interactivos
 
 ## Optimizaciones obligatorias

@@ -1,4 +1,4 @@
-const VERSION = 'dstar-v1';
+const VERSION = 'dstar-v2';
 const SHELL = `${VERSION}-shell`;
 const IMAGES = `${VERSION}-img`;
 const MAX_IMAGES = 80;
@@ -13,10 +13,10 @@ const PRECACHE = [
   '/js/app.js',
   '/js/gsap-animations.js',
   '/js/blog-transitions.js',
-  '/assets/brand/logo-120.webp',
-  '/assets/brand/logo-240.webp',
-  '/assets/brand/logo-480.webp',
-  '/assets/brand/favicon-32.png'
+  '/assets/brand/logo-120.webp?v=2',
+  '/assets/brand/logo-240.webp?v=2',
+  '/assets/brand/logo-480.webp?v=2',
+  '/assets/brand/favicon-32.png?v=2'
 ];
 
 const NEVER_CACHE = [/^\/\.netlify\//, /^\/api\//, /^\/checkout/, /^\/gracias/, /^\/error-pago/, /^\/pago-pendiente/, /^\/sw\.js$/];
