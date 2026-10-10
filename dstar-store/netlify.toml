@@ -71,6 +71,12 @@
   [headers.values]
     Cache-Control = "public, max-age=2592000"
 
+[[headers]]
+  for = "/assets/brand/*.avif"
+  [headers.values]
+    Content-Type = "image/avif"
+    Cache-Control = "public, max-age=2592000"
+
 # HTML siempre fresco
 [[headers]]
   for = "/*.html"

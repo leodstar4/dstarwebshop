@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preload" as="image" type="image/webp" href="/assets/brand/logo-480.webp?v=2" imagesrcset="/assets/brand/logo-120.webp?v=2 120w, /assets/brand/logo-240.webp?v=2 240w, /assets/brand/logo-480.webp?v=2 480w, /assets/brand/logo-960.webp?v=2 960w" imagesizes="(min-width: 768px) 200px, 140px" fetchpriority="high">
+  <link rel="preload" as="image" type="image/avif" href="/assets/brand/logo-3d-480.avif?v=2" media="(max-width: 767px) and (prefers-reduced-motion: no-preference)" fetchpriority="high">
+  <link rel="preload" as="image" type="image/avif" href="/assets/brand/logo-3d-720.avif?v=1" media="(min-width: 768px) and (prefers-reduced-motion: no-preference)" fetchpriority="high">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSTAR</title>
@@ -28,16 +29,16 @@
     body { margin: 0; background: #0a0a0a; }
     .loader { position: fixed; inset: 0; z-index: 9999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.6s; }
     .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .loader.hidden .loader__logo, .loader.hidden .loader__fill { animation: none; }
-    .loader__logo { display: block; height: clamp(140px, 28dvh, 280px); width: auto; animation: pulse 1.5s ease-in-out infinite; }
+    .loader.hidden .loader__fill { animation: none; }
+    .logo-3d { display: contents; }
+    .loader__logo { display: block; height: clamp(140px, 28dvh, 280px); width: auto; }
     .loader__bar { width: 120px; height: 2px; background: #5c5c57; border-radius: 2px; overflow: hidden; }
     .loader__fill { height: 100%; background: #f0ede8; transform-origin: 0 50%; animation: loadBar 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .loader__logo, .loader__fill { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=23" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="css/style.css?v=23"></noscript>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=24" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="css/style.css?v=24"></noscript>
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body>
@@ -46,7 +47,12 @@
 
   <!-- LOADER -->
   <div id="loader" class="loader">
-    <img src="/assets/brand/logo-240.webp?v=2" srcset="/assets/brand/logo-120.webp?v=2 120w, /assets/brand/logo-240.webp?v=2 240w, /assets/brand/logo-480.webp?v=2 480w, /assets/brand/logo-960.webp?v=2 960w" sizes="(min-width: 768px) 200px, 140px" width="193" height="280" alt="DSTAR" class="loader__logo" fetchpriority="high" loading="eager" decoding="sync">
+    <picture class="logo-3d">
+      <source media="(prefers-reduced-motion: reduce)" type="image/webp" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 192px, 130px">
+      <source media="(min-width: 768px)" type="image/avif" srcset="/assets/brand/logo-3d-720.avif?v=1">
+      <source type="image/avif" srcset="/assets/brand/logo-3d-480.avif?v=2">
+      <img src="/assets/brand/logo-3d-poster-640.webp?v=1" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 192px, 130px" width="192" height="280" alt="DSTAR" class="loader__logo" fetchpriority="high" loading="eager" decoding="async">
+    </picture>
     <div class="loader__bar"><div class="loader__fill"></div></div>
   </div>
 
@@ -118,7 +124,12 @@
   <section class="hero">
     <div class="hero__bg"></div>
     <div class="hero__content">
-      <img src="/assets/brand/logo-240.webp?v=2" srcset="/assets/brand/logo-120.webp?v=2 120w, /assets/brand/logo-240.webp?v=2 240w, /assets/brand/logo-480.webp?v=2 480w, /assets/brand/logo-960.webp?v=2 960w" sizes="(min-width: 768px) 280px, 200px" width="276" height="400" alt="DSTAR" class="hero__logo" loading="eager" decoding="async">
+      <picture class="logo-3d">
+        <source media="(prefers-reduced-motion: reduce)" type="image/webp" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 274px, 220px">
+        <source media="(min-width: 768px)" type="image/avif" srcset="/assets/brand/logo-3d-720.avif?v=1">
+        <source type="image/avif" srcset="/assets/brand/logo-3d-480.avif?v=2">
+        <img src="/assets/brand/logo-3d-poster-640.webp?v=1" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 274px, 220px" width="274" height="400" alt="DSTAR" class="hero__logo" loading="eager" decoding="async">
+      </picture>
       <h1 class="hero__tagline">TODO<br>CON AMOR</h1>
       <a href="#drops" class="hero__cta">VER DROPS</a>
     </div>
@@ -285,7 +296,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
   <script src="js/products-data.js?v=1" defer></script>
   <script src="js/cart-store.js?v=1" defer></script>
-  <script src="js/app.js?v=24" defer></script>
+  <script src="js/app.js?v=25" defer></script>
   <script src="js/gsap-animations.js?v=5" defer></script>
   <script src="js/blog-transitions.js?v=4" defer></script>
 </body>

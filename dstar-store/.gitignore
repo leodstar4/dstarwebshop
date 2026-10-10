@@ -12,3 +12,6 @@ test-results/
 playwright-report/
 blob-report/
 .playwright/
+
+# Reportes del diagnóstico de fluidez
+tests/perf/reportes/

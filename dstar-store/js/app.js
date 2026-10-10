@@ -87,7 +87,10 @@ function initLoader() {
   const logo = loader.querySelector('img');
   const minDelay = new Promise((resolve) => setTimeout(resolve, 450));
   const logoReady = logo && !logo.complete
-    ? new Promise((resolve) => { logo.addEventListener('load', resolve, { once: true }); logo.addEventListener('error', resolve, { once: true }); })
+    ? Promise.race([
+        new Promise((resolve) => { logo.addEventListener('load', resolve, { once: true }); logo.addEventListener('error', resolve, { once: true }); }),
+        new Promise((resolve) => setTimeout(resolve, 1500))
+      ])
     : Promise.resolve();
   const css = document.getElementById('mainCss');
   const cssReady = css && css.media !== 'all'
