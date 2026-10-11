@@ -537,7 +537,7 @@ function initLookbookMasonry() {
 
 // ============================================
 // PRODUCT CARD → PAGE TRANSITION
-// Click en tarjeta: imagen se expande a pantalla completa, luego navega.
+// Click en tarjeta: las demás se apagan, la prenda se acerca y funde a negro.
 // Usa capture phase para interceptar antes que blog-transitions.
 // ============================================
 function initProductCardClick() {
@@ -558,142 +558,28 @@ function initProductCardClick() {
       return;
     }
 
-    const rect = card.getBoundingClientRect();
-    const vw   = window.innerWidth;
-    const vh   = window.innerHeight;
-
-    // ── Clon de la imagen que se va a expandir ──
-    const clone = document.createElement('div');
-    clone.dataset.pdTransit = '1';
-    const startClip = `inset(${rect.top}px ${vw - rect.right}px ${vh - rect.bottom}px ${rect.left}px)`;
-    clone.style.cssText = [
-      'position:fixed', 'inset:0',
-      'background-color:#0a0a0a',
-      `background-image:url("${encodeURI(img.currentSrc || img.src)}")`,
-      'background-position:center', 'background-size:contain', 'background-repeat:no-repeat',
-      `clip-path:${startClip}`,
-      'z-index:99995', 'pointer-events:none'
-    ].join(';');
-    document.body.appendChild(clone);
-
-    // ── Nombre del producto centrado sobre el clon ──
-    const nameEl = card.querySelector('.product-card__name');
-    const label  = document.createElement('div');
-    label.dataset.pdTransit = '1';
-    label.style.cssText = [
-      'position:fixed', 'inset:0', 'opacity:0',
-      'display:flex', 'align-items:center', 'justify-content:center',
-      'z-index:99996', 'pointer-events:none',
-      'text-align:center', 'padding:0 24px'
-    ].join(';');
-    const nameText = nameEl ? (nameEl.dataset.name || nameEl.textContent) : '';
-    const labelText = document.createElement('span');
-    labelText.style.cssText = "font-family:'Archivo Black',sans-serif;font-size:clamp(28px,7vw,88px);letter-spacing:6px;color:#f0ede8;text-shadow:0 4px 60px rgba(0,0,0,0.9);line-height:1";
-    labelText.textContent = nameText;
-    label.appendChild(labelText);
-    document.body.appendChild(label);
-
-    // ── Velo negro final ──
     const dark = document.createElement('div');
     dark.dataset.pdTransit = '1';
-    dark.style.cssText = [
-      'position:fixed', 'inset:0', 'background:#0a0a0a',
-      'z-index:99997', 'pointer-events:none', 'opacity:0'
-    ].join(';');
+    dark.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99997;pointer-events:none;opacity:0';
     document.body.appendChild(dark);
 
-    const tl = gsap.timeline({
+    const others = document.querySelectorAll('.product-card:not([data-product-index="' + card.dataset.productIndex + '"])');
+    gsap.timeline({
       onComplete() {
         sessionStorage.setItem('dstar-fade-transit', '1');
         window.location.href = href;
       }
-    });
-
-    // 1. Apagar otras tarjetas
-    const others = document.querySelectorAll('.product-card:not([data-product-index="' + card.dataset.productIndex + '"])');
-    tl.to(others, { opacity: 0, scale: 0.96, duration: 0.35, ease: 'power2.out', stagger: 0.03 }, 0);
-
-    // 2. Micro-bounce en la tarjeta clicada
-    tl.to(card, { scale: 1.04, duration: 0.1, ease: 'power2.out' }, 0)
-      .to(card, { scale: 1, duration: 0.12, ease: 'power2.inOut' }, 0.1);
-
-    // 3. Expansión de la imagen al viewport completo
-    tl.to(clone, {
-      clipPath: 'inset(0px 0px 0px 0px)',
-      duration: 0.7,
-      ease: 'expo.inOut'
-    }, 0.06);
-
-    // 4. Nombre aparece en el centro de la imagen expandida
-    tl.to(label, { opacity: 1, duration: 0.25, ease: 'power2.out' }, 0.42)
-      .to(label, { opacity: 0, duration: 0.2,  ease: 'power2.in'  }, 0.72);
-
-    // 5. Fade negro tapa todo antes de navegar
-    tl.to(dark, { opacity: 1, duration: 0.28, ease: 'power2.in' }, 0.6);
-
+    })
+      .to(others, { opacity: 0, duration: 0.22, ease: 'power2.out' }, 0)
+      .to(img, { scale: 1.06, duration: 0.32, ease: 'power2.out' }, 0)
+      .to(dark, { opacity: 1, duration: 0.24, ease: 'power2.in' }, 0.1);
   }, true); // capture phase → antes que blog-transitions
 
   window.addEventListener('pageshow', function (event) {
     if (!event.persisted) return;
     document.querySelectorAll('[data-pd-transit], #dstarPageFade').forEach(el => el.remove());
-    gsap.set('.product-card', { clearProps: 'opacity,scale,transform' });
+    gsap.set('.product-card, .product-card__image img', { clearProps: 'opacity,scale,transform' });
   });
-}
-
-// ============================================
-// PRODUCT PAGE ENTRY ANIMATION
-// Corre en producto.html: imagen y panel info entran con cinética.
-// ============================================
-function initProductPageEntry() {
-  if (!document.body.classList.contains('page-product')) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  const DELAY = 0.52; // post fade-overlay (animatePageEnter dura 0.48s)
-
-  // Imagen principal: escala desde 1.1 → 1, opacity 0 → 1
-  const mainImgEl = document.getElementById('pdMainImg');
-  if (mainImgEl) {
-    gsap.fromTo(mainImgEl,
-      { scale: 1.1, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 1.1, ease: 'power3.out', delay: DELAY }
-    );
-  }
-
-  // Panel de info: elementos entran desde la derecha en stagger
-  const infoEls = document.querySelectorAll([
-    '.product-detail__back',
-    '.product-detail__badge',
-    '.product-detail__drop',
-    '.product-detail__name',
-    '.product-detail__price',
-    '.product-detail__desc',
-    '.product-detail__size-label',
-    '.product-detail__sizes',
-    '.product-detail__stock',
-    '.product-detail__add'
-  ].join(','));
-
-  if (infoEls.length) {
-    gsap.fromTo(infoEls,
-      { opacity: 0, x: 48 },
-      {
-        opacity: 1, x: 0,
-        duration: 0.65,
-        stagger: 0.055,
-        ease: 'power3.out',
-        delay: DELAY + 0.08
-      }
-    );
-  }
-
-  // Thumbnails: pequeño bounce desde abajo
-  const thumbs = document.querySelectorAll('.pd-thumb');
-  if (thumbs.length) {
-    gsap.fromTo(thumbs,
-      { opacity: 0, y: 16 },
-      { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: 'back.out(1.4)', delay: DELAY + 0.3 }
-    );
-  }
 }
 
 // ============================================
@@ -879,7 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => {
       if (document.body.classList.contains('page-product')) {
         // ── Página de detalle de producto ──
-        initProductPageEntry();
         initButtonEffects();
         initCustomCursor();
         initMagneticButtons();

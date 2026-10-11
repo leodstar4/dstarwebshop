@@ -12,6 +12,7 @@
   <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png?v=2">
   <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png?v=2">
   <link rel="manifest" href="/manifest.webmanifest">
+  <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/producto.html?*"},"eagerness":"moderate"}]}</script>
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -38,8 +39,8 @@
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=25" media="print" onload="this.media='all';document.documentElement.classList.remove('css-pending')">
-  <noscript><link rel="stylesheet" href="css/style.css?v=25"></noscript>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=27" media="print" onload="this.media='all';document.documentElement.classList.remove('css-pending')">
+  <noscript><link rel="stylesheet" href="css/style.css?v=27"></noscript>
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body>
@@ -70,7 +71,11 @@
       Promise.all([
         new Promise(function (resolve) { setTimeout(resolve, 450); }),
         logo && !logo.complete ? wait(logo, 1500) : null,
-        css && css.media !== 'all' ? wait(css, 2500) : null
+        css && css.media !== 'all' ? wait(css, 2500) : null,
+        matchMedia('(prefers-reduced-motion: reduce)').matches ? null : new Promise(function (resolve) {
+          loader.addEventListener('logo3d:live', function () { setTimeout(resolve, 900); }, { once: true });
+          setTimeout(resolve, 2600);
+        })
       ]).then(hide);
       setTimeout(hide, 3000);
     })();
@@ -308,14 +313,14 @@
   </div>
 
   <!-- GSAP (local) -->
+  <script src="js/logo-3d.js?v=2" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
   <script src="js/products-data.js?v=1" defer></script>
   <script src="js/cart-store.js?v=1" defer></script>
-  <script src="js/app.js?v=27" defer></script>
-  <script src="js/gsap-animations.js?v=6" defer></script>
-  <script src="js/logo-3d.js?v=1" defer></script>
+  <script src="js/app.js?v=28" defer></script>
+  <script src="js/gsap-animations.js?v=7" defer></script>
   <script src="js/blog-transitions.js?v=4" defer></script>
 </body>
 </html>

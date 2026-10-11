@@ -39,7 +39,7 @@ const $$ = (sel) => document.querySelectorAll(sel);
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   if (document.body.classList.contains('page-product')) {
     // ── Página de detalle de producto ──
     updateCartUI();
@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // renderLookbook/Blog/FAQ corren SYNC aquí para que GSAP los encuentre
     // cuando initFadeIns/initLookbook/initBlogReveal corran en el rAF de gsap-animations.js
     renderProducts();
+    initCardPrefetch();
     renderLookbook();
     renderBlog();
     renderFAQ();
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
       initGlassLight();
     });
   }
-});
+}
 
 // ============================================
 // NAV
@@ -198,6 +199,30 @@ function renderProducts() {
   }).join('');
 
 }
+function initCardPrefetch() {
+  const grid = $('#productsGrid');
+  if (!grid) return;
+  const warmed = new Set();
+  const warm = (e) => {
+    const card = e.target.closest && e.target.closest('a.product-card');
+    if (!card) return;
+    const id = new URL(card.href).searchParams.get('id');
+    const p = PRODUCTS.find((prod) => prod.id === id);
+    if (!p || warmed.has(id)) return;
+    warmed.add(id);
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = cdnOpt((p.gallery && p.gallery[0]) || p.image, 1200);
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = card.href;
+    document.head.appendChild(link);
+  };
+  grid.addEventListener('pointerenter', warm, true);
+  grid.addEventListener('pointerdown', warm, true);
+  grid.addEventListener('touchstart', warm, { capture: true, passive: true });
+}
+
 // ============================================
 // CART
 // ============================================
@@ -738,6 +763,8 @@ function initProductPage() {
     }
   }
 
+  _pdRevealPage();
+
   // Store product reference
   window._pdProduct      = p;
   window._pdSelectedSize = null;
@@ -745,6 +772,19 @@ function initProductPage() {
 
   // ── MOBILE UX: sticky CTA bar + size-label pulse + smart-scroll ──
   _pdInitMobileUX(p, isSoldOut);
+}
+
+function _pdRevealPage() {
+  const clearFlag = () => { try { sessionStorage.removeItem('dstar-fade-transit'); } catch (e) {} };
+  clearFlag();
+  if (document.prerendering) document.addEventListener('prerenderingchange', clearFlag, { once: true });
+  const cover = document.getElementById('dstarPageFade');
+  if (!cover) return;
+  requestAnimationFrame(() => {
+    cover.style.transition = 'opacity 0.25s ease-out';
+    cover.style.opacity = '0';
+    setTimeout(() => cover.remove(), 300);
+  });
 }
 
 // Sticky CTA: visible siempre desde load (mobile).
@@ -813,7 +853,7 @@ function _pdBuildStack(gallery, productName) {
 
   stack.innerHTML = gallery.map((src, i) => `
     <div class="pd-gallery-img pd-gallery-img--loading" data-index="${i}">
-      <img src="${cdnOpt(src, 900)}" alt="${productName} — foto ${i + 1}"
+      <img src="${cdnOpt(src, 1200)}" alt="${productName} — foto ${i + 1}"
            loading="${i === 0 ? 'eager' : 'lazy'}"
            fetchpriority="${i === 0 ? 'high' : 'auto'}"
            decoding="async">
@@ -835,30 +875,6 @@ function _pdBuildStack(gallery, productName) {
     }
     el.addEventListener('click', () => pdLightboxOpen(parseInt(el.dataset.index)));
   });
-
-  // GSAP entrance — stagger images up into view
-  if (window.gsap) {
-    gsap.fromTo('.pd-gallery-img',
-      { opacity: 0, y: 40 },
-      { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, ease: 'power3.out', delay: 0.3 }
-    );
-
-    // Per-image parallax scroll
-    if (window.ScrollTrigger) {
-      stack.querySelectorAll('.pd-gallery-img').forEach(el => {
-        gsap.to(el, {
-          yPercent: -8,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: true
-          }
-        });
-      });
-    }
-  }
 }
 
 // ── Mobile: horizontal swipe carousel with dot indicators ──
@@ -1288,3 +1304,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
+else initApp();

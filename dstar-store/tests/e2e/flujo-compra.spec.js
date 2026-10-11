@@ -61,6 +61,9 @@ test.describe('Página de producto', () => {
     // Info panel visible
     await expect(page.locator('.product-detail__info')).toBeVisible({ timeout: 8000 });
     await expect(page.locator('#pdName')).not.toBeEmpty();
+    for (const sel of ['#pdName', '#pdPrice', '#pdAddBtn']) {
+      await expect(page.locator(sel)).toHaveCSS('opacity', '1', { timeout: 3000 });
+    }
   });
 
   test('selector de talla muestra opciones', async ({ page }) => {
