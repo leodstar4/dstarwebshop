@@ -3,7 +3,21 @@
    ScrollTrigger + SplitText + Lookbook CSS-snap
    ============================================ */
 
-gsap.registerPlugin(ScrollTrigger, SplitText);
+gsap.registerPlugin(...[window.ScrollTrigger, window.SplitText].filter(Boolean));
+
+// Reveal de una sola vez con IntersectionObserver: a diferencia de ScrollTrigger
+// no corre trabajo en cada cuadro del scroll.
+function revealOnEnter(els, onEnter, rootMargin = '0px 0px -12% 0px') {
+  const list = Array.from(els);
+  if (!list.length) return;
+  const io = new IntersectionObserver((entries) => {
+    const batch = entries.filter((e) => e.isIntersecting).map((e) => e.target);
+    if (!batch.length) return;
+    batch.forEach((el) => io.unobserve(el));
+    onEnter(batch);
+  }, { rootMargin });
+  list.forEach((el) => io.observe(el));
+}
 
 // ============================================
 // HERO TAGLINE — SplitText char-by-char entrada + breathing
@@ -54,6 +68,7 @@ function initHeroTagline() {
 // ============================================
 function initHeroParallax() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (CSS.supports('animation-timeline: scroll()') || !window.ScrollTrigger) return;
 
   const hero = document.querySelector('.hero');
   if (!hero) return;
@@ -125,61 +140,37 @@ function initSectionTitles() {
   // Very low-end devices (≤480px): skip SplitText entirely — char-by-char layout
   // recalculation causes measurable jank on budget Android phones. Use simple fade.
   if (window.innerWidth <= 480) {
-    document.querySelectorAll('.section-title, .about__title').forEach(el => {
-      gsap.set(el, { opacity: 0, y: 18 });
-      ScrollTrigger.create({
-        trigger: el,
-        start: 'top 88%',
-        once: true,
-        onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' })
-      });
-    });
+    const titles = document.querySelectorAll('.section-title, .about__title');
+    gsap.set(titles, { opacity: 0, y: 18 });
+    revealOnEnter(titles, (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }));
     return;
   }
 
-  document.querySelectorAll('.section-title, .about__title').forEach(el => {
-    const split = SplitText.create(el, {
-      type: 'chars',
-      charsClass: 'split-char'
-    });
-
+  const titles = document.querySelectorAll('.section-title, .about__title');
+  titles.forEach(el => {
+    el._split = SplitText.create(el, { type: 'chars', charsClass: 'split-char' });
     // Móvil: sin skewX (más ligero), desktop: efecto completo
-    gsap.set(split.chars, { opacity: 0, y: isMobile ? 18 : 28, skewX: isMobile ? 0 : 10 });
-
-    ScrollTrigger.create({
-      trigger: el,
-      start: 'top 88%',
-      once: true,
-      onEnter: () => {
-        gsap.to(split.chars, {
-          opacity: 1,
-          y: 0,
-          skewX: 0,
-          duration: isMobile ? 0.45 : 0.55,
-          stagger: isMobile ? 0.025 : 0.03,
-          ease: 'power3.out'
-        });
-      }
-    });
+    gsap.set(el._split.chars, { opacity: 0, y: isMobile ? 18 : 28, skewX: isMobile ? 0 : 10 });
   });
+  revealOnEnter(titles, (batch) => batch.forEach((el) => {
+    gsap.to(el._split.chars, {
+      opacity: 1,
+      y: 0,
+      skewX: 0,
+      duration: isMobile ? 0.45 : 0.55,
+      stagger: isMobile ? 0.025 : 0.03,
+      ease: 'power3.out'
+    });
+  }));
 }
 
 // ============================================
 // SECTION LINES — scale reveal
 // ============================================
 function initSectionLines() {
-  document.querySelectorAll('.section-line').forEach(line => {
-    gsap.set(line, { scaleX: 0, transformOrigin: 'left center' });
-
-    ScrollTrigger.create({
-      trigger: line,
-      start: 'top 88%',
-      once: true,
-      onEnter: () => {
-        gsap.to(line, { scaleX: 1, duration: 0.9, ease: 'power3.out' });
-      }
-    });
-  });
+  const lines = document.querySelectorAll('.section-line');
+  gsap.set(lines, { scaleX: 0, transformOrigin: 'left center' });
+  revealOnEnter(lines, (batch) => gsap.to(batch, { scaleX: 1, duration: 0.9, ease: 'power3.out' }));
 }
 
 // ============================================
@@ -187,7 +178,7 @@ function initSectionLines() {
 // ============================================
 function initScrollProgress() {
   const bar = document.getElementById('scrollProgress');
-  if (!bar) return;
+  if (!bar || CSS.supports('animation-timeline: scroll()') || !window.ScrollTrigger) return;
   bar.style.transition = 'none';
   gsap.set(bar, { scaleX: 0, transformOrigin: '0 50%' });
 
@@ -199,7 +190,7 @@ function initScrollProgress() {
 }
 
 // ============================================
-// FADE-IN ELEMENTS — ScrollTrigger.batch
+// FADE-IN ELEMENTS — reveal por lotes
 // ============================================
 function initFadeIns() {
   const fadeEls = document.querySelectorAll('.fade-in');
@@ -209,20 +200,15 @@ function initFadeIns() {
   const dy = isMobile ? 18 : 30;
   gsap.set(fadeEls, { opacity: 0, y: dy });
 
-  ScrollTrigger.batch(fadeEls, {
-    start: 'top 105%',   // fire as soon as any part nears the viewport
-    once: true,
-    interval: 0.08,
-    onEnter: (batch) => {
-      gsap.to(batch, {
-        opacity: 1,
-        y: 0,
-        duration: isMobile ? 0.55 : 0.75,
-        stagger: 0.07,
-        ease: 'power2.out'
-      });
-    }
-  });
+  revealOnEnter(fadeEls, (batch) => {
+    gsap.to(batch, {
+      opacity: 1,
+      y: 0,
+      duration: isMobile ? 0.45 : 0.5,
+      stagger: 0.05,
+      ease: 'power2.out'
+    });
+  }, '0px 0px 5% 0px');
 
   // Safety net: after all assets load, force-animate any element
   // still stuck at opacity:0 that is already in (or near) the viewport.
@@ -250,21 +236,16 @@ function initAboutCounters() {
 
     const obj = { n: 0 };
 
-    ScrollTrigger.create({
-      trigger: numEl,
-      start: 'top 82%',
-      once: true,
-      onEnter: () => {
-        gsap.to(obj, {
-          n: target,
-          duration: 1.6,
-          ease: 'power2.out',
-          onUpdate() {
-            numEl.textContent = String(Math.round(obj.n)).padStart(2, '0');
-          }
-        });
-      }
-    });
+    revealOnEnter([numEl], () => {
+      gsap.to(obj, {
+        n: target,
+        duration: 1.6,
+        ease: 'power2.out',
+        onUpdate() {
+          numEl.textContent = String(Math.round(obj.n)).padStart(2, '0');
+        }
+      });
+    }, '0px 0px -18% 0px');
   });
 }
 
@@ -466,15 +447,12 @@ function initLookbook() {
     const panels = document.querySelectorAll('.lookbook-panel');
     if (!panels.length) return;
 
-    const STAGGER_MS = 110;
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const idx = Array.from(panels).indexOf(entry.target);
-        setTimeout(() => entry.target.classList.add('lb-in'), idx * STAGGER_MS);
+      entries.filter(entry => entry.isIntersecting).forEach((entry, i) => {
+        setTimeout(() => entry.target.classList.add('lb-in'), i * 60);
         observer.unobserve(entry.target);
       });
-    }, { threshold: 0.12 });
+    }, { rootMargin: '0px 0px 20% 0px' });
 
     panels.forEach(panel => observer.observe(panel));
 
@@ -492,22 +470,17 @@ function initBlogReveal() {
   const cards = document.querySelectorAll('.blog-card');
   if (!cards.length) return;
 
-  gsap.set(cards, { opacity: 0, y: 32 });
+  gsap.set(cards, { opacity: 0, y: 24 });
 
-  ScrollTrigger.batch(cards, {
-    start: 'top 91%',
-    once: true,
-    interval: 0.1,
-    onEnter: (batch) => {
-      gsap.to(batch, {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        stagger: 0.12,
-        ease: 'power2.out'
-      });
-    }
-  });
+  revealOnEnter(cards, (batch) => {
+    gsap.to(batch, {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      stagger: 0.08,
+      ease: 'power2.out'
+    });
+  }, '0px 0px 5% 0px');
 }
 
 // ============================================
@@ -783,11 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initButtonEffects();
         initCustomCursor();
         initMagneticButtons();
-        ScrollTrigger.refresh();
 
-        // Segundo refresh cuando todas las imágenes lazy terminan de cargar
-        // (cambian el layout y desplazan los triggers de ScrollTrigger)
-        window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true });
       }
     });
   });

@@ -19,7 +19,28 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
   <!-- ?v=18 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
-  <link rel="stylesheet" href="css/style.css?v=27">
+  <link rel="stylesheet" href="css/style.css?v=29">
+  <script src="js/products-data.js?v=1"></script>
+  <script>
+    (function () {
+      var id = new URLSearchParams(location.search).get('id');
+      var p = (window.DSTAR_PRODUCTS || []).find(function (x) { return x.id === id; });
+      if (!p) return;
+      var src = (p.gallery && p.gallery[0]) || p.image;
+      var jpg = /\.(jpe?g)(\?|$)/i.test(src);
+      var url = function (w) {
+        return src.replace('/image/upload/', '/image/upload/' + ['f_auto', 'q_auto', 'dpr_auto'].concat(jpg ? ['fl_progressive'] : [], ['w_' + w]).join(',') + '/');
+      };
+      var link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.setAttribute('fetchpriority', 'high');
+      link.setAttribute('imagesrcset', [600, 900, 1200, 1600].map(function (w) { return url(w) + ' ' + w + 'w'; }).join(', '));
+      link.setAttribute('imagesizes', '(max-width: 768px) 100vw, (max-width: 1440px) 52vw, 744px');
+      link.href = url(1200);
+      document.head.appendChild(link);
+    })();
+  </script>
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body class="page-product">
@@ -175,14 +196,11 @@
 
   <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
-  <script src="js/products-data.js?v=1" defer></script>
   <script src="js/cart-store.js?v=1" defer></script>
-  <script src="js/app.js?v=28" defer></script>
+  <script src="js/app.js?v=30" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/ScrollTrigger.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" defer></script>
-  <script src="js/gsap-animations.js?v=7" defer></script>
-  <script src="js/blog-transitions.js?v=4" defer></script>
+  <script src="js/gsap-animations.js?v=10" defer></script>
+  <script src="js/blog-transitions.js?v=5" defer></script>
 </body>
 </html>
 

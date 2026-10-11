@@ -155,7 +155,7 @@ ul { list-style: none; }
 .logo-3d canvas { opacity: 0; }
 .logo-3d--live canvas { opacity: 1; }
 .logo-3d--live img { visibility: hidden; }
-.logo-3d__source { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; z-index: -1; }
+.logo-3d__source { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; z-index: -1; clip-path: inset(0 calc(100% - 1px) calc(100% - 1px) 0); }
 .logo-3d--css { perspective: 900px; }
 .logo-3d--css img { animation: logoSpin 4s linear infinite; }
 @keyframes logoSpin { to { transform: rotateY(360deg); } }
@@ -1822,22 +1822,6 @@ ul { list-style: none; }
   overflow: hidden;
 }
 
-/* Grain overlay */
-body::after {
-  content: none;
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9998;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px;
-  opacity: 0.4;
-}
-@media (min-width: 1025px) and (hover: hover) {
-  body::after { content: ''; }
-}
-
 /* cursor nativo restaurado — sin estilos de cursor custom */
 
 /* ============================================
@@ -2066,8 +2050,7 @@ body::after {
     scroll-snap-stop: unset !important;
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
-    will-change: opacity, transform;
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
   }
   .lookbook-panel.lb-in-mobile {
     opacity: 1;
@@ -2254,9 +2237,8 @@ body::after {
   /* Entrance animation — fade + lift */
   .lookbook-panel {
     opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);
-    will-change: opacity, transform;
+    transform: translateY(20px);
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
   }
   .lookbook-panel.lb-in {
     opacity: 1;
@@ -2674,22 +2656,33 @@ body::after {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 7px;
-    padding: 14px 0 6px;
+    gap: 0;
+    padding: 4px 0 0;
   }
   .pd-carousel-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--concrete-dark);
+    position: relative;
+    width: 24px;
+    height: 24px;
+    background: none;
     border: none;
     cursor: pointer;
     padding: 0;
-    transition: background 0.25s, width 0.25s;
   }
-  .pd-carousel-dot--active {
+  .pd-carousel-dot::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 3px;
+    background: var(--concrete-dark);
+    transition: background-color 0.25s, transform 0.25s var(--ease-out);
+  }
+  .pd-carousel-dot--active::before {
     background: var(--white);
-    width: 20px;
+    transform: scaleX(3.3);
   }
 
   /* Info: no sticky, mantiene gradiente premium + stripe + watermark */
@@ -3249,10 +3242,9 @@ body::after {
   padding: 8px 0 2px;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 3px;
-  color: var(--concrete);
-  opacity: 0.8;
+  color: var(--concrete-light);
   transition: opacity 0.55s ease, transform 0.55s ease;
 }
 .pd-swipe-hint span + span {
@@ -3496,4 +3488,50 @@ body::after {
   .toast,
   .pd-sticky-cta { background: var(--glass-fallback); }
   .mobile-nav { background: var(--glass-fallback); }
+}
+
+/* ============================================
+   SCROLL-DRIVEN (compositor) — sin JS por cuadro donde hay soporte
+   ============================================ */
+@supports (animation-timeline: scroll()) {
+  #scrollProgress {
+    animation: scrollProgressGrow linear both;
+    animation-timeline: scroll(root);
+  }
+  @keyframes scrollProgressGrow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__content {
+      animation: heroContentOut linear both;
+      animation-timeline: scroll(root);
+      animation-range: 45svh 100svh;
+    }
+    .hero__scroll-indicator {
+      animation: heroFadeIn 0.9s var(--ease-out) 1.2s both, heroIndicatorOut linear forwards;
+      animation-timeline: auto, scroll(root);
+      animation-range: normal, 1px 18svh;
+    }
+    @keyframes heroContentOut { to { opacity: 0; } }
+    @keyframes heroIndicatorOut { to { opacity: 0; } }
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (min-width: 769px) {
+    .hero__content { animation-range: 55svh 100svh; }
+    .hero__logo {
+      animation: heroFadeIn 1.1s var(--ease-out) 0.3s both, heroLogoDrift linear both;
+      animation-timeline: auto, scroll(root);
+      animation-range: normal, 0 100svh;
+    }
+    @keyframes heroLogoDrift { to { translate: 0 20%; } }
+  }
+}
+
+@media (max-width: 768px) {
+  .announcement-bar__track,
+  .footer__links a,
+  .footer__copy,
+  .footer__note { font-size: 12px; }
 }

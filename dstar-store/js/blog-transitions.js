@@ -171,9 +171,8 @@
         wrapper.style.overflow = 'hidden';
       }
       gsap.from(featuredImg, {
-        scale: 1.08,
-        opacity: 0,
-        duration: 1.2,
+        scale: 1.05,
+        duration: 1.1,
         ease: 'power2.out',
         delay: BASE_DELAY + 0.15
       });
@@ -220,7 +219,7 @@
   function initScrollProgress() {
     if (!document.querySelector('.blog-post__hero')) return;
     var bar = document.getElementById('scrollProgress');
-    if (!bar || !window.ScrollTrigger) return;
+    if (!bar || !window.ScrollTrigger || CSS.supports('animation-timeline: scroll()')) return;
     bar.style.transition = 'none';
     gsap.set(bar, { scaleX: 0, transformOrigin: '0 50%' });
     gsap.to(bar, {

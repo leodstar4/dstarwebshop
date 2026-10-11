@@ -82,11 +82,9 @@
   host.appendChild(video);
 
   const visible = (v) => v.inView && !v.el.closest('.loader.hidden');
-  let lastScroll = -1e4;
-  window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
 
   const draw = () => {
-    if (video.readyState >= 2 && performance.now() - lastScroll > 160) {
+    if (video.readyState >= 2) {
       for (const v of views) {
         if (!visible(v)) continue;
         const gl = v.gl;

@@ -210,9 +210,12 @@ function initCardPrefetch() {
     const p = PRODUCTS.find((prod) => prod.id === id);
     if (!p || warmed.has(id)) return;
     warmed.add(id);
+    const src = (p.gallery && p.gallery[0]) || p.image;
     const img = new Image();
     img.decoding = 'async';
-    img.src = cdnOpt((p.gallery && p.gallery[0]) || p.image, 1200);
+    img.sizes = PD_SIZES;
+    img.srcset = pdSrcset(src);
+    img.src = cdnOpt(src, 1200);
     const link = document.createElement('link');
     link.rel = 'prefetch';
     link.href = card.href;
@@ -583,9 +586,9 @@ function formatPrice(amount) {
 // SCROLL PROGRESS BAR
 // ============================================
 function initScrollProgress() {
-  if (window.gsap) return; // GSAP ScrollTrigger handles this
+  if (window.ScrollTrigger) return;
   const bar = $('#scrollProgress');
-  if (!bar) return;
+  if (!bar || CSS.supports('animation-timeline: scroll()')) return;
   window.addEventListener('scroll', () => {
     const scrolled = window.scrollY;
     const total = document.documentElement.scrollHeight - window.innerHeight;
@@ -847,15 +850,18 @@ function _pdInitMobileUX(p, isSoldOut) {
 }
 
 // ── Desktop: render all gallery images as a vertical stack ──
+const PD_SIZES = '(max-width: 768px) 100vw, (max-width: 1440px) 52vw, 744px';
+const pdSrcset = (src) => [600, 900, 1200, 1600].map((w) => cdnOpt(src, w) + ' ' + w + 'w').join(', ');
+
 function _pdBuildStack(gallery, productName) {
   const stack = document.getElementById('pdGalleryStack');
   if (!stack) return;
 
   stack.innerHTML = gallery.map((src, i) => `
     <div class="pd-gallery-img pd-gallery-img--loading" data-index="${i}">
-      <img src="${cdnOpt(src, 1200)}" alt="${productName} — foto ${i + 1}"
-           loading="${i === 0 ? 'eager' : 'lazy'}"
-           fetchpriority="${i === 0 ? 'high' : 'auto'}"
+      <img src="${cdnOpt(src, 1200)}" srcset="${pdSrcset(src)}" sizes="${PD_SIZES}"
+           alt="${productName} — foto ${i + 1}"
+           fetchpriority="${i === 0 ? 'high' : 'low'}"
            decoding="async">
     </div>`).join('');
 
@@ -887,7 +893,8 @@ function _pdBuildCarousel(gallery, productName) {
   // suficientes píxeles para que el carrusel se vea nítido al contain
   carousel.innerHTML = gallery.map((src, i) => `
     <div class="pd-carousel__item pd-carousel__item--loading" data-index="${i}">
-      <img src="${cdnOpt(src, 1200)}" alt="${productName} — foto ${i + 1}"
+      <img src="${cdnOpt(src, 1200)}" srcset="${pdSrcset(src)}" sizes="${PD_SIZES}"
+           alt="${productName} — foto ${i + 1}"
            loading="${i === 0 ? 'eager' : 'lazy'}"
            fetchpriority="${i === 0 ? 'high' : 'auto'}"
            decoding="async">
