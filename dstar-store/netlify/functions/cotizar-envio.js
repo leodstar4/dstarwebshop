@@ -11,7 +11,7 @@
 // ============================================
 
 const { SKYDROPX_BASE, getSkydropxToken } = require('../lib/skydropx');
-const { str } = require('../lib/validate');
+const { str, origenPermitido } = require('../lib/validate');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -20,6 +20,9 @@ exports.handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
+  }
+  if (!origenPermitido(event)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Origen no permitido' }) };
   }
 
   try {

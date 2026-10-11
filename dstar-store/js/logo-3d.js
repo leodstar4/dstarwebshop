@@ -1,19 +1,18 @@
 // Logo 3D girando: MP4 H.264 con el color arriba y la transparencia abajo (en grises),
 // compuesto en WebGL. Así el iPhone lo decodifica por hardware (fluido y nítido) y
-// todos los navegadores lo ven igual. Si el navegador bloquea el video (modo de bajo
-// consumo en iPhone) gira el póster con CSS 3D; si no hay WebGL se queda el póster.
+// todos los navegadores lo ven igual. Si el navegador bloquea el <video> (modo de bajo
+// consumo en iPhone) decodifica el mismo MP4 con WebCodecs, que no está sujeto a la
+// política de autoplay, y se ve idéntico. Si nada de eso existe se queda el póster.
 (function () {
   const SRC = '/assets/brand/logo-3d.mp4?v=1';
+  const FRAME_MS = 1000 / 60;
   const els = Array.from(document.querySelectorAll('[data-logo-3d]'));
   if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   const VERT = 'attribute vec2 p;varying vec2 uv;void main(){uv=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
   const FRAG = 'precision mediump float;varying vec2 uv;uniform sampler2D t;void main(){vec3 c=texture2D(t,vec2(uv.x,uv.y*.5)).rgb;float a=texture2D(t,vec2(uv.x,.5+uv.y*.5)).r;gl_FragColor=vec4(c*a,a);}';
 
-  const cssSpin = (on) => els.forEach((el) => {
-    el.classList.toggle('logo-3d--css', on);
-    if (on) el.dispatchEvent(new CustomEvent('logo3d:live', { bubbles: true }));
-  });
+  const release = () => els.forEach((el) => el.dispatchEvent(new CustomEvent('logo3d:live', { bubbles: true })));
 
   function createView(el) {
     const canvas = document.createElement('canvas');
@@ -62,8 +61,179 @@
 
   const views = els.map(createView).filter(Boolean);
   if (!views.length) {
-    cssSpin(true);
+    release();
     return;
+  }
+
+  const visible = (v) => v.inView && !v.el.closest('.loader.hidden');
+
+  let staging = null;
+  const upload = (gl, source) => {
+    if (!staging) {
+      try {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+        return;
+      } catch (err) {
+        staging = document.createElement('canvas').getContext('2d');
+      }
+    }
+    const w = source.displayWidth || source.videoWidth;
+    const h = source.displayHeight || source.videoHeight;
+    if (staging.canvas.width !== w || staging.canvas.height !== h) {
+      staging.canvas.width = w;
+      staging.canvas.height = h;
+    }
+    staging.drawImage(source, 0, 0, w, h);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, staging.canvas);
+  };
+
+  const render = (source) => {
+    for (const v of views) {
+      if (!visible(v)) continue;
+      upload(v.gl, source);
+      v.gl.drawArrays(v.gl.TRIANGLE_STRIP, 0, 4);
+      if (!v.ready) {
+        v.ready = true;
+        v.el.classList.add('logo-3d--live');
+        v.el.dispatchEvent(new CustomEvent('logo3d:live', { bubbles: true }));
+      }
+    }
+  };
+
+  function parseMp4(buf) {
+    const dv = new DataView(buf);
+    const bytes = new Uint8Array(buf);
+    const boxes = (start, end) => {
+      const out = {};
+      for (let o = start; o + 8 <= end;) {
+        let size = dv.getUint32(o);
+        let head = 8;
+        if (size === 1) {
+          size = Number(dv.getBigUint64(o + 8));
+          head = 16;
+        } else if (size === 0) {
+          size = end - o;
+        }
+        if (size < head) break;
+        out[String.fromCharCode(...bytes.subarray(o + 4, o + 8))] = { start: o + head, end: o + size };
+        o += size;
+      }
+      return out;
+    };
+    const path = (names) => names.reduce((box, n) => box && boxes(box.start, box.end)[n], { start: 0, end: buf.byteLength });
+    const stbl = path(['moov', 'trak', 'mdia', 'minf', 'stbl']);
+    if (!stbl) return null;
+    const t = boxes(stbl.start, stbl.end);
+    const avc1 = t.stsd && boxes(t.stsd.start + 8, t.stsd.end).avc1;
+    const avcC = avc1 && boxes(avc1.start + 78, avc1.end).avcC;
+    const chunkBox = t.stco || t.co64;
+    if (!avcC || !t.stsz || !t.stsc || !chunkBox) return null;
+
+    const description = bytes.slice(avcC.start, avcC.end);
+    const hex = (i) => description[i].toString(16).padStart(2, '0');
+    const codec = `avc1.${hex(1)}${hex(2)}${hex(3)}`;
+
+    const count = dv.getUint32(t.stsz.start + 8);
+    const fixed = dv.getUint32(t.stsz.start + 4);
+    const sizes = Array.from({ length: count }, (_, i) => fixed || dv.getUint32(t.stsz.start + 12 + i * 4));
+
+    const wide = !!t.co64;
+    const chunks = Array.from({ length: dv.getUint32(chunkBox.start + 4) }, (_, i) => (wide
+      ? Number(dv.getBigUint64(chunkBox.start + 8 + i * 8))
+      : dv.getUint32(chunkBox.start + 8 + i * 4)));
+
+    const runs = Array.from({ length: dv.getUint32(t.stsc.start + 4) }, (_, i) => ({
+      first: dv.getUint32(t.stsc.start + 8 + i * 12) - 1,
+      per: dv.getUint32(t.stsc.start + 12 + i * 12),
+    }));
+
+    const keys = new Set();
+    if (t.stss) {
+      const n = dv.getUint32(t.stss.start + 4);
+      for (let i = 0; i < n; i++) keys.add(dv.getUint32(t.stss.start + 8 + i * 4) - 1);
+    } else {
+      keys.add(0);
+    }
+
+    const samples = [];
+    for (let c = 0, s = 0; c < chunks.length && s < count; c++) {
+      const run = runs.filter((r) => r.first <= c).pop();
+      let off = chunks[c];
+      for (let k = 0; k < run.per && s < count; k++, s++) {
+        samples.push({ data: bytes.subarray(off, off + sizes[s]), key: keys.has(s) });
+        off += sizes[s];
+      }
+    }
+    return samples.length && samples[0].key ? { codec, description, samples } : null;
+  }
+
+  async function playDecoded() {
+    if (!('VideoDecoder' in window)) return false;
+    const mp4 = parseMp4(await (await fetch(SRC)).arrayBuffer());
+    if (!mp4) return false;
+    const config = { codec: mp4.codec, description: mp4.description, optimizeForLatency: true };
+    if (!(await VideoDecoder.isConfigSupported(config)).supported) return false;
+
+    const queue = [];
+    let decoder;
+    let fed = 0;
+    let shown = 0;
+    let start = 0;
+    let running = false;
+    let failed = false;
+
+    const feed = () => {
+      while (decoder.state === 'configured' && decoder.decodeQueueSize < 3 && queue.length < 6) {
+        const i = fed % mp4.samples.length;
+        const s = mp4.samples[i];
+        decoder.decode(new EncodedVideoChunk({ type: s.key ? 'key' : 'delta', timestamp: Math.round(fed * FRAME_MS * 1000), data: s.data }));
+        fed++;
+      }
+    };
+
+    decoder = new VideoDecoder({
+      output: (frame) => {
+        queue.push(frame);
+        feed();
+      },
+      error: () => {
+        failed = true;
+        queue.splice(0).forEach((f) => f.close());
+      },
+    });
+    decoder.configure(config);
+    decoder.addEventListener('dequeue', feed);
+    feed();
+
+    const tick = (now) => {
+      if (!running || failed) return;
+      if (!start) start = now - shown * FRAME_MS;
+      const due = Math.floor((now - start) / FRAME_MS);
+      let frame = null;
+      while (queue.length && shown < due) {
+        if (frame) frame.close();
+        frame = queue.shift();
+        shown++;
+      }
+      if (frame) {
+        render(frame);
+        frame.close();
+      }
+      if (due - shown > 2) start = now - shown * FRAME_MS;
+      feed();
+      requestAnimationFrame(tick);
+    };
+    const resume = () => {
+      if (running || failed || document.hidden) return;
+      running = true;
+      start = 0;
+      requestAnimationFrame(tick);
+    };
+
+    document.addEventListener('visibilitychange', () => (document.hidden ? (running = false) : resume()));
+    window.addEventListener('pageshow', (e) => { if (e.persisted) resume(); });
+    resume();
+    return true;
   }
 
   const host = document.querySelector('.hero__logo[data-logo-3d]') || els[0];
@@ -81,28 +251,25 @@
   video.src = SRC;
   host.appendChild(video);
 
-  const visible = (v) => v.inView && !v.el.closest('.loader.hidden');
+  let mode = 'video';
+  const fallback = () => {
+    if (mode !== 'video') return;
+    mode = 'decoder';
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    video.remove();
+    playDecoded().catch(() => false).then((ok) => { if (!ok) release(); });
+  };
 
   const draw = () => {
-    if (video.readyState >= 2) {
-      for (const v of views) {
-        if (!visible(v)) continue;
-        const gl = v.gl;
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-        if (!v.ready) {
-          v.ready = true;
-          v.el.classList.add('logo-3d--live');
-          v.el.classList.remove('logo-3d--css');
-          v.el.dispatchEvent(new CustomEvent('logo3d:live', { bubbles: true }));
-        }
-      }
-    }
+    if (mode !== 'video') return;
+    if (video.readyState >= 2) render(video);
     schedule();
   };
   let pending = false;
   const schedule = () => {
-    if (video.paused) {
+    if (video.paused || mode !== 'video') {
       pending = false;
       return;
     }
@@ -111,19 +278,17 @@
     else requestAnimationFrame(draw);
   };
   const play = () => {
+    if (mode !== 'video') return;
     const p = video.play();
     if (p && p.then) {
       p.then(() => { if (!pending) schedule(); }).catch((err) => {
-        if (err && err.name === 'NotAllowedError') cssSpin(true);
+        if (err && err.name === 'NotAllowedError' && !document.hidden) fallback();
       });
     }
   };
 
   video.addEventListener('playing', () => { if (!pending) schedule(); });
-  video.addEventListener('error', () => {
-    views.forEach((v) => v.canvas.remove());
-    cssSpin(true);
-  });
+  video.addEventListener('error', fallback);
 
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) {
@@ -135,8 +300,7 @@
 
   document.addEventListener('visibilitychange', () => (document.hidden ? video.pause() : play()));
   window.addEventListener('resize', () => views.forEach((v) => v.resize()), { passive: true });
-  ['pointerdown', 'touchstart', 'keydown'].forEach((t) => window.addEventListener(t, () => { if (video.paused) play(); }, { once: true, passive: true }));
   window.addEventListener('pageshow', (e) => { if (e.persisted) play(); });
   play();
-  setTimeout(() => { if (video.paused && !views.some((v) => v.ready)) cssSpin(true); }, 2500);
+  setTimeout(() => { if (mode === 'video' && video.paused && !views.some((v) => v.ready)) fallback(); }, 2500);
 })();

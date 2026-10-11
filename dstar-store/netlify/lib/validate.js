@@ -4,6 +4,19 @@ const MAX_QTY = 10;
 
 const str = (v, max) => (typeof v === 'string' ? v.trim().replace(/[\r\n\t]+/g, ' ').slice(0, max) : '');
 
+function origenPermitido(event) {
+  const h = event.headers || {};
+  const origin = h.origin || h.Origin;
+  if (!origin) return true;
+  let host;
+  try { host = new URL(origin).host; } catch { return false; }
+  const permitidos = [process.env.URL, process.env.DEPLOY_PRIME_URL, process.env.DEPLOY_URL, process.env.URL_SITIO]
+    .filter(Boolean)
+    .map((u) => { try { return new URL(u).host; } catch { return ''; } });
+  permitidos.push(h.host || h.Host, h['x-forwarded-host']);
+  return permitidos.includes(host);
+}
+
 function validarCliente(raw) {
   const c = raw && typeof raw === 'object' ? raw : {};
   const cliente = {
@@ -60,4 +73,4 @@ function construirPedido(rawItems) {
   return { items, subtotal };
 }
 
-module.exports = { validarCliente, construirPedido, str };
+module.exports = { validarCliente, construirPedido, origenPermitido, str };

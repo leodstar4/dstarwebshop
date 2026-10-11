@@ -156,9 +156,6 @@ ul { list-style: none; }
 .logo-3d--live canvas { opacity: 1; }
 .logo-3d--live img { visibility: hidden; }
 .logo-3d__source { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; z-index: -1; clip-path: inset(0 calc(100% - 1px) calc(100% - 1px) 0); }
-.logo-3d--css { perspective: 900px; }
-.logo-3d--css img { animation: logoSpin 4s linear infinite; }
-@keyframes logoSpin { to { transform: rotateY(360deg); } }
 .loader__logo {
   height: clamp(140px, 28dvh, 280px);
 }

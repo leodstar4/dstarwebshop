@@ -23,6 +23,10 @@ const STALE_MS = 5 * 60 * 1000;
 function firmaValida(event, dataId) {
   const secret = process.env.MP_WEBHOOK_SECRET;
   if (!secret) {
+    if (process.env.NETLIFY_DEV !== 'true') {
+      console.error('mp-webhook — MP_WEBHOOK_SECRET no configurado; se rechaza la notificación');
+      return false;
+    }
     console.warn('mp-webhook — MP_WEBHOOK_SECRET no configurado; no se verifica la firma');
     return true;
   }
@@ -90,7 +94,7 @@ exports.handler = async (event) => {
       return reply(200, { ok: true });
     }
 
-    await store.set(paymentId, { status: 'processing', at: Date.now() });
+    if (!(await store.claim(paymentId, STALE_MS))) return reply(200, { ok: true });
 
     let guiaResult;
     try {

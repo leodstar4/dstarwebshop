@@ -7,7 +7,7 @@
 // Variables de entorno: MP_ACCESS_TOKEN, URL_SITIO (o URL que define Netlify)
 // ============================================
 
-const { validarCliente, construirPedido, str } = require('../lib/validate');
+const { validarCliente, construirPedido, origenPermitido, str } = require('../lib/validate');
 const { getRatePrice } = require('../lib/skydropx');
 
 const headers = { 'Content-Type': 'application/json' };
@@ -15,6 +15,7 @@ const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return reply(405, { error: 'Método no permitido' });
+  if (!origenPermitido(event)) return reply(403, { error: 'Origen no permitido' });
 
   try {
     let body;

@@ -1,7 +1,19 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
+import crypto from 'crypto';
 
 const FN_DIR = path.resolve(process.cwd(), 'netlify/functions');
+const WEBHOOK_SECRET = 'test-secret';
+
+const webhookEvent = (id, secret = WEBHOOK_SECRET) => {
+  const ts = '1700000000';
+  const v1 = crypto.createHmac('sha256', secret).update(`id:${id};request-id:req-1;ts:${ts};`).digest('hex');
+  return {
+    httpMethod: 'POST',
+    headers: { 'x-signature': `ts=${ts},v1=${v1}`, 'x-request-id': 'req-1' },
+    body: JSON.stringify({ type: 'payment', data: { id } })
+  };
+};
 
 const PRODUCT_URL = '/producto.html?id=dstar-bts-shirt-01';
 
@@ -196,10 +208,12 @@ test.describe('AUDIT — Netlify Functions (handler directo, fetch stub, sin red
     delete process.env.GMAIL_APP_PASSWORD;
     try {
       const { handler } = require(path.join(FN_DIR, 'mp-webhook.js'));
-      const ev = { httpMethod: 'POST', body: JSON.stringify({ type: 'payment', data: { id: '123' } }) };
+      process.env.MP_WEBHOOK_SECRET = WEBHOOK_SECRET;
+      const ev = webhookEvent('123');
       await handler(ev);
       await handler(ev);
-      expect(shipments).toBe(1);
+      await Promise.all([handler(webhookEvent('124')), handler(webhookEvent('124')), handler(webhookEvent('124'))]);
+      expect(shipments).toBe(2);
     } finally {
       global.fetch = realFetch;
     }
@@ -258,12 +272,53 @@ test.describe('AUDIT — Netlify Functions (handler directo, fetch stub, sin red
     process.env.MP_ACCESS_TOKEN = 'TEST';
     try {
       const { handler } = require(path.join(FN_DIR, 'mp-webhook.js'));
-      const res = await handler({ httpMethod: 'POST', body: JSON.stringify({ type: 'payment', data: { id: '999' } }) });
+      process.env.MP_WEBHOOK_SECRET = WEBHOOK_SECRET;
+      const res = await handler(webhookEvent('999'));
       expect(res.statusCode).toBe(200);
       expect(res.body).not.toContain('label');
       expect(shipments).toBe(0);
     } finally {
       global.fetch = realFetch;
+    }
+  });
+
+  test('mp-webhook rechaza notificaciones sin firma o con firma falsa', async () => {
+    const realFetch = global.fetch;
+    let consultas = 0;
+    global.fetch = async () => { consultas++; throw new Error('no debería consultar MP'); };
+    process.env.MP_ACCESS_TOKEN = 'TEST';
+    const secretPrevio = process.env.MP_WEBHOOK_SECRET;
+    try {
+      const { handler } = require(path.join(FN_DIR, 'mp-webhook.js'));
+      process.env.MP_WEBHOOK_SECRET = WEBHOOK_SECRET;
+      const sinFirma = await handler({ httpMethod: 'POST', body: JSON.stringify({ type: 'payment', data: { id: '555' } }) });
+      const falsa = await handler(webhookEvent('555', 'otra-clave'));
+      delete process.env.MP_WEBHOOK_SECRET;
+      const sinSecreto = await handler(webhookEvent('555'));
+      expect([sinFirma.statusCode, falsa.statusCode, sinSecreto.statusCode]).toEqual([401, 401, 401]);
+      expect(consultas).toBe(0);
+    } finally {
+      global.fetch = realFetch;
+      if (secretPrevio) process.env.MP_WEBHOOK_SECRET = secretPrevio;
+    }
+  });
+
+  test('cotizar-envio y mp-preference rechazan peticiones de otros sitios', async () => {
+    const realFetch = global.fetch;
+    global.fetch = async () => { throw new Error('red no permitida'); };
+    process.env.URL = 'https://dstarshop.netlify.app';
+    try {
+      const preference = require(path.join(FN_DIR, 'mp-preference.js')).handler;
+      const cotizar = require(path.join(FN_DIR, 'cotizar-envio.js')).handler;
+      const ajeno = { httpMethod: 'POST', headers: { origin: 'https://evil.example', host: 'dstarshop.netlify.app' }, body: '{}' };
+      expect((await preference(ajeno)).statusCode).toBe(403);
+      expect((await cotizar(ajeno)).statusCode).toBe(403);
+      const propio = { ...ajeno, headers: { origin: 'https://dstarshop.netlify.app', host: 'dstarshop.netlify.app' } };
+      expect((await preference(propio)).statusCode).toBe(400);
+      expect((await cotizar(propio)).statusCode).toBe(400);
+    } finally {
+      global.fetch = realFetch;
+      delete process.env.URL;
     }
   });
 });
