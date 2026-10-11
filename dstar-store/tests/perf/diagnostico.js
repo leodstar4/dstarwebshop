@@ -6,6 +6,8 @@
  *   node tests/perf/diagnostico.js https://tu-sitio.netlify.app
  *   node tests/perf/diagnostico.js https://tu-sitio.netlify.app http://localhost:8888
  *   node tests/perf/diagnostico.js <url> --path=/producto.html?id=dstar-bts-shirt-01
+ *   DIAG_CHANNEL=chrome  usa Chrome instalado (con H.264); DIAG_BLOCK=regex bloquea recursos para experimentos;
+ *   DIAG_PERFIL=movil|desktop  mide solo ese perfil
  */
 const fs = require('fs');
 const path = require('path');
@@ -40,6 +42,7 @@ async function medir(browser, url, nombre, perfil, frio) {
   if (perfil.cpu > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: perfil.cpu });
   if (perfil.red) await cdp.send('Network.emulateNetworkConditions', { offline: false, ...perfil.red });
 
+  if (process.env.DIAG_BLOCK) await page.route(new RegExp(process.env.DIAG_BLOCK), (r) => r.abort());
   const errores = [];
   page.on('pageerror', (e) => errores.push(String(e.message).slice(0, 200)));
   page.on('console', (m) => { if (m.type() === 'error') errores.push(m.text().slice(0, 200)); });
@@ -171,10 +174,11 @@ function resumen(r) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ channel: process.env.DIAG_CHANNEL || undefined });
   const resultados = [];
   for (const url of urls) {
     for (const [nombre, perfil] of Object.entries(PERFILES)) {
+      if (process.env.DIAG_PERFIL && process.env.DIAG_PERFIL !== nombre) continue;
       for (const frio of [true, false]) {
         process.stdout.write(`Midiendo ${nombre} ${frio ? 'fría' : 'caliente'} ${url}...\n`);
         try {
