@@ -87,9 +87,11 @@
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, staging.canvas);
   };
 
+  const inLoader = (v) => !!v.el.closest('.loader');
   const render = (source) => {
+    const loaderUp = views.some((v) => inLoader(v) && visible(v));
     for (const v of views) {
-      if (!visible(v)) continue;
+      if (!visible(v) || (loaderUp && v.ready && !inLoader(v))) continue;
       upload(v.gl, source);
       v.gl.drawArrays(v.gl.TRIANGLE_STRIP, 0, 4);
       if (!v.ready) {
@@ -167,25 +169,25 @@
     return samples.length && samples[0].key ? { codec, description, samples } : null;
   }
 
-  async function playDecoded() {
-    if (!('VideoDecoder' in window)) return false;
-    const mp4 = parseMp4(await (await fetch(SRC)).arrayBuffer());
+  async function playDecoded(buf) {
+    if (!buf || !('VideoDecoder' in window)) return false;
+    const mp4 = parseMp4(buf);
     if (!mp4) return false;
     const config = { codec: mp4.codec, description: mp4.description, optimizeForLatency: true };
     if (!(await VideoDecoder.isConfigSupported(config)).supported) return false;
 
+    const BUFFER = 12;
     const queue = [];
     let decoder;
     let fed = 0;
-    let shown = 0;
-    let start = 0;
     let running = false;
     let failed = false;
+    let last = 0;
+    let debt = 0;
 
     const feed = () => {
-      while (decoder.state === 'configured' && decoder.decodeQueueSize < 3 && queue.length < 6) {
-        const i = fed % mp4.samples.length;
-        const s = mp4.samples[i];
+      while (decoder.state === 'configured' && decoder.decodeQueueSize < 4 && queue.length + decoder.decodeQueueSize < BUFFER) {
+        const s = mp4.samples[fed % mp4.samples.length];
         decoder.decode(new EncodedVideoChunk({ type: s.key ? 'key' : 'delta', timestamp: Math.round(fed * FRAME_MS * 1000), data: s.data }));
         fed++;
       }
@@ -207,32 +209,40 @@
 
     const tick = (now) => {
       if (!running || failed) return;
-      if (!start) start = now - shown * FRAME_MS;
-      const due = Math.floor((now - start) / FRAME_MS);
+      if (last) debt += Math.min(now - last, 100) / FRAME_MS;
+      last = now;
+      let advance = Math.round(debt);
+      debt -= advance;
       let frame = null;
-      while (queue.length && shown < due) {
+      while (advance > 0 && queue.length) {
         if (frame) frame.close();
         frame = queue.shift();
-        shown++;
+        advance--;
       }
       if (frame) {
         render(frame);
         frame.close();
       }
-      if (due - shown > 2) start = now - shown * FRAME_MS;
       feed();
       requestAnimationFrame(tick);
     };
     const resume = () => {
       if (running || failed || document.hidden) return;
       running = true;
-      start = 0;
+      last = 0;
+      debt = 1;
       requestAnimationFrame(tick);
     };
 
     document.addEventListener('visibilitychange', () => (document.hidden ? (running = false) : resume()));
     window.addEventListener('pageshow', (e) => { if (e.persisted) resume(); });
-    resume();
+    const t0 = performance.now();
+    const preroll = () => {
+      if (failed) return;
+      if (queue.length >= 6 || performance.now() - t0 > 1500) resume();
+      else requestAnimationFrame(preroll);
+    };
+    preroll();
     return true;
   }
 
@@ -248,8 +258,9 @@
   video.setAttribute('aria-hidden', 'true');
   video.setAttribute('tabindex', '-1');
   video.className = 'logo-3d__source';
-  video.src = SRC;
   host.appendChild(video);
+
+  const bytes = fetch(SRC).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
 
   let mode = 'video';
   const fallback = () => {
@@ -259,7 +270,7 @@
     video.removeAttribute('src');
     video.load();
     video.remove();
-    playDecoded().catch(() => false).then((ok) => { if (!ok) release(); });
+    bytes.then(playDecoded).catch(() => false).then((ok) => { if (!ok) release(); });
   };
 
   const draw = () => {
@@ -301,6 +312,10 @@
   document.addEventListener('visibilitychange', () => (document.hidden ? video.pause() : play()));
   window.addEventListener('resize', () => views.forEach((v) => v.resize()), { passive: true });
   window.addEventListener('pageshow', (e) => { if (e.persisted) play(); });
-  play();
-  setTimeout(() => { if (mode === 'video' && video.paused && !views.some((v) => v.ready)) fallback(); }, 2500);
+  bytes.then((buf) => {
+    if (mode !== 'video') return;
+    video.src = buf ? URL.createObjectURL(new Blob([buf], { type: 'video/mp4' })) : SRC;
+    play();
+    setTimeout(() => { if (mode === 'video' && !document.hidden && (video.paused || video.currentTime === 0)) fallback(); }, 1200);
+  });
 })();
