@@ -151,7 +151,7 @@ test.describe('AUDIT — checkout', () => {
 test.describe('AUDIT — errores JS por página', () => {
   const pages = ['/', PRODUCT_URL, '/checkout.html', '/gracias.html', '/error-pago.html', '/pago-pendiente.html',
     '/agradecimientos.html', '/blog/born-to-shine-detras-del-drop.html', '/blog/como-cuidar-tu-ropa.html',
-    '/blog/streetwear-mexico-escena.html'];
+    '/blog/streetwear-mexico-escena.html', '/terminos.html'];
   for (const url of pages) {
     test(`sin pageerror en ${url}`, async ({ page }) => {
       const errors = [];

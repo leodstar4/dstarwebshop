@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
   <title>DSTAR</title>
   <meta name="description" content="DSTAR — Piezas limitadas. Todo con amor. Streetwear exclusivo hecho en México.">
@@ -39,8 +38,8 @@
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=29" media="print" onload="this.media='all';document.documentElement.classList.remove('css-pending')">
-  <noscript><link rel="stylesheet" href="css/style.css?v=29"></noscript>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=30" media="print" onload="this.media='all';document.documentElement.classList.remove('css-pending')">
+  <noscript><link rel="stylesheet" href="css/style.css?v=30"></noscript>
   <script>if(sessionStorage.getItem('dstar-fade-transit')){var _o=document.createElement('div');_o.id='dstarPageFade';_o.style.cssText='position:fixed;inset:0;background:#0a0a0a;z-index:99999;pointer-events:none';document.write(_o.outerHTML);}</script>
 </head>
 <body>
@@ -57,7 +56,14 @@
   <script>
     (function () {
       var loader = document.getElementById('loader');
-      var hide = function () { document.documentElement.classList.remove('css-pending'); loader.classList.add('hidden'); };
+      var hide = function () {
+        if (window.__dstarLoaded) return;
+        window.__dstarLoaded = true;
+        document.documentElement.classList.remove('css-pending');
+        document.documentElement.classList.add('is-loaded');
+        loader.classList.add('hidden');
+        window.dispatchEvent(new Event('dstar:loaded'));
+      };
       var wait = function (el, ms) {
         return new Promise(function (resolve) {
           if (!el) return resolve();
@@ -283,6 +289,7 @@
         <a href="#about">Nosotros</a>
         <a href="#blog">Blog</a>
         <a href="#contact">Contacto</a>
+        <a href="/terminos.html">Términos y envíos</a>
         <a href="agradecimientos.html">Gracias</a>
       </div>
       <p class="footer__copy">© 2026 DSTAR. TODOS LOS DERECHOS RESERVADOS.</p>
@@ -319,14 +326,14 @@
   </div>
 
   <!-- GSAP (local) -->
-  <script src="js/logo-3d.js?v=6" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" integrity="sha384-iJQU/7haAHHrfeX4o0uooRF7Po6K7IhD+YU5dustu1NfalmSBYI7pbX6wAtx2f9j" crossorigin="anonymous" defer></script>
+  <script src="js/logo-3d.js?v=7" defer></script>
+  <script src="js/vendor/gsap.min.js?v=3.14.2" defer></script>
+  <script src="js/vendor/SplitText.min.js?v=3.14.2" defer></script>
   <script src="js/products-data.js?v=1" defer></script>
-  <script src="js/cart-store.js?v=1" defer></script>
-  <script src="js/app.js?v=30" defer></script>
-  <script src="js/gsap-animations.js?v=10" defer></script>
-  <script src="js/blog-transitions.js?v=5" defer></script>
+  <script src="js/cart-store.js?v=2" defer></script>
+  <script src="js/app.js?v=31" defer></script>
+  <script src="js/gsap-animations.js?v=11" defer></script>
+  <script src="js/blog-transitions.js?v=6" defer></script>
 </body>
 </html>
 

@@ -13,7 +13,7 @@ function openStore(event) {
       set: (key, value) => store.setJSON(key, value),
       claim: async (key, staleMs) => {
         const actual = await store.getWithMetadata(key, { type: 'json' });
-        const valor = { status: 'processing', at: Date.now() };
+        const valor = { ...(actual && actual.data), status: 'processing', at: Date.now() };
         if (!actual) return (await store.setJSON(key, valor, { onlyIfNew: true })).modified;
         if (!disponible(actual.data, staleMs)) return false;
         return (await store.setJSON(key, valor, { onlyIfMatch: actual.etag })).modified;
@@ -28,7 +28,7 @@ function openStore(event) {
       set: async (key, value) => { memory.set(key, value); },
       claim: async (key, staleMs) => {
         if (!disponible(memory.get(key), staleMs)) return false;
-        memory.set(key, { status: 'processing', at: Date.now() });
+        memory.set(key, { ...memory.get(key), status: 'processing', at: Date.now() });
         return true;
       }
     };

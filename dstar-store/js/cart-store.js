@@ -45,5 +45,34 @@
     } catch {}
   }
 
-  root.DSTAR_CART = { load, save, stockFor };
+  let syncing = null;
+  function syncStock() {
+    if (syncing) return syncing;
+    if (!/^https?:$/.test(location.protocol) || typeof fetch !== 'function') return Promise.resolve(false);
+    syncing = fetch('/api/stock', { headers: { Accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        const live = json && json.stock;
+        if (!live || typeof live !== 'object') return false;
+        let changed = false;
+        for (const p of catalog()) {
+          const sizes = live[p.id];
+          if (!sizes || !p.sizesStock) continue;
+          for (const size of p.sizes) {
+            const n = sizes[size];
+            if (Number.isInteger(n) && n !== p.sizesStock[size]) {
+              p.sizesStock[size] = n;
+              changed = true;
+            }
+          }
+          p.stock = p.sizes.reduce((sum, s) => sum + (p.sizesStock[s] || 0), 0);
+        }
+        if (changed) root.dispatchEvent(new CustomEvent('dstar:stock'));
+        return changed;
+      })
+      .catch(() => false);
+    return syncing;
+  }
+
+  root.DSTAR_CART = { load, save, stockFor, syncStock };
 })(window);

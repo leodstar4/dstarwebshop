@@ -1,258 +1,254 @@
 /* ============================================
-   DSTAR STORE — GSAP ANIMATIONS
-   ScrollTrigger + SplitText + Lookbook CSS-snap
+   DSTAR STORE — ANIMACIONES (GSAP + SplitText)
+   El contenido es visible por defecto en el CSS: aquí se oculta justo antes
+   de animarlo, así que si algo falla nunca se queda invisible.
    ============================================ */
 
-gsap.registerPlugin(...[window.ScrollTrigger, window.SplitText].filter(Boolean));
+if (window.SplitText) gsap.registerPlugin(SplitText);
 
-// Reveal de una sola vez con IntersectionObserver: a diferencia de ScrollTrigger
-// no corre trabajo en cada cuadro del scroll.
-function revealOnEnter(els, onEnter, rootMargin = '0px 0px -12% 0px') {
-  const list = Array.from(els);
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const IS_MOBILE = window.innerWidth <= 768;
+const EASE_OUT = 'expo.out';
+const EASE_IN_OUT = 'expo.inOut';
+
+// Reveal de una sola vez con IntersectionObserver: no corre trabajo en cada cuadro del scroll.
+function revealOnEnter(els, onEnter, rootMargin = '0px 0px -10% 0px') {
+  const list = Array.from(els).filter(Boolean);
   if (!list.length) return;
   const io = new IntersectionObserver((entries) => {
     const batch = entries.filter((e) => e.isIntersecting).map((e) => e.target);
     if (!batch.length) return;
     batch.forEach((el) => io.unobserve(el));
+    batch.sort((a, b) => list.indexOf(a) - list.indexOf(b));
     onEnter(batch);
   }, { rootMargin });
   list.forEach((el) => io.observe(el));
 }
 
-// ============================================
-// HERO TAGLINE — SplitText char-by-char entrada + breathing
-// ============================================
-function initHeroTagline() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+// Si una animación falla a la mitad, devuelve el contenido a su estado visible.
+function safely(roots, fn) {
+  try {
+    fn();
+  } catch (err) {
+    const els = [];
+    Array.from(roots).filter(Boolean).forEach((root) => els.push(root, ...root.querySelectorAll('*')));
+    gsap.set(els, { clearProps: 'opacity,transform,clipPath,visibility' });
+  }
+}
 
-  const tagline = document.querySelector('.hero__tagline');
-  if (!tagline) return;
-  const loader = document.getElementById('loader');
-  if (loader && loader.classList.contains('hidden')) return;
+// SplitText mide las líneas con la fuente real; si aún no carga, cortaría mal.
+function fontsReady(maxMs = 1800) {
+  if (!document.fonts || !document.fonts.ready) return Promise.resolve();
+  return Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, maxMs))]);
+}
 
-  const isMobile = window.innerWidth <= 768;
+function splitChars(el) {
+  if (!window.SplitText) return [el];
+  return SplitText.create(el, { type: 'lines,chars', mask: 'lines', linesClass: 'split-line', charsClass: 'split-char' }).chars;
+}
 
-  // Quitar la CSS animation y tomar control con GSAP
-  tagline.style.animation = 'none';
-  tagline.style.opacity = '0';
-
-  // Separar el texto en caracteres individuales
-  const split = SplitText.create(tagline, { type: 'chars', charsClass: 'split-char' });
-
-  // Móvil: animación más ligera (sin rotationX 3D que puede causar jank)
-  // Desktop: efecto cinematográfico completo
-  gsap.fromTo(split.chars,
-    {
-      opacity: 0,
-      y: isMobile ? 22 : 36,
-      rotationX: isMobile ? 0 : -50,
-      transformOrigin: '50% 100%'
-    },
-    {
-      opacity: 1,
-      y: 0,
-      rotationX: 0,
-      duration: isMobile ? 0.55 : 0.65,
-      stagger: isMobile ? 0.035 : 0.045,
-      ease: 'power3.out',
-      delay: 0.75,
-      onStart() {
-        tagline.style.opacity = '1';
-      }
-    }
-  );
+function splitLines(el) {
+  if (!window.SplitText) return [el];
+  return SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line' }).lines;
 }
 
 // ============================================
-// HERO PARALLAX — ScrollTrigger scrub
+// HERO — "TODO CON AMOR" entra letra por letra cuando se va el loader
 // ============================================
-function initHeroParallax() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (CSS.supports('animation-timeline: scroll()') || !window.ScrollTrigger) return;
-
+function initHero() {
   const hero = document.querySelector('.hero');
-  if (!hero) return;
+  if (!hero || window.__dstarLoaded) return;
+  const tagline = hero.querySelector('.hero__tagline');
+  const cta = hero.querySelector('.hero__cta');
+  if (!tagline) return;
 
-  // Móvil: solo fade del contenido (sin parallax de profundidad — ahorra
-  // composite layers y evita jank con el fondo fijo)
-  const isMobile = window.innerWidth <= 768;
+  safely([tagline, cta], () => {
+    hero.classList.add('hero--gsap');
+    const chars = window.SplitText ? SplitText.create(tagline, { type: 'chars', charsClass: 'split-char' }).chars : [tagline];
+    gsap.set(chars, { opacity: 0, yPercent: 45, scale: 1.25, filter: `blur(${IS_MOBILE ? 6 : 12}px)` });
+    if (cta) gsap.set(cta, { opacity: 0, y: 26, clipPath: 'inset(0% 100% 0% 0%)', transition: 'none' });
 
-  const content         = hero.querySelector('.hero__content');
-  const logo            = hero.querySelector('.hero__logo');
-  const tagline         = hero.querySelector('.hero__tagline');
-  const scrollIndicator = hero.querySelector('.hero__scroll-indicator');
-
-  if (!isMobile) {
-    // Desktop: parallax completo con lag suave (scrub: 1 = ~1s de suavizado)
-    if (logo) {
-      gsap.to(logo, {
-        yPercent: 20,
-        ease: 'none',
-        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 1 }
-      });
-    }
-    if (tagline) {
-      gsap.to(tagline, {
-        yPercent: 30,
-        ease: 'none',
-        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 1 }
-      });
-    }
-  }
-
-  // Fade del bloque completo — tanto móvil como desktop (scrub suave)
-  if (content) {
-    gsap.to(content, {
-      opacity: 0,
-      ease: 'power1.in',
-      scrollTrigger: {
-        trigger: hero,
-        start: isMobile ? '45% top' : '55% top',
-        end: 'bottom top',
-        scrub: 0.6
-      }
-    });
-  }
-
-  // Scroll indicator: desaparece rápido al empezar a scrollear
-  if (scrollIndicator) {
-    gsap.to(scrollIndicator, {
-      opacity: 0,
-      ease: 'power1.in',
-      scrollTrigger: {
-        trigger: hero,
-        start: 'top top',
-        end: isMobile ? '18% top' : '22% top',
-        scrub: 0.4
-      }
-    });
-  }
-}
-
-// ============================================
-// SECTION TITLES — SplitText char drop
-// ============================================
-function initSectionTitles() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  const isMobile = window.innerWidth <= 768;
-
-  // Very low-end devices (≤480px): skip SplitText entirely — char-by-char layout
-  // recalculation causes measurable jank on budget Android phones. Use simple fade.
-  if (window.innerWidth <= 480) {
-    const titles = document.querySelectorAll('.section-title, .about__title');
-    gsap.set(titles, { opacity: 0, y: 18 });
-    revealOnEnter(titles, (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }));
-    return;
-  }
-
-  const titles = document.querySelectorAll('.section-title, .about__title');
-  titles.forEach(el => {
-    el._split = SplitText.create(el, { type: 'chars', charsClass: 'split-char' });
-    // Móvil: sin skewX (más ligero), desktop: efecto completo
-    gsap.set(el._split.chars, { opacity: 0, y: isMobile ? 18 : 28, skewX: isMobile ? 0 : 10 });
-  });
-  revealOnEnter(titles, (batch) => batch.forEach((el) => {
-    gsap.to(el._split.chars, {
-      opacity: 1,
-      y: 0,
-      skewX: 0,
-      duration: isMobile ? 0.45 : 0.55,
-      stagger: isMobile ? 0.025 : 0.03,
-      ease: 'power3.out'
-    });
-  }));
-}
-
-// ============================================
-// SECTION LINES — scale reveal
-// ============================================
-function initSectionLines() {
-  const lines = document.querySelectorAll('.section-line');
-  gsap.set(lines, { scaleX: 0, transformOrigin: 'left center' });
-  revealOnEnter(lines, (batch) => gsap.to(batch, { scaleX: 1, duration: 0.9, ease: 'power3.out' }));
-}
-
-// ============================================
-// SCROLL PROGRESS — scrub
-// ============================================
-function initScrollProgress() {
-  const bar = document.getElementById('scrollProgress');
-  if (!bar || CSS.supports('animation-timeline: scroll()') || !window.ScrollTrigger) return;
-  bar.style.transition = 'none';
-  gsap.set(bar, { scaleX: 0, transformOrigin: '0 50%' });
-
-  gsap.to(bar, {
-    scaleX: 1,
-    ease: 'none',
-    scrollTrigger: { start: 0, end: 'max', scrub: 0.2 }
+    const play = () => {
+      gsap.timeline({ delay: 0.32 })
+        .to(chars, { opacity: 1, yPercent: 0, scale: 1, filter: 'blur(0px)', duration: 1.3, stagger: 0.055, ease: EASE_OUT, clearProps: 'filter,transform' })
+        .to(cta, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 1, ease: EASE_IN_OUT, clearProps: 'clipPath,transform,transition' }, '-=0.75');
+    };
+    if (window.__dstarLoaded) play();
+    else window.addEventListener('dstar:loaded', play, { once: true });
   });
 }
 
 // ============================================
-// FADE-IN ELEMENTS — reveal por lotes
+// TÍTULOS DE SECCIÓN — letras que suben desde una máscara + línea que se dibuja
 // ============================================
-function initFadeIns() {
-  const fadeEls = document.querySelectorAll('.fade-in');
-  if (!fadeEls.length) return;
-
-  const isMobile = window.innerWidth <= 768;
-  const dy = isMobile ? 18 : 30;
-  gsap.set(fadeEls, { opacity: 0, y: dy });
-
-  revealOnEnter(fadeEls, (batch) => {
-    gsap.to(batch, {
-      opacity: 1,
-      y: 0,
-      duration: isMobile ? 0.45 : 0.5,
-      stagger: 0.05,
-      ease: 'power2.out'
-    });
-  }, '0px 0px 5% 0px');
-
-  // Safety net: after all assets load, force-animate any element
-  // still stuck at opacity:0 that is already in (or near) the viewport.
-  window.addEventListener('load', () => {
-    requestAnimationFrame(() => {
-      document.querySelectorAll('.fade-in').forEach(el => {
-        const rect = el.getBoundingClientRect();
-        const inView = rect.top < window.innerHeight + 80;
-        const stillHidden = parseFloat(gsap.getProperty(el, 'opacity')) < 0.1;
-        if (inView && stillHidden) {
-          gsap.to(el, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
-        }
+function initSectionHeaders() {
+  document.querySelectorAll('.section-header').forEach((header) => {
+    const title = header.querySelector('.section-title');
+    const line = header.querySelector('.section-line');
+    const sub = header.querySelector('.section-sub');
+    safely([header], () => {
+      const chars = title ? splitChars(title) : [];
+      gsap.set(chars, { yPercent: 115, opacity: 0 });
+      if (line) gsap.set(line, { scaleX: 0, transformOrigin: '50% 50%' });
+      if (sub) gsap.set(sub, { opacity: 0, y: 14 });
+      revealOnEnter([header], () => {
+        const tl = gsap.timeline().to(chars, { yPercent: 0, opacity: 1, duration: 1.05, stagger: 0.04, ease: EASE_OUT });
+        if (line) tl.to(line, { scaleX: 1, duration: 1.1, ease: EASE_IN_OUT }, 0.15);
+        if (sub) tl.to(sub, { opacity: 1, y: 0, duration: 0.9, ease: EASE_OUT, clearProps: 'transform' }, 0.45);
       });
     });
-  }, { once: true });
-}
-
-// ============================================
-// ABOUT VALUES — counter animation
-// ============================================
-function initAboutCounters() {
-  document.querySelectorAll('.about__value-num').forEach(numEl => {
-    const target = parseInt(numEl.textContent.trim(), 10);
-    if (isNaN(target)) return;
-
-    const obj = { n: 0 };
-
-    revealOnEnter([numEl], () => {
-      gsap.to(obj, {
-        n: target,
-        duration: 1.6,
-        ease: 'power2.out',
-        onUpdate() {
-          numEl.textContent = String(Math.round(obj.n)).padStart(2, '0');
-        }
-      });
-    }, '0px 0px -18% 0px');
   });
 }
 
 // ============================================
-// LOOKBOOK — gsap.matchMedia() responsive
-// Mobile/tablet (< 1024): CSS scroll-snap + flechas + dots
-// Desktop (≥ 1024): masonry entrance con IntersectionObserver
+// DROPS — cada prenda sube y se asienta, en cascada
+// ============================================
+function initProductReveal() {
+  const cards = Array.from(document.querySelectorAll('.product-card'));
+  if (!cards.length) return;
+  safely(cards, () => {
+    cards.forEach((card) => {
+      gsap.set(card, { opacity: 0 });
+      gsap.set(card.querySelector('.product-card__image'), { yPercent: 10, scale: 0.92 });
+      gsap.set(card.querySelector('.product-card__info'), { opacity: 0, y: 22 });
+    });
+    revealOnEnter(cards, (batch) => {
+      const tl = gsap.timeline();
+      batch.forEach((card, i) => {
+        const at = i * 0.12;
+        tl.to(card, { opacity: 1, duration: 0.9, ease: 'power2.out' }, at)
+          .to(card.querySelector('.product-card__image'), { yPercent: 0, scale: 1, duration: 1.4, ease: EASE_OUT, clearProps: 'transform' }, at)
+          .to(card.querySelector('.product-card__info'), { opacity: 1, y: 0, duration: 1, ease: EASE_OUT, clearProps: 'transform' }, at + 0.18);
+      });
+    }, '0px 0px -6% 0px');
+  });
+}
+
+// ============================================
+// LOOKBOOK — cada foto se descubre de abajo hacia arriba con un zoom que se asienta
+// ============================================
+function initLookbookReveal() {
+  const panels = Array.from(document.querySelectorAll('.lookbook-panel'));
+  if (!panels.length) return;
+  safely(panels, () => {
+    panels.forEach((panel) => {
+      gsap.set(panel, { clipPath: 'inset(100% 0% 0% 0%)' });
+      gsap.set(panel.querySelector('.lookbook-panel__img-wrap'), { scale: 1.32 });
+      gsap.set(panel.querySelector('.lookbook-panel__num'), { yPercent: 100, opacity: 0 });
+    });
+    revealOnEnter(panels, (batch) => {
+      batch.forEach((panel, i) => {
+        gsap.timeline({ delay: i * 0.13 })
+          .to(panel, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: EASE_IN_OUT, clearProps: 'clipPath' })
+          .to(panel.querySelector('.lookbook-panel__img-wrap'), { scale: 1, duration: 1.7, ease: EASE_OUT, clearProps: 'transform' }, 0.1)
+          .to(panel.querySelector('.lookbook-panel__num'), { yPercent: 0, opacity: 1, duration: 0.9, ease: EASE_OUT, clearProps: 'transform,opacity' }, 0.75);
+      });
+    }, '0px 0px -8% 0px');
+  });
+}
+
+// ============================================
+// NOSOTROS — texto por líneas, sello que gira, valores en cascada
+// ============================================
+function initAbout() {
+  const about = document.querySelector('.about');
+  if (!about) return;
+  const title = about.querySelector('.about__title');
+  const subtitle = about.querySelector('.about__subtitle');
+  const desc = about.querySelector('.about__desc');
+  const stamp = about.querySelector('.about__stamp');
+  const heroInner = about.querySelector('.about__hero-inner');
+
+  safely([heroInner], () => {
+    const chars = title ? splitChars(title) : [];
+    const lines = desc ? splitLines(desc) : [];
+    gsap.set(chars, { yPercent: 115, opacity: 0 });
+    gsap.set(subtitle, { opacity: 0, y: 16 });
+    gsap.set(lines, { yPercent: 100, opacity: 0 });
+    gsap.set(stamp, { opacity: 0, rotate: -25, scale: 0.7 });
+    revealOnEnter([heroInner], () => {
+      gsap.timeline()
+        .to(chars, { yPercent: 0, opacity: 1, duration: 1.1, stagger: 0.06, ease: EASE_OUT })
+        .to(subtitle, { opacity: 1, y: 0, duration: 0.9, ease: EASE_OUT, clearProps: 'transform' }, 0.3)
+        .to(lines, { yPercent: 0, opacity: 1, duration: 1, stagger: 0.08, ease: EASE_OUT }, 0.4)
+        .to(stamp, { opacity: 1, rotate: 0, scale: 1, duration: 1.4, ease: EASE_OUT, clearProps: 'transform' }, 0.3);
+    });
+  });
+
+  const values = Array.from(about.querySelectorAll('.about__value'));
+  safely(values, () => {
+    values.forEach((value) => {
+      gsap.set(value.children, { opacity: 0, y: 24 });
+      const num = value.querySelector('.about__value-num');
+      if (num) num.dataset.target = num.textContent.trim();
+    });
+    revealOnEnter(values, (batch) => {
+      batch.forEach((value, i) => {
+        gsap.to(value.children, { opacity: 1, y: 0, duration: 1, stagger: 0.1, delay: i * 0.14, ease: EASE_OUT, clearProps: 'transform' });
+        const num = value.querySelector('.about__value-num');
+        const target = num ? parseInt(num.dataset.target, 10) : NaN;
+        if (isNaN(target)) return;
+        const counter = { n: 0 };
+        gsap.to(counter, {
+          n: target,
+          duration: 1.4,
+          delay: i * 0.14,
+          ease: 'power2.out',
+          onUpdate() { num.textContent = String(Math.round(counter.n)).padStart(2, '0'); }
+        });
+      });
+    });
+  });
+}
+
+// ============================================
+// BLOG — la imagen se descubre y el texto sube
+// ============================================
+function initBlogReveal() {
+  const cards = Array.from(document.querySelectorAll('.blog-card'));
+  if (!cards.length) return;
+  safely(cards, () => {
+    cards.forEach((card) => {
+      gsap.set(card, { opacity: 0 });
+      gsap.set(card.querySelector('.blog-card__image'), { clipPath: 'inset(0% 0% 100% 0%)' });
+      gsap.set(card.querySelector('.blog-card__body'), { opacity: 0, y: 26 });
+    });
+    revealOnEnter(cards, (batch) => {
+      batch.forEach((card, i) => {
+        gsap.timeline({ delay: i * 0.12 })
+          .to(card, { opacity: 1, duration: 0.6, ease: 'power2.out' })
+          .to(card.querySelector('.blog-card__image'), { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.2, ease: EASE_IN_OUT, clearProps: 'clipPath' }, 0)
+          .to(card.querySelector('.blog-card__body'), { opacity: 1, y: 0, duration: 1, ease: EASE_OUT, clearProps: 'transform' }, 0.35);
+      });
+    }, '0px 0px -6% 0px');
+  });
+}
+
+// ============================================
+// RESTO — FAQ, contacto, enlaces y footer suben en cascada
+// ============================================
+function initRiseIns() {
+  const groups = [
+    '.lookbook__footer > *',
+    '.contact__text, .contact__link',
+    '.faq__title',
+    '.faq__item',
+    '.footer__inner > *'
+  ];
+  groups.forEach((selector) => {
+    const els = Array.from(document.querySelectorAll(selector));
+    if (!els.length) return;
+    safely(els, () => {
+      gsap.set(els, { opacity: 0, y: 22 });
+      revealOnEnter(els, (batch) => {
+        gsap.to(batch, { opacity: 1, y: 0, duration: 0.9, stagger: 0.07, ease: EASE_OUT, clearProps: 'transform' });
+      }, '0px');
+    });
+  });
+}
+
+// ============================================
+// LOOKBOOK — lightbox en móvil, flechas y puntos en tablet
 // ============================================
 function initLookbook() {
   const mm = gsap.matchMedia();
@@ -265,16 +261,6 @@ function initLookbook() {
     const panels = Array.from(track.querySelectorAll('.lookbook-panel'));
     if (!panels.length) return;
 
-    // Fade-in stagger on scroll into view
-    const fadeIO = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const idx = panels.indexOf(entry.target);
-        setTimeout(() => entry.target.classList.add('lb-in-mobile'), (idx % 6) * 70);
-        fadeIO.unobserve(entry.target);
-      });
-    }, { threshold: 0.12 });
-    panels.forEach(p => fadeIO.observe(p));
 
     // Build fullscreen lightbox (once) — reusa las mismas imágenes pero pide w=1600
     const lb = document.createElement('div');
@@ -330,10 +316,8 @@ function initLookbook() {
     document.addEventListener('keydown', onKey);
 
     return () => {
-      fadeIO.disconnect();
       panels.forEach(p => {
         if (p._lbHandler) p.removeEventListener('click', p._lbHandler);
-        p.classList.remove('lb-in-mobile');
         p.style.cursor = '';
       });
       document.removeEventListener('keydown', onKey);
@@ -416,97 +400,14 @@ function initLookbook() {
 
     prevBtn.disabled = true;
 
-    panels.forEach(panel => {
-      const caption = panel.querySelector('.lookbook-panel__caption');
-      if (caption) gsap.set(caption, { opacity: 0, y: 18 });
-    });
-
-    const captionObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const caption = entry.target.querySelector('.lookbook-panel__caption');
-        if (caption) gsap.to(caption, { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out' });
-        captionObserver.unobserve(entry.target);
-      });
-    }, { root: wrap, threshold: 0.25 });
-
-    panels.forEach(panel => captionObserver.observe(panel));
 
     return () => {
-      captionObserver.disconnect();
       navContainer.parentNode?.removeChild(navContainer);
-      panels.forEach(panel => {
-        const caption = panel.querySelector('.lookbook-panel__caption');
-        if (caption) gsap.set(caption, { clearProps: 'all' });
-      });
     };
   });
 
-  // ── DESKTOP ───────────────────────────────────────────────────────
-  mm.add('(min-width: 1024px)', () => {
-    const panels = document.querySelectorAll('.lookbook-panel');
-    if (!panels.length) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.filter(entry => entry.isIntersecting).forEach((entry, i) => {
-        setTimeout(() => entry.target.classList.add('lb-in'), i * 60);
-        observer.unobserve(entry.target);
-      });
-    }, { rootMargin: '0px 0px 20% 0px' });
-
-    panels.forEach(panel => observer.observe(panel));
-
-    return () => {
-      observer.disconnect();
-      panels.forEach(p => p.classList.remove('lb-in'));
-    };
-  });
 }
 
-// ============================================
-// BLOG CARDS — staggered reveal
-// ============================================
-function initBlogReveal() {
-  const cards = document.querySelectorAll('.blog-card');
-  if (!cards.length) return;
-
-  gsap.set(cards, { opacity: 0, y: 24 });
-
-  revealOnEnter(cards, (batch) => {
-    gsap.to(batch, {
-      opacity: 1,
-      y: 0,
-      duration: 0.5,
-      stagger: 0.08,
-      ease: 'power2.out'
-    });
-  }, '0px 0px 5% 0px');
-}
-
-// ============================================
-// LOOKBOOK — DESKTOP MASONRY ENTRANCE  (≥1024px)
-// ============================================
-function initLookbookMasonry() {
-  if (window.innerWidth < 1024) return;
-
-  const panels = document.querySelectorAll('.lookbook-panel');
-  if (!panels.length) return;
-
-  // Stagger delay per panel (ms) — each item enters slightly after the previous
-  const STAGGER_MS = 110;
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const panel = entry.target;
-      const idx   = Array.from(panels).indexOf(panel);
-      setTimeout(() => panel.classList.add('lb-in'), idx * STAGGER_MS);
-      observer.unobserve(panel);
-    });
-  }, { threshold: 0.12 });
-
-  panels.forEach(panel => observer.observe(panel));
-}
 
 // ============================================
 // PRODUCT CARD → PAGE TRANSITION
@@ -731,33 +632,19 @@ function initMagneticButtons() {
 }
 
 // ============================================
-// INIT ALL
+// INIT
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (document.body.classList.contains('page-product')) {
-        // ── Página de detalle de producto ──
-        initButtonEffects();
-        initCustomCursor();
-        initMagneticButtons();
-      } else {
-        // ── Página principal ──
-        initHeroTagline();
-        initHeroParallax();
-        initSectionTitles();
-        initSectionLines();
-        initScrollProgress();
-        initFadeIns();
-        initAboutCounters();
-        initBlogReveal();
-        initLookbook();          // reemplaza initLookbookSnap + initLookbookMasonry
-        initProductCardClick();
-        initButtonEffects();
-        initCustomCursor();
-        initMagneticButtons();
-
-      }
-    });
+    const run = (fn) => { try { fn(); } catch {} };
+    if (document.body.classList.contains('page-product')) {
+      [initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
+      return;
+    }
+    if (!REDUCED_MOTION) {
+      [initProductReveal, initLookbookReveal, initBlogReveal, initRiseIns].forEach(run);
+      fontsReady().then(() => [initHero, initSectionHeaders, initAbout].forEach(run));
+    }
+    [initLookbook, initProductCardClick, initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
   });
 });

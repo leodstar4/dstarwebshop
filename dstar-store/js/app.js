@@ -49,6 +49,7 @@ function initApp() {
     initRippleButtons();
     initProductPage();
     initGlassLight();
+    initLiveStock();
   } else {
     // ── Página principal ──
     // 1. Critical path: renders + core interactivity
@@ -63,6 +64,7 @@ function initApp() {
     initNav();
     initCart();
     initScrollProgress();
+    initLiveStock();
 
     // 2. Idle: interactions decorativas (no bloquean el render crítico)
     const idle = window.requestIdleCallback
@@ -75,6 +77,13 @@ function initApp() {
       initGlassLight();
     });
   }
+}
+
+function initLiveStock() {
+  if (!window.DSTAR_CART || !window.DSTAR_CART.syncStock) return;
+  if (!$('#productsGrid') && !window._pdProduct && cart.length === 0) return;
+  window.addEventListener('dstar:stock', applyLiveStock);
+  window.DSTAR_CART.syncStock();
 }
 
 // ============================================
@@ -154,22 +163,8 @@ function renderProducts() {
   // Without this check, null.innerHTML throws and kills initNav/initCart on those pages.
   if (!grid) return;
   grid.innerHTML = PRODUCTS.map((p, i) => {
-    const isSoldOut = p.stock === 0 || p.badge === 'SOLDOUT';
-    const delay = Math.min(i, 5) * 0.08;
+    const isSoldOut = isProductSoldOut(p);
     const name = escapeHtml(p.name);
-
-    const badgeHtml = isSoldOut
-      ? '<span class="product-card__badge product-card__badge--soldout">AGOTADO</span>'
-      : p.badge === 'NEW' ? '<span class="product-card__badge product-card__badge--new">NUEVO</span>' : '';
-
-    const ctaHtml = isSoldOut ? '' : '<span class="product-card__cta">VER PIEZA <span aria-hidden="true">→</span></span>';
-
-    const scarcityHtml = isSoldOut ? '' : `
-          <div class="product-card__scarcity product-card__scarcity--${p.stock <= 3 ? 'low' : 'medium'}">
-            <span class="product-card__scarcity-dot" aria-hidden="true"></span>
-            <span>QUEDAN ${p.stock} ${p.stock === 1 ? 'PIEZA' : 'PIEZAS'}</span>
-          </div>`;
-
     const tag = isSoldOut ? 'div' : 'a';
     const attrs = isSoldOut
       ? 'aria-disabled="true"'
@@ -178,27 +173,76 @@ function renderProducts() {
     return `
       <${tag} class="product-card fade-in${isSoldOut ? ' sold-out' : ''}"
            data-product-index="${i}"
-           style="--stagger-delay: ${delay}s"
            ${attrs}>
         <div class="product-card__image">
           <img src="${cdnOpt(p.image, 600, null, { limit: true })}" alt="${name}"
                width="600" height="800" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"
                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 400%22/%3E'">
-          ${badgeHtml}
+          ${cardBadgeHtml(p, isSoldOut)}
         </div>
-        <div class="product-card__info">
+        <div class="product-card__info">${cardInfoHtml(p, isSoldOut)}</div>
+      </${tag}>
+    `;
+  }).join('');
+}
+
+function isProductSoldOut(p) {
+  return p.stock === 0 || p.badge === 'SOLDOUT';
+}
+
+function cardBadgeHtml(p, isSoldOut) {
+  if (isSoldOut) return '<span class="product-card__badge product-card__badge--soldout">AGOTADO</span>';
+  return p.badge === 'NEW' ? '<span class="product-card__badge product-card__badge--new">NUEVO</span>' : '';
+}
+
+function cardInfoHtml(p, isSoldOut) {
+  const name = escapeHtml(p.name);
+  const ctaHtml = isSoldOut ? '' : '<span class="product-card__cta">VER PIEZA <span aria-hidden="true">→</span></span>';
+  const scarcityHtml = isSoldOut ? '' : `
+          <div class="product-card__scarcity product-card__scarcity--${p.stock <= 3 ? 'low' : 'medium'}">
+            <span class="product-card__scarcity-dot" aria-hidden="true"></span>
+            <span>QUEDAN ${p.stock} ${p.stock === 1 ? 'PIEZA' : 'PIEZAS'}</span>
+          </div>`;
+  return `
           <span class="product-card__accent" aria-hidden="true"></span>
           <h3 class="product-card__name" data-name="${name}">${name}</h3>
           <div class="product-card__meta">
             <span class="product-card__price">${isSoldOut ? 'AGOTADO' : formatPrice(p.price)}</span>
             ${ctaHtml}
-          </div>${scarcityHtml}
-        </div>
-      </${tag}>
-    `;
-  }).join('');
-
+          </div>${scarcityHtml}`;
 }
+
+function patchProductCard(card, p) {
+  const isSoldOut = isProductSoldOut(p);
+  const info = card.querySelector('.product-card__info');
+  if (info) info.innerHTML = cardInfoHtml(p, isSoldOut);
+  const imageWrap = card.querySelector('.product-card__image');
+  card.querySelector('.product-card__badge')?.remove();
+  if (imageWrap) imageWrap.insertAdjacentHTML('beforeend', cardBadgeHtml(p, isSoldOut));
+  if (isSoldOut) {
+    card.classList.add('sold-out');
+    card.removeAttribute('href');
+    card.removeAttribute('aria-label');
+    card.setAttribute('aria-disabled', 'true');
+  }
+}
+
+function applyLiveStock() {
+  if (window.DSTAR_CART) {
+    cart = window.DSTAR_CART.load();
+    saveCart();
+  }
+  updateCartUI();
+  const grid = $('#productsGrid');
+  if (grid) {
+    PRODUCTS.forEach((p, i) => {
+      const card = grid.querySelector(`[data-product-index="${i}"]`);
+      if (card) patchProductCard(card, p);
+    });
+  }
+  if (window._pdProduct) patchProductPageStock(window._pdProduct);
+}
+
 function initCardPrefetch() {
   const grid = $('#productsGrid');
   if (!grid) return;
@@ -452,7 +496,7 @@ const FAQ_ITEMS = [
   },
   {
     q: '¿ACEPTAN DEVOLUCIONES O CAMBIOS?',
-    a: 'Por el momento no contamos con servicio de devoluciones ni cambios. Te recomendamos revisar bien la guía de tallas antes de hacer tu pedido. Si tienes dudas sobre qué talla elegir, escríbenos antes de comprar y con gusto te asesoramos.'
+    a: 'Tienes 5 días hábiles desde que recibes tu pedido para devolverlo si la prenda está sin usar y con etiquetas. Si llega con defecto o te enviamos otra pieza, nosotros cubrimos el cambio. Los cambios de talla dependen del stock. Todos los detalles en <a href="terminos.html">términos, envíos y devoluciones</a>.'
   },
   {
     q: '¿POR QUÉ LOS TIRAJES SON LIMITADOS?',
@@ -504,8 +548,8 @@ function renderBlog() {
   const grid = document.getElementById('blogGrid');
   if (!grid) return;
 
-  grid.innerHTML = BLOG_POSTS.map((post, i) => `
-    <a href="blog/${post.slug}.html" class="blog-card fade-in" style="--stagger-delay: ${i * 0.1}s">
+  grid.innerHTML = BLOG_POSTS.map((post) => `
+    <a href="blog/${post.slug}.html" class="blog-card fade-in">
       <div class="blog-card__image">
         <img src="${cdnOpt(post.image, 600)}" alt="${post.title}"
              loading="lazy" decoding="async"
@@ -775,6 +819,45 @@ function initProductPage() {
 
   // ── MOBILE UX: sticky CTA bar + size-label pulse + smart-scroll ──
   _pdInitMobileUX(p, isSoldOut);
+}
+
+function patchProductPageStock(p) {
+  const isSoldOut = isProductSoldOut(p);
+  document.querySelectorAll('#pdSizes .size-btn').forEach((btn) => {
+    const out = !((p.sizesStock[btn.dataset.size] || 0) > 0);
+    btn.disabled = out;
+    if (out && btn.classList.contains('active')) {
+      btn.classList.remove('active');
+      window._pdSelectedSize = null;
+      document.body.classList.add('pd-needs-size');
+      const addBtn = document.getElementById('pdAddBtn');
+      if (addBtn && !isSoldOut) {
+        addBtn.dataset.state = 'locked';
+        addBtn.innerHTML = '<span class="btn-text">SELECCIONA TALLA</span>';
+      }
+      const stickyText = document.getElementById('pdStickyBtnText');
+      if (stickyText) stickyText.textContent = 'SELECCIONA TALLA';
+    }
+  });
+  const stockEl = document.getElementById('pdStock');
+  if (stockEl) {
+    stockEl.textContent = isSoldOut ? 'AGOTADO' : `QUEDAN ${p.stock} ${p.stock === 1 ? 'PIEZA' : 'PIEZAS'}`;
+    stockEl.classList.toggle('product-modal__stock--urgent', !isSoldOut && p.stock <= 5);
+  }
+  if (!isSoldOut) return;
+  const priceEl = document.getElementById('pdPrice');
+  if (priceEl) priceEl.textContent = 'AGOTADO';
+  const addBtn = document.getElementById('pdAddBtn');
+  if (addBtn) {
+    addBtn.disabled = true;
+    addBtn.textContent = 'AGOTADO';
+  }
+  const stickyBtn = document.getElementById('pdStickyBtn');
+  const stickyText = document.getElementById('pdStickyBtnText');
+  const stickyPrice = document.getElementById('pdStickyPrice');
+  if (stickyBtn) stickyBtn.disabled = true;
+  if (stickyText) stickyText.textContent = 'AGOTADO';
+  if (stickyPrice) stickyPrice.textContent = 'AGOTADO';
 }
 
 function _pdRevealPage() {

@@ -429,7 +429,7 @@ ul { list-style: none; }
 .hero__logo {
   height: clamp(200px, 38svh, 400px);
   background: radial-gradient(closest-side, rgba(255, 255, 255, 0.09), transparent);
-  animation: heroFadeIn 1.1s var(--ease-out) 0.3s both;
+  animation: heroLogoIn 1.4s var(--ease-out) 0.05s both;
   margin-bottom: 8px;
 }
 .hero__tagline {
@@ -440,7 +440,7 @@ ul { list-style: none; }
   line-height: 1.1;
   color: var(--white);
   text-shadow: 0 4px 40px rgba(0,0,0,0.5);
-  animation: heroFadeIn 0.9s var(--ease-out) 0.6s both;
+  animation: heroFadeIn 1s var(--ease-out) 0.35s both;
   margin-bottom: 32px;
 }
 .hero__cta {
@@ -453,13 +453,27 @@ ul { list-style: none; }
   min-height: 48px;
   border: none;
   transition: background-color var(--dur-base) var(--ease), transform var(--dur-base) var(--ease-out);
-  animation: heroFadeIn 0.9s var(--ease-out) 0.85s both;
+  animation: heroFadeIn 0.9s var(--ease-out) 0.75s both;
 }
 .hero__cta:hover { background: var(--concrete-light); }
 .hero__cta:active { transform: scale(0.97); }
 @keyframes heroFadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroLogoIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+html:not(.is-loaded) .hero__logo,
+html:not(.is-loaded) .hero__tagline,
+html:not(.is-loaded) .hero__cta,
+html:not(.is-loaded) .hero__scroll-indicator {
+  animation-play-state: paused;
+}
+.hero--gsap .hero__tagline,
+.hero--gsap .hero__cta {
+  animation: none;
 }
 .hero__scroll-indicator {
   position: absolute;
@@ -471,7 +485,7 @@ ul { list-style: none; }
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  animation: heroFadeIn 0.9s var(--ease-out) 1.2s both;
+  animation: heroFadeIn 0.9s var(--ease-out) 1.1s both;
 }
 .hero__scroll-indicator span {
   font-family: var(--font-mono);
@@ -1622,16 +1636,6 @@ ul { list-style: none; }
 /* ============================================
    UTILITY / ANIMATIONS
    ============================================ */
-.fade-in {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
-}
-.fade-in.visible {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: var(--stagger-delay, 0s);
-}
 
 /* ============================================
    BLOG POST PAGE
@@ -1717,6 +1721,32 @@ ul { list-style: none; }
 }
 .blog-post__content strong {
   color: var(--white);
+}
+.blog-post__content a {
+  color: var(--white);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.blog-post__content ul {
+  margin: -8px 0 28px;
+  display: grid;
+  gap: 12px;
+}
+.blog-post__content li {
+  position: relative;
+  padding-left: 22px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--concrete-light);
+}
+.blog-post__content li::before {
+  content: '★';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 10px;
+  color: var(--concrete);
 }
 .blog-post__content blockquote {
   border-left: 2px solid var(--concrete);
@@ -2045,13 +2075,6 @@ ul { list-style: none; }
     flex-shrink: unset !important;
     scroll-snap-align: unset !important;
     scroll-snap-stop: unset !important;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
-  }
-  .lookbook-panel.lb-in-mobile {
-    opacity: 1;
-    transform: translateY(0);
   }
   .lookbook-panel:active .lookbook-panel__img-wrap img {
     transform: scale(1.03);
@@ -2148,21 +2171,16 @@ ul { list-style: none; }
   touch-action: pinch-zoom;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .lookbook-panel {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
-}
 
 /* ============================================
    SPLIT CHARS — TITLE ANIMATION
    ============================================ */
 .split-char {
   display: inline-block;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
+}
+.split-line-mask {
+  padding: 0 0.12em 0.12em;
+  margin: 0 -0.12em -0.12em;
 }
 
 /* ============================================
@@ -2229,17 +2247,6 @@ ul { list-style: none; }
   /* Hide mobile scroll nav on desktop */
   .lookbook__nav {
     display: none !important;
-  }
-
-  /* Entrance animation — fade + lift */
-  .lookbook-panel {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
-  }
-  .lookbook-panel.lb-in {
-    opacity: 1;
-    transform: translateY(0);
   }
 
 }
@@ -3507,7 +3514,7 @@ ul { list-style: none; }
       animation-range: 45svh 100svh;
     }
     .hero__scroll-indicator {
-      animation: heroFadeIn 0.9s var(--ease-out) 1.2s both, heroIndicatorOut linear forwards;
+      animation: heroFadeIn 0.9s var(--ease-out) 1.1s both, heroIndicatorOut linear forwards;
       animation-timeline: auto, scroll(root);
       animation-range: normal, 1px 18svh;
     }
@@ -3518,7 +3525,7 @@ ul { list-style: none; }
   @media (prefers-reduced-motion: no-preference) and (min-width: 769px) {
     .hero__content { animation-range: 55svh 100svh; }
     .hero__logo {
-      animation: heroFadeIn 1.1s var(--ease-out) 0.3s both, heroLogoDrift linear both;
+      animation: heroLogoIn 1.4s var(--ease-out) 0.05s both, heroLogoDrift linear both;
       animation-timeline: auto, scroll(root);
       animation-range: normal, 0 100svh;
     }

@@ -22,7 +22,7 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
 
   <!-- GSAP desde CDN — usado para animaciones de entrada -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+  <script src="js/vendor/gsap.min.js?v=3.14.2"></script>
 
   <style>
     /* ============================================
@@ -443,6 +443,22 @@
       line-height: 1.8;
     }
 
+    .terms-note {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--concrete);
+      text-align: center;
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+    .terms-note a {
+      color: var(--white);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      display: inline-block;
+      padding: 12px 0;
+    }
+
     /* ============================================
        MENSAJE CARRITO VACÍO
        ============================================ */
@@ -674,6 +690,9 @@
             PAGO SEGURO CON MERCADO PAGO<br>
             TUS DATOS ESTÁN PROTEGIDOS
           </p>
+          <p class="terms-note">
+            Al pagar aceptas los <a href="terminos.html" target="_blank" rel="noopener">términos, envíos y devoluciones</a>.
+          </p>
         </div>
 
       </div><!-- /checkout-right -->
@@ -688,7 +707,7 @@
        JAVASCRIPT — Lógica del checkout
        ============================================ -->
   <script src="js/products-data.js?v=1"></script>
-  <script src="js/cart-store.js?v=1"></script>
+  <script src="js/cart-store.js?v=2"></script>
   <script>
     // ============================================
     // ESTADO GLOBAL DEL CHECKOUT
@@ -1178,6 +1197,20 @@
 
       // Renderizar resumen del pedido
       renderOrderSummary();
+
+      if (window.DSTAR_CART && window.DSTAR_CART.syncStock) {
+        window.addEventListener('dstar:stock', () => {
+          const antes = JSON.stringify(cart);
+          cart = window.DSTAR_CART.load();
+          if (JSON.stringify(cart) === antes) return;
+          window.DSTAR_CART.save(cart);
+          if (cart.length === 0) { location.reload(); return; }
+          renderOrderSummary();
+          actualizarTotal();
+          showToast('Una pieza de tu carrito se agotó; ajustamos tu pedido', true);
+        });
+        window.DSTAR_CART.syncStock();
+      }
 
       // Animación de entrada con GSAP para las secciones (salvo reduced-motion)
       if (window.gsap && !prefersReducedMotion) {

@@ -2,7 +2,8 @@
 // DSTAR — WEBHOOK DE MERCADO PAGO
 // ============================================
 // Si el pago está aprobado y el monto coincide con el calculado al crear la
-// preferencia, genera la guía en Skydropx y envía el correo. Cada pago se
+// preferencia, descuenta el stock, genera la guía en Skydropx y envía el correo.
+// Si algo requiere revisión manual, avisa a la tienda por correo. Cada pago se
 // procesa una sola vez (registro en Netlify Blobs).
 //
 // Variables de entorno:
@@ -15,6 +16,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { SKYDROPX_BASE, getSkydropxToken } = require('../lib/skydropx');
 const { openStore } = require('../lib/orders-store');
+const { descontar } = require('../lib/stock-store');
 
 const headers = { 'Content-Type': 'application/json' };
 const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify(body) });
@@ -81,9 +83,17 @@ exports.handler = async (event) => {
     const payment = await mpResponse.json();
     if (payment.status !== 'approved') return reply(200, { ok: true });
 
-    const { cliente, rate_id, parcel, order_items, expected_total } = payment.metadata || {};
+    const { cliente, rate_id, parcel, order_items, stock_items, expected_total } = payment.metadata || {};
+    if (!(await store.claim(paymentId, STALE_MS))) return reply(200, { ok: true });
+
     if (!cliente || !rate_id) {
       console.error('mp-webhook — metadata incompleta en pago', paymentId);
+      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true });
+      await alertarTienda(`Pago ${paymentId} sin datos de envío`, [
+        'Mercado Pago aprobó un pago que no trae los datos del cliente ni la tarifa de envío, así que no se generó guía.',
+        `Monto: ${fmtMXN(payment.transaction_amount)}`,
+        'Búscalo en tu panel de Mercado Pago para contactar al comprador.'
+      ], paymentId);
       return reply(200, { ok: true });
     }
 
@@ -91,19 +101,57 @@ exports.handler = async (event) => {
     if (payment.currency_id !== 'MXN' || !Number.isFinite(Number(expected_total)) || pagado + 0.01 < Number(expected_total)) {
       console.error(`mp-webhook — monto no coincide en pago ${paymentId}: pagado=${pagado} esperado=${expected_total} moneda=${payment.currency_id}. Revisar a mano.`);
       await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true });
+      await alertarTienda(`El monto del pago ${paymentId} no coincide`, [
+        `Se pagó ${fmtMXN(pagado)} (${payment.currency_id}) pero el pedido costaba ${fmtMXN(expected_total)}.`,
+        'No se generó guía ni se descontó stock. Revisa el pago en Mercado Pago antes de enviar.',
+        ...datosCliente(cliente),
+        ...lineasPedido(order_items)
+      ], paymentId);
       return reply(200, { ok: true });
     }
 
-    if (!(await store.claim(paymentId, STALE_MS))) return reply(200, { ok: true });
+    const registro = { ...previo };
+    if (!registro.stock) {
+      try {
+        const sobreventa = await descontar(event, stock_items);
+        registro.stock = true;
+        await store.set(paymentId, { ...registro, status: 'processing', at: Date.now() });
+        if (sobreventa.length) {
+          await alertarTienda(`Sobreventa en el pago ${paymentId}`, [
+            'Dos personas pagaron la misma pieza casi al mismo tiempo. Faltan:',
+            ...sobreventa.map((l) => `• ${l.name} talla ${l.size}: ${l.faltan} pieza(s)`),
+            'La guía se genera de todos modos; contacta al cliente para ofrecerle otra talla o reembolsar desde Mercado Pago.',
+            ...datosCliente(cliente)
+          ], paymentId);
+        }
+      } catch (err) {
+        console.error('mp-webhook — no se pudo descontar stock:', err.message);
+        await alertarTienda(`No se descontó el stock del pago ${paymentId}`, [
+          `Error: ${err.message}`,
+          'Ajusta el stock a mano en products-data.js.',
+          ...lineasPedido(order_items)
+        ], paymentId);
+      }
+    }
 
     let guiaResult;
     try {
       guiaResult = await crearGuiaSkydropx({ cliente, rate_id, parcel, total: pagado });
     } catch (err) {
-      await store.set(paymentId, { status: 'failed', at: Date.now() });
+      console.error('mp-webhook — Skydropx falló:', err.message);
+      if (!registro.alertaGuia) {
+        registro.alertaGuia = true;
+        await alertarTienda(`No se pudo crear la guía del pago ${paymentId}`, [
+          `Skydropx respondió: ${err.message}`,
+          'El cliente ya pagó. Mercado Pago reintentará el aviso; si sigue fallando, genera la guía a mano en Skydropx con estos datos:',
+          ...datosCliente(cliente),
+          ...lineasPedido(order_items)
+        ], paymentId);
+      }
+      await store.set(paymentId, { ...registro, status: 'failed', at: Date.now() });
       throw err;
     }
-    await store.set(paymentId, { status: 'done', at: Date.now(), tracking: guiaResult.tracking_number || '' });
+    await store.set(paymentId, { ...registro, status: 'done', at: Date.now(), tracking: guiaResult.tracking_number || '' });
 
     try {
       await enviarCorreoConfirmacion({ cliente, guia: guiaResult, items: order_items || [], total: pagado, paymentId });
@@ -191,10 +239,51 @@ const esc = (s) =>
   String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-async function enviarCorreoConfirmacion({ cliente, guia, items, total, paymentId }) {
+function transporte() {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) {
+  if (!user || !pass) return null;
+  return { user, transporter: nodemailer.createTransport({ service: 'gmail', auth: { user, pass } }) };
+}
+
+function datosCliente(c) {
+  return [
+    `Cliente: ${c.nombre || '-'} · ${c.email || '-'} · ${c.telefono || '-'}`,
+    `Dirección: ${[c.calle, c.colonia, c.ciudad, c.estado, c.cp && `C.P. ${c.cp}`].filter(Boolean).join(', ')}`,
+    c.referencia ? `Referencia: ${c.referencia}` : ''
+  ].filter(Boolean);
+}
+
+function lineasPedido(items) {
+  return (items || []).map((i) => `• ${i.title} × ${i.quantity} — ${fmtMXN((Number(i.unit_price) || 0) * (Number(i.quantity) || 1))}`);
+}
+
+// Avisa a la tienda por correo de un pedido que necesita atención manual.
+async function alertarTienda(asunto, lineas, paymentId) {
+  console.error(`mp-webhook — ALERTA: ${asunto}`);
+  const t = transporte();
+  if (!t) {
+    console.error('mp-webhook — falta GMAIL_USER / GMAIL_APP_PASSWORD; la alerta solo queda en el log');
+    return;
+  }
+  const cuerpo = lineas.map((l) => `<p style="margin:0 0 10px;color:#f0ede8;font-size:14px;line-height:1.6;">${esc(l)}</p>`).join('');
+  await t.transporter.sendMail({
+    from: `"DSTAR alertas" <${t.user}>`,
+    to: process.env.EMAIL_ORIGEN || t.user,
+    subject: `⚠️ ${asunto}`,
+    text: `${lineas.join('\n')}\n\nPago Mercado Pago #${paymentId}`,
+    html: `<div style="background:#0a0a0a;padding:24px;font-family:'Courier New',monospace;">
+      <p style="margin:0 0 16px;color:#e63232;font-size:12px;letter-spacing:3px;">ALERTA DE PEDIDO</p>
+      <h1 style="margin:0 0 16px;color:#f0ede8;font-size:20px;">${esc(asunto)}</h1>
+      ${cuerpo}
+      <p style="margin:16px 0 0;color:#8a8a83;font-size:12px;">Pago Mercado Pago #${esc(paymentId)}</p>
+    </div>`
+  }).catch((e) => console.error('mp-webhook — no se pudo enviar la alerta:', e.message));
+}
+
+async function enviarCorreoConfirmacion({ cliente, guia, items, total, paymentId }) {
+  const t = transporte();
+  if (!t) {
     console.error('mp-webhook — falta GMAIL_USER / GMAIL_APP_PASSWORD; no se envía correo');
     return;
   }
@@ -202,11 +291,7 @@ async function enviarCorreoConfirmacion({ cliente, guia, items, total, paymentId
     console.error('mp-webhook — el cliente no tiene email; no se envía correo');
     return;
   }
-
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass }
-  });
+  const { user, transporter } = t;
 
   const fromName = process.env.EMPRESA_ORIGEN || 'DSTAR';
 

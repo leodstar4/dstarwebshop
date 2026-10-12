@@ -10,7 +10,7 @@
   if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   const VERT = 'attribute vec2 p;varying vec2 uv;void main(){uv=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
-  const FRAG = 'precision mediump float;varying vec2 uv;uniform sampler2D t;void main(){vec3 c=texture2D(t,vec2(uv.x,uv.y*.5)).rgb;float a=texture2D(t,vec2(uv.x,.5+uv.y*.5)).r;gl_FragColor=vec4(c*a,a);}';
+  const FRAG = 'precision mediump float;varying vec2 uv;uniform sampler2D t;void main(){vec3 c=texture2D(t,vec2(uv.x,uv.y*.5)).rgb;float a=clamp((texture2D(t,vec2(uv.x,.5+uv.y*.5)).r-.04)*1.0417,0.,1.);gl_FragColor=vec4(c*a,a);}';
 
   const release = () => els.forEach((el) => el.dispatchEvent(new CustomEvent('logo3d:live', { bubbles: true })));
 

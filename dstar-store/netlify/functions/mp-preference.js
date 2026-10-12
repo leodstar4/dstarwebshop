@@ -9,6 +9,7 @@
 
 const { validarCliente, construirPedido, origenPermitido, str } = require('../lib/validate');
 const { getRatePrice } = require('../lib/skydropx');
+const { leerStock } = require('../lib/stock-store');
 
 const headers = { 'Content-Type': 'application/json' };
 const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify(body) });
@@ -21,7 +22,7 @@ exports.handler = async (event) => {
     let body;
     try { body = JSON.parse(event.body || '{}'); } catch { return reply(400, { error: 'JSON inválido' }); }
 
-    const pedido = construirPedido(body.items);
+    const pedido = construirPedido(body.items, await leerStock(event).catch((e) => { console.error('mp-preference — no se pudo leer el stock:', e.message); return null; }));
     if (pedido.error) return reply(400, { error: pedido.error });
 
     const { cliente, errores } = validarCliente(body.cliente);
@@ -41,7 +42,7 @@ exports.handler = async (event) => {
     const envio = await getRatePrice(quotationId, rateId);
     if (!envio) return reply(400, { error: 'La tarifa de envío expiró, vuelve a cotizar' });
 
-    const mpItems = pedido.items.map(({ id, ...i }) => i);
+    const mpItems = pedido.items.map(({ id, size, ...i }) => i);
     if (envio.price > 0) {
       mpItems.push({ title: envio.name ? `Envío — ${envio.name}` : 'Envío', unit_price: envio.price, quantity: 1, currency_id: 'MXN' });
     }
@@ -56,6 +57,7 @@ exports.handler = async (event) => {
         rate_id: rateId,
         parcel: { weight: Math.max(0.5, Math.round(totalUnidades * 4) / 10), height: 15, width: 20, length: 5 },
         order_items: mpItems.map((i) => ({ title: i.title, quantity: i.quantity, unit_price: i.unit_price })),
+        stock_items: pedido.items.map((i) => ({ id: i.id, size: i.size, qty: i.quantity })),
         expected_total: total
       },
       back_urls: {

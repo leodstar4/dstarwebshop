@@ -256,7 +256,9 @@
   // ============================================
   function init() {
     if (!window.gsap) {
-      console.warn('[blog-transitions] GSAP not found');
+      sessionStorage.removeItem(TRANSIT_FLAG);
+      var cover = document.getElementById(OVERLAY_ID);
+      if (cover && cover.parentNode) cover.parentNode.removeChild(cover);
       return;
     }
 

@@ -42,7 +42,7 @@ function validarCliente(raw) {
   return { cliente, errores };
 }
 
-function construirPedido(rawItems) {
+function construirPedido(rawItems, stock) {
   if (!Array.isArray(rawItems) || rawItems.length === 0 || rawItems.length > 20) {
     return { error: 'El carrito está vacío o es inválido' };
   }
@@ -63,11 +63,12 @@ function construirPedido(rawItems) {
   const items = [];
   let subtotal = 0;
   for (const { product, size, qty } of lineas.values()) {
-    const disponible = product.sizesStock ? (product.sizesStock[size] || 0) : product.stock;
+    const vivo = stock && stock[product.id] && stock[product.id][size];
+    const disponible = Number.isInteger(vivo) ? vivo : (product.sizesStock ? (product.sizesStock[size] || 0) : product.stock);
     if (product.badge === 'SOLDOUT' || qty > disponible) {
       return { error: `Sin stock suficiente de ${product.name} talla ${size}` };
     }
-    items.push({ id: product.id, title: `${product.name} — Talla ${size}`, unit_price: product.price, quantity: qty, currency_id: 'MXN' });
+    items.push({ id: product.id, size, title: `${product.name} — Talla ${size}`, unit_price: product.price, quantity: qty, currency_id: 'MXN' });
     subtotal += product.price * qty;
   }
   return { items, subtotal };
