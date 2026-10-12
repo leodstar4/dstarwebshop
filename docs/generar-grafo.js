@@ -17,7 +17,7 @@ const exists = (p) => fs.existsSync(p);
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
 const DESC = {
-  'dstar-store/index.html': 'Página principal: loader, hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.',
+  'dstar-store/index.html': 'Página principal: loader (solo en la primera visita de la sesión, sessionStorage dstar-intro), hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.',
   'dstar-store/producto.html': 'Detalle de producto: galería, selector de talla y botón de compra.',
   'dstar-store/checkout.html': 'Checkout: datos del cliente, cotización de envío y pago con Mercado Pago.',
   'dstar-store/gracias.html': 'Confirmación después de un pago exitoso.',
@@ -30,13 +30,13 @@ const DESC = {
   'dstar-store/blog/como-cuidar-tu-ropa.html': 'Artículo del blog: cómo cuidar tu ropa.',
   'dstar-store/blog/streetwear-mexico-escena.html': 'Artículo del blog: la escena del streetwear en México.',
   'dstar-preview.html': 'Vista previa estática grande del sitio, en la raíz del repo.',
-  'dstar-store/css/style.css': 'Estilos completos del sitio: BEM, custom properties en :root y mobile-first.',
+  'dstar-store/css/style.css': 'Estilos completos del sitio: BEM, custom properties en :root y mobile-first; incluye la View Transition nativa entre páginas (@view-transition) y el hero de desktop que reserva el alto del header.',
   'dstar-store/js/app.js': 'Lógica principal: render de productos, carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto.',
   'dstar-store/js/cart-store.js': 'Carrito en localStorage (dstar_cart) y sincronización del stock con /api/stock.',
   'dstar-store/js/products-data.js': 'Catálogo estático de productos; lo leen el navegador y el backend (validación de precios y stock).',
   'dstar-store/js/logo-3d.js': 'Logo 3D animado: video con alfa compuesto en WebGL, con modo de ahorro de batería.',
-  'dstar-store/js/gsap-animations.js': 'Animaciones con GSAP y SplitText servidos desde js/vendor: hero que entra al irse el loader (evento dstar:loaded), títulos con máscara, reveals de drops, lookbook, nosotros, blog y FAQ con IntersectionObserver, cursor y botones magnéticos. El contenido es visible por defecto y respeta prefers-reduced-motion.',
-  'dstar-store/js/blog-transitions.js': 'Transiciones entre páginas (blog y producto) con bandera en sessionStorage; si GSAP no carga, quita la capa negra para no dejar la pantalla en negro.',
+  'dstar-store/js/gsap-animations.js': 'Animaciones con GSAP y SplitText servidos desde js/vendor: hero que entra al irse el loader (evento dstar:loaded), títulos con máscara, reveals de drops, lookbook, nosotros, blog y FAQ con IntersectionObserver (solo transform/opacity, sin clip-path), cursor y botones magnéticos. El contenido es visible por defecto y respeta prefers-reduced-motion.',
+  'dstar-store/js/blog-transitions.js': 'Animaciones de los artículos del blog: entrada del encabezado, título palabra por palabra con SplitText, reveal del contenido con IntersectionObserver y barra de progreso de lectura con ScrollTrigger cuando el navegador no soporta animation-timeline.',
   'dstar-store/sw.js': 'Service worker de la PWA: precache del shell, network-first para páginas, caché de imágenes; nunca cachea /api ni el checkout.',
   'dstar-store/manifest.webmanifest': 'Manifest de la PWA (nombre, íconos, colores).',
   'dstar-store/netlify/functions/cotizar-envio.js': 'Función /api/cotizar-envio: cotiza tarifas de envío con Skydropx Pro.',
@@ -564,7 +564,7 @@ tags: [contexto]
 - PWA: [[sw.js]], [[manifest.webmanifest]] y [[offline.html]].
 - Logo 3D: [[logo-3d.js]] reproduce video con alfa compuesto en WebGL y mantiene el mismo aspecto en modo de ahorro de batería.
 - Animaciones: [[gsap-animations.js]] usa IntersectionObserver para los reveals (se quitó ScrollTrigger por fluidez) y CSS scroll-driven donde se puede.
-- Navegación: [[blog-transitions.js]] y precarga de páginas; el sitio respeta bfcache.
+- Navegación: View Transition nativa entre documentos en [[style.css]]; precarga de páginas; el sitio respeta bfcache.
 - Imágenes: [[optimize-images.js (dstar-store)]] y [[optimize-images.js (scripts)]] con [[sharp]], servidas por [[Cloudinary]].
 - Medición: [[diagnostico.js]] y [[Lighthouse]].
 

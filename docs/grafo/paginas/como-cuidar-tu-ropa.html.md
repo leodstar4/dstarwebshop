@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/blog/como-cuidar-tu-ropa.html"
-lineas: 241
+lineas: 240
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # como-cuidar-tu-ropa.html
 
-`dstar-store/blog/como-cuidar-tu-ropa.html` · 241 líneas
+`dstar-store/blog/como-cuidar-tu-ropa.html` · 240 líneas
 
 Artículo del blog: cómo cuidar tu ropa.
 

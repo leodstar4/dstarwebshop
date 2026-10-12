@@ -1,4 +1,4 @@
-const VERSION = 'dstar-v3';
+const VERSION = 'dstar-v4';
 const SHELL = `${VERSION}-shell`;
 const IMAGES = `${VERSION}-img`;
 const MAX_IMAGES = 80;

@@ -12,7 +12,7 @@ Actualizado: 2026-10-12.
 
 - [ ] **Enlaces rotos de redes:** INSTAGRAM y TIKTOK con `href="#"` en `index.html`, `producto.html`, `agradecimientos.html` y los 3 artículos del blog.
 - [ ] **Límite de peticiones** en `/api/cotizar-envio`, `/api/mp-preference` y `/api/stock`. Ya se rechazan peticiones de otros sitios, pero un script puede llamarlas directo. Migrar a Netlify Functions v2 y usar `config.rateLimit`.
-- [ ] **Quitar `'unsafe-inline'` de `script-src`.** Mover los scripts inline (loader, fade de transición, checkout) a archivos `.js`, o usar hashes en la CSP.
+- [ ] **Quitar `'unsafe-inline'` de `script-src`.** Mover los scripts inline que quedan (loader de `index.html`, checkout) a archivos `.js`, o usar hashes en la CSP. El script inline del velo de transición ya se quitó de las páginas.
 - [ ] **Panel de pedidos.** Hoy los pedidos solo existen en los correos y en Mercado Pago. Una página protegida (Netlify Identity o contraseña) que liste los pedidos de Blobs con su guía.
 - [ ] **SEO básico:** no hay `robots.txt`, `sitemap.xml` ni `<link rel="canonical">`.
 - [ ] **Correo transaccional:** Gmail SMTP tiene límite diario y puede caer en spam. Considerar Resend o Brevo con dominio propio (SPF/DKIM).

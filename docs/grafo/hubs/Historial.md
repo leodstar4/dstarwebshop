@@ -11,6 +11,7 @@ Parte de: [[DSTAR]]
 
 ## 2026-10-12
 
+- `a5ec8ac` Grafo de Obsidian del proyecto y agentes que lo leen y lo mantienen
 - `17c7774` Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 
 ## 2026-10-11

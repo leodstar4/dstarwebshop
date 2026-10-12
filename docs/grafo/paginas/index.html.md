@@ -1,15 +1,15 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/index.html"
-lineas: 340
+lineas: 346
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # index.html
 
-`dstar-store/index.html` · 340 líneas
+`dstar-store/index.html` · 346 líneas
 
-Página principal: loader, hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
+Página principal: loader (solo en la primera visita de la sesión, sessionStorage dstar-intro), hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
 
 Parte de: [[Páginas]]
 

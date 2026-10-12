@@ -1,32 +1,28 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/blog-transitions.js"
-lineas: 279
+lineas: 169
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # blog-transitions.js
 
-`dstar-store/js/blog-transitions.js` · 279 líneas
+`dstar-store/js/blog-transitions.js` · 169 líneas
 
-Transiciones entre páginas (blog y producto) con bandera en sessionStorage; si GSAP no carga, quita la capa negra para no dejar la pantalla en negro.
+Animaciones de los artículos del blog: entrada del encabezado, título palabra por palabra con SplitText, reveal del contenido con IntersectionObserver y barra de progreso de lectura con ScrollTrigger cuando el navegador no soporta animation-timeline.
 
 Parte de: [[Frontend]]
 
 ## Conexiones
 
-- Referencia a: [[index.html]]
 - Usa: [[GSAP]]
 
 ## Funciones y clases
 
-- `animatePageEnter` (línea 30)
-- `animatePageExit` (línea 43)
-- `initLinkInterception` (línea 71)
-- `initArticleAnimations` (línea 116)
-- `initScrollProgress` (línea 219)
-- `initBlogGridReveal` (línea 237)
-- `init` (línea 257)
+- `initArticleAnimations` (línea 20)
+- `initScrollProgress` (línea 123)
+- `initBlogGridReveal` (línea 141)
+- `init` (línea 154)
 
 ## Últimos cambios
 

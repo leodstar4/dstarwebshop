@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/producto.html"
-lineas: 208
+lineas: 207
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # producto.html
 
-`dstar-store/producto.html` · 208 líneas
+`dstar-store/producto.html` · 207 líneas
 
 Detalle de producto: galería, selector de talla y botón de compra.
 

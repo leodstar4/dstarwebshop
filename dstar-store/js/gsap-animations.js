@@ -132,14 +132,15 @@ function initLookbookReveal() {
   if (!panels.length) return;
   safely(panels, () => {
     panels.forEach((panel) => {
-      gsap.set(panel, { clipPath: 'inset(100% 0% 0% 0%)' });
-      gsap.set(panel.querySelector('.lookbook-panel__img-wrap'), { scale: 1.32 });
+      gsap.set(panel, { opacity: 0 });
+      gsap.set(panel.querySelector('.lookbook-panel__img-wrap'), { yPercent: 100, scale: 1.32 });
       gsap.set(panel.querySelector('.lookbook-panel__num'), { yPercent: 100, opacity: 0 });
     });
     revealOnEnter(panels, (batch) => {
       batch.forEach((panel, i) => {
         gsap.timeline({ delay: i * 0.13 })
-          .to(panel, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: EASE_IN_OUT, clearProps: 'clipPath' })
+          .to(panel, { opacity: 1, duration: 0.5, ease: 'power2.out', clearProps: 'opacity' })
+          .to(panel.querySelector('.lookbook-panel__img-wrap'), { yPercent: 0, duration: 1.3, ease: EASE_IN_OUT }, 0)
           .to(panel.querySelector('.lookbook-panel__img-wrap'), { scale: 1, duration: 1.7, ease: EASE_OUT, clearProps: 'transform' }, 0.1)
           .to(panel.querySelector('.lookbook-panel__num'), { yPercent: 0, opacity: 1, duration: 0.9, ease: EASE_OUT, clearProps: 'transform,opacity' }, 0.75);
       });
@@ -210,14 +211,14 @@ function initBlogReveal() {
   safely(cards, () => {
     cards.forEach((card) => {
       gsap.set(card, { opacity: 0 });
-      gsap.set(card.querySelector('.blog-card__image'), { clipPath: 'inset(0% 0% 100% 0%)' });
+      gsap.set(card.querySelector('.blog-card__image'), { opacity: 0, scale: 1.08 });
       gsap.set(card.querySelector('.blog-card__body'), { opacity: 0, y: 26 });
     });
     revealOnEnter(cards, (batch) => {
       batch.forEach((card, i) => {
         gsap.timeline({ delay: i * 0.12 })
           .to(card, { opacity: 1, duration: 0.6, ease: 'power2.out' })
-          .to(card.querySelector('.blog-card__image'), { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.2, ease: EASE_IN_OUT, clearProps: 'clipPath' }, 0)
+          .to(card.querySelector('.blog-card__image'), { opacity: 1, scale: 1, duration: 1.2, ease: EASE_OUT, clearProps: 'opacity,transform' }, 0)
           .to(card.querySelector('.blog-card__body'), { opacity: 1, y: 0, duration: 1, ease: EASE_OUT, clearProps: 'transform' }, 0.35);
       });
     }, '0px 0px -6% 0px');
@@ -410,53 +411,6 @@ function initLookbook() {
 
 
 // ============================================
-// PRODUCT CARD → PAGE TRANSITION
-// Click en tarjeta: las demás se apagan, la prenda se acerca y funde a negro.
-// Usa capture phase para interceptar antes que blog-transitions.
-// ============================================
-function initProductCardClick() {
-  document.addEventListener('click', function (e) {
-    const card = e.target.closest('a.product-card:not(.sold-out)');
-    if (!card) return;
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    const href = card.getAttribute('href');
-    const img  = card.querySelector('.product-card__image img');
-    // Si la imagen no cargó aún (lazy) o no tiene src, navegar directo sin animación
-    if (!img || !img.src || img.src === window.location.href || img.naturalWidth === 0) {
-      window.location.href = href;
-      return;
-    }
-
-    const dark = document.createElement('div');
-    dark.dataset.pdTransit = '1';
-    dark.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99997;pointer-events:none;opacity:0';
-    document.body.appendChild(dark);
-
-    const others = document.querySelectorAll('.product-card:not([data-product-index="' + card.dataset.productIndex + '"])');
-    gsap.timeline({
-      onComplete() {
-        sessionStorage.setItem('dstar-fade-transit', '1');
-        window.location.href = href;
-      }
-    })
-      .to(others, { opacity: 0, duration: 0.22, ease: 'power2.out' }, 0)
-      .to(img, { scale: 1.06, duration: 0.32, ease: 'power2.out' }, 0)
-      .to(dark, { opacity: 1, duration: 0.24, ease: 'power2.in' }, 0.1);
-  }, true); // capture phase → antes que blog-transitions
-
-  window.addEventListener('pageshow', function (event) {
-    if (!event.persisted) return;
-    document.querySelectorAll('[data-pd-transit], #dstarPageFade').forEach(el => el.remove());
-    gsap.set('.product-card, .product-card__image img', { clearProps: 'opacity,scale,transform' });
-  });
-}
-
-// ============================================
 // BUTTON GLOW SYSTEM — iluminación premium
 // Mouse-tracking spotlight, ripple on click, magnetic cart
 // ============================================
@@ -645,6 +599,6 @@ document.addEventListener('DOMContentLoaded', () => {
       [initProductReveal, initLookbookReveal, initBlogReveal, initRiseIns].forEach(run);
       fontsReady().then(() => [initHero, initSectionHeaders, initAbout].forEach(run));
     }
-    [initLookbook, initProductCardClick, initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
+    [initLookbook, initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
   });
 });

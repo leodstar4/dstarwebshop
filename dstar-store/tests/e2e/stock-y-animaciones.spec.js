@@ -145,15 +145,6 @@ test.describe('Contenido visible y animaciones', () => {
     expect(ocultos).toEqual([]);
   });
 
-  test('sin GSAP, ir del inicio a un artículo no deja la pantalla en negro', async ({ page }) => {
-    await page.route('**/js/vendor/**', (route) => route.abort());
-    await page.goto('/');
-    await page.evaluate(() => sessionStorage.setItem('dstar-fade-transit', '1'));
-    await page.goto('/blog/como-cuidar-tu-ropa.html');
-    await page.waitForTimeout(800);
-    await expect(page.locator('#dstarPageFade')).toHaveCount(0);
-  });
-
   test('términos enlazados en el footer y junto al botón PAGAR', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.footer__links a[href="/terminos.html"]')).toHaveCount(1);

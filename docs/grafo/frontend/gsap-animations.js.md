@@ -1,15 +1,15 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/gsap-animations.js"
-lineas: 651
+lineas: 605
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # gsap-animations.js
 
-`dstar-store/js/gsap-animations.js` · 651 líneas
+`dstar-store/js/gsap-animations.js` · 605 líneas
 
-Animaciones con GSAP y SplitText servidos desde js/vendor: hero que entra al irse el loader (evento dstar:loaded), títulos con máscara, reveals de drops, lookbook, nosotros, blog y FAQ con IntersectionObserver, cursor y botones magnéticos. El contenido es visible por defecto y respeta prefers-reduced-motion.
+Animaciones con GSAP y SplitText servidos desde js/vendor: hero que entra al irse el loader (evento dstar:loaded), títulos con máscara, reveals de drops, lookbook, nosotros, blog y FAQ con IntersectionObserver (solo transform/opacity, sin clip-path), cursor y botones magnéticos. El contenido es visible por defecto y respeta prefers-reduced-motion.
 
 Parte de: [[Frontend]]
 
@@ -29,22 +29,21 @@ Parte de: [[Frontend]]
 - `initSectionHeaders` (línea 84)
 - `initProductReveal` (línea 106)
 - `initLookbookReveal` (línea 130)
-- `initAbout` (línea 153)
-- `initBlogReveal` (línea 207)
-- `initRiseIns` (línea 230)
-- `initLookbook` (línea 253)
-- `openAt` (línea 285)
-- `closeLb` (línea 294)
-- `onKey` (línea 315)
-- `scrollToPanel` (línea 367)
-- `setActive` (línea 375)
-- `initProductCardClick` (línea 417)
-- `initButtonEffects` (línea 463)
-- `spawnRipple` (línea 482)
-- `initCustomCursor` (línea 544)
-- `initMagneticButtons` (línea 591)
-- `invalidate` (línea 602)
-- `run` (línea 639)
+- `initAbout` (línea 154)
+- `initBlogReveal` (línea 208)
+- `initRiseIns` (línea 231)
+- `initLookbook` (línea 254)
+- `openAt` (línea 286)
+- `closeLb` (línea 295)
+- `onKey` (línea 316)
+- `scrollToPanel` (línea 368)
+- `setActive` (línea 376)
+- `initButtonEffects` (línea 417)
+- `spawnRipple` (línea 436)
+- `initCustomCursor` (línea 498)
+- `initMagneticButtons` (línea 545)
+- `invalidate` (línea 556)
+- `run` (línea 593)
 
 ## Últimos cambios
 

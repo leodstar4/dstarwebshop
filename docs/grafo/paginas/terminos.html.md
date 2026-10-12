@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/terminos.html"
-lineas: 249
+lineas: 248
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # terminos.html
 
-`dstar-store/terminos.html` · 249 líneas
+`dstar-store/terminos.html` · 248 líneas
 
 Términos, envíos y devoluciones: precios, pagos, tiempos de envío, devolución en 5 días hábiles, defectos y quejas ante PROFECO; enlazada en los footers y junto al botón PAGAR.
 

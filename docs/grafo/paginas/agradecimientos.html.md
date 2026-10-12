@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/agradecimientos.html"
-lineas: 263
+lineas: 262
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # agradecimientos.html
 
-`dstar-store/agradecimientos.html` · 263 líneas
+`dstar-store/agradecimientos.html` · 262 líneas
 
 Página de agradecimientos.
 

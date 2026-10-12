@@ -176,6 +176,8 @@ function renderProducts() {
            ${attrs}>
         <div class="product-card__image">
           <img src="${cdnOpt(p.image, 600, null, { limit: true })}" alt="${name}"
+               srcset="${cdnOpt(p.image, 400, null, { limit: true })} 400w, ${cdnOpt(p.image, 600, null, { limit: true })} 600w, ${cdnOpt(p.image, 900, null, { limit: true })} 900w"
+               sizes="(max-width: 1024px) 50vw, 380px"
                width="600" height="800" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"
                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 400%22/%3E'">
           ${cardBadgeHtml(p, isSoldOut)}
@@ -810,8 +812,6 @@ function initProductPage() {
     }
   }
 
-  _pdRevealPage();
-
   // Store product reference
   window._pdProduct      = p;
   window._pdSelectedSize = null;
@@ -858,19 +858,6 @@ function patchProductPageStock(p) {
   if (stickyBtn) stickyBtn.disabled = true;
   if (stickyText) stickyText.textContent = 'AGOTADO';
   if (stickyPrice) stickyPrice.textContent = 'AGOTADO';
-}
-
-function _pdRevealPage() {
-  const clearFlag = () => { try { sessionStorage.removeItem('dstar-fade-transit'); } catch (e) {} };
-  clearFlag();
-  if (document.prerendering) document.addEventListener('prerenderingchange', clearFlag, { once: true });
-  const cover = document.getElementById('dstarPageFade');
-  if (!cover) return;
-  requestAnimationFrame(() => {
-    cover.style.transition = 'opacity 0.25s ease-out';
-    cover.style.opacity = '0';
-    setTimeout(() => cover.remove(), 300);
-  });
 }
 
 // Sticky CTA: visible siempre desde load (mobile).

@@ -1,6 +1,6 @@
 /* ============================================
    DSTAR — BLOG TRANSITIONS + ARTICLE ANIMATIONS
-   Blade wipe · card hover · scroll reveal
+   Article entry animations · scroll reveal
    Vanilla GSAP, no framework dependencies
    ============================================ */
 
@@ -14,102 +14,6 @@
   if (window.gsap && window.SplitText)     gsap.registerPlugin(SplitText);
 
   // ============================================
-  // PAGE TRANSITION — pure opacity overlay
-  //
-  // Exit : overlay fades IN  (200ms) → navigate
-  // Enter: overlay already visible (injected in <head>),
-  //        fades OUT (480ms power2.out)
-  //
-  // The overlay is injected synchronously in <head> via
-  // an inline <script> so it covers the page before
-  // first paint — zero flash guaranteed.
-  // ============================================
-  var TRANSIT_FLAG = 'dstar-fade-transit';
-  var OVERLAY_ID   = 'dstarPageFade';
-
-  function animatePageEnter() {
-    var cover = document.getElementById(OVERLAY_ID);
-    if (!cover) return;                       // no flag → direct visit, nothing to do
-    sessionStorage.removeItem(TRANSIT_FLAG);
-
-    gsap.to(cover, {
-      opacity: 0,
-      duration: 0.48,
-      ease: 'power2.out',
-      onComplete: function () { cover.parentNode && cover.parentNode.removeChild(cover); }
-    });
-  }
-
-  function animatePageExit(href) {
-    // Build the overlay fresh on each exit
-    var cover = document.createElement('div');
-    cover.id = OVERLAY_ID;
-    cover.style.cssText = [
-      'position:fixed', 'inset:0',
-      'background:#0a0a0a',
-      'z-index:99999',
-      'pointer-events:none',
-      'opacity:0'
-    ].join(';');
-    document.body.appendChild(cover);
-
-    sessionStorage.setItem(TRANSIT_FLAG, '1');
-
-    gsap.to(cover, {
-      opacity: 1,
-      duration: 0.2,
-      ease: 'power1.in',
-      onComplete: function () {
-        window.location.href = href;
-      }
-    });
-  }
-
-  // ============================================
-  // LINK INTERCEPTION
-  // ============================================
-  function initLinkInterception() {
-    document.addEventListener('click', function (e) {
-      const link = e.target.closest('a[href]');
-      if (!link) return;
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-      const href = link.getAttribute('href');
-
-      // Skip: no href, hash-only, external protocols, new tab
-      if (!href)                          return;
-      if (href.startsWith('#'))           return;
-      if (href.startsWith('mailto:'))     return;
-      if (href.startsWith('tel:'))        return;
-      if (href.startsWith('javascript:')) return;
-      if (link.target === '_blank')       return;
-
-      // Skip: genuinely external domains, or same-page hash-only navigation
-      try {
-        const resolved = new URL(href, window.location.href);
-        if (resolved.hostname !== window.location.hostname) return;
-        // Same pathname + hash → browser handles native anchor scroll, no transition needed.
-        // Covers cases like "index.html#drops" or "./page.html#section" resolved on that same page.
-        if (resolved.pathname === window.location.pathname && resolved.hash) return;
-      } catch (_) {
-        return;
-      }
-
-      // On touch devices skip the exit animation — async GSAP navigation
-      // is unreliable on mobile after the gesture context expires.
-      // The enter animation (black overlay fade-in on arrival) still works.
-      if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-        sessionStorage.setItem(TRANSIT_FLAG, '1');
-        return; // native navigation takes over
-      }
-
-      // Desktop: animate out then navigate
-      e.preventDefault();
-      animatePageExit(href);
-    });
-  }
-
-  // ============================================
   // ARTICLE ENTRY ANIMATIONS
   // Only runs on blog post pages (.blog-post__hero exists)
   // ============================================
@@ -117,7 +21,7 @@
     if (!document.querySelector('.blog-post__hero')) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const BASE_DELAY = 0.3; // wait for blade to finish exiting
+    const BASE_DELAY = 0.15;
 
     // --- BACK LINK ---
     const backLink = document.querySelector('.blog-post__back');
@@ -244,26 +148,12 @@
     if (parseFloat(window.getComputedStyle(cards[0]).opacity) === 0) return;
   }
 
-  window.addEventListener('pageshow', function (event) {
-    if (!event.persisted) return;
-    sessionStorage.removeItem(TRANSIT_FLAG);
-    var cover = document.getElementById(OVERLAY_ID);
-    if (cover && cover.parentNode) cover.parentNode.removeChild(cover);
-  });
-
   // ============================================
   // INIT
   // ============================================
   function init() {
-    if (!window.gsap) {
-      sessionStorage.removeItem(TRANSIT_FLAG);
-      var cover = document.getElementById(OVERLAY_ID);
-      if (cover && cover.parentNode) cover.parentNode.removeChild(cover);
-      return;
-    }
+    if (!window.gsap) return;
 
-    animatePageEnter();
-    initLinkInterception();
     initArticleAnimations();
     initScrollProgress();
     initBlogGridReveal();

@@ -1,15 +1,15 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/css/style.css"
-lineas: 3542
+lineas: 3561
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # style.css
 
-`dstar-store/css/style.css` · 3542 líneas
+`dstar-store/css/style.css` · 3561 líneas
 
-Estilos completos del sitio: BEM, custom properties en :root y mobile-first.
+Estilos completos del sitio: BEM, custom properties en :root y mobile-first; incluye la View Transition nativa entre páginas (@view-transition) y el hero de desktop que reserva el alto del header.
 
 Parte de: [[Frontend]]
 
@@ -23,7 +23,7 @@ Parte de: [[Frontend]]
 
 ## Variables CSS
 
-`--black`, `--dark`, `--concrete`, `--concrete-light`, `--concrete-dark`, `--white`, `--offwhite`, `--accent`, `--red`, `--green`, `--font-display`, `--font-heading`, `--font-mono`, `--ease`, `--ease-out`, `--orange`, `--dur-fast`, `--dur-base`, `--dur-slow`, `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-pill`, `--z-progress`, `--z-header`, `--z-nav`, `--z-overlay`, `--z-drawer`, `--z-toast`, `--z-loader`, `--glass-tint`, `--glass-tint-strong`, `--glass-fallback`, `--glass-sheen`, `--glass-edge`, `--glass-shadow`, `--glass-blur`, `--glass-saturate`
+`--black`, `--dark`, `--concrete`, `--concrete-light`, `--concrete-dark`, `--white`, `--offwhite`, `--accent`, `--red`, `--green`, `--font-display`, `--font-heading`, `--font-mono`, `--ease`, `--ease-out`, `--orange`, `--dur-fast`, `--dur-base`, `--dur-slow`, `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-pill`, `--z-progress`, `--z-header`, `--z-nav`, `--z-overlay`, `--z-drawer`, `--z-toast`, `--z-loader`, `--glass-tint`, `--glass-tint-strong`, `--glass-fallback`, `--glass-sheen`, `--glass-edge`, `--glass-shadow`, `--glass-blur`, `--glass-saturate`, `--hero-top`, `--hero-bottom`
 
 ## Últimos cambios
 

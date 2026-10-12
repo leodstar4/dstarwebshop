@@ -1,13 +1,13 @@
 ---
 tags: [codigo, prueba]
 ruta: "dstar-store/tests/e2e/stock-y-animaciones.spec.js"
-lineas: 167
+lineas: 158
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # stock-y-animaciones.spec.js
 
-`dstar-store/tests/e2e/stock-y-animaciones.spec.js` · 167 líneas
+`dstar-store/tests/e2e/stock-y-animaciones.spec.js` · 158 líneas
 
 Pruebas de stock vivo y alertas (descuento por pago, reintento sin doble descuento, sobreventa, monto distinto) y de que el contenido se vea aunque GSAP no cargue.
 
@@ -15,7 +15,7 @@ Parte de: [[Pruebas]]
 
 ## Conexiones
 
-- Visita: [[index.html]], [[como-cuidar-tu-ropa.html]], [[checkout.html]], [[terminos.html]]
+- Visita: [[index.html]], [[checkout.html]], [[terminos.html]]
 - Usa: [[Playwright]], [[Mercado Pago]], [[Skydropx]], [[Gmail SMTP]], [[GSAP]]
 - Lee la variable: [[GMAIL_USER]], [[GMAIL_APP_PASSWORD]]
 
@@ -38,7 +38,6 @@ Parte de: [[Pruebas]]
 - Contenido visible y animaciones
 - sin GSAP los drops, el lookbook y el blog se ven
 - con animaciones todo termina visible después de recorrer la página
-- sin GSAP, ir del inicio a un artículo no deja la pantalla en negro
 - términos enlazados en el footer y junto al botón PAGAR
 
 ## Últimos cambios

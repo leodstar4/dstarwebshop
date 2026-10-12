@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/blog/born-to-shine-detras-del-drop.html"
-lineas: 203
+lineas: 202
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # born-to-shine-detras-del-drop.html
 
-`dstar-store/blog/born-to-shine-detras-del-drop.html` · 203 líneas
+`dstar-store/blog/born-to-shine-detras-del-drop.html` · 202 líneas
 
 Artículo del blog: detrás del drop Born to Shine.
 

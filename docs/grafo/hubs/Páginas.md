@@ -18,7 +18,7 @@ Parte de: [[DSTAR]]
 - [[dstar-preview.html]] — Vista previa estática grande del sitio, en la raíz del repo.
 - [[error-pago.html]] — Pantalla cuando el pago falla.
 - [[gracias.html]] — Confirmación después de un pago exitoso.
-- [[index.html]] — Página principal: loader, hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
+- [[index.html]] — Página principal: loader (solo en la primera visita de la sesión, sessionStorage dstar-intro), hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
 - [[offline.html]] — Página sin conexión de la PWA.
 - [[pago-pendiente.html]] — Pantalla cuando el pago queda pendiente de confirmar.
 - [[producto.html]] — Detalle de producto: galería, selector de talla y botón de compra.

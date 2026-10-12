@@ -1,13 +1,13 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/app.js"
-lineas: 1400
+lineas: 1387
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # app.js
 
-`dstar-store/js/app.js` · 1400 líneas
+`dstar-store/js/app.js` · 1387 líneas
 
 Lógica principal: render de productos, carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto.
 
@@ -27,41 +27,41 @@ Parte de: [[Frontend]]
 - `initNav` (línea 92)
 - `setNav` (línea 97)
 - `renderProducts` (línea 160)
-- `isProductSoldOut` (línea 189)
-- `cardBadgeHtml` (línea 193)
-- `cardInfoHtml` (línea 198)
-- `patchProductCard` (línea 215)
-- `applyLiveStock` (línea 230)
-- `initCardPrefetch` (línea 246)
-- `warm` (línea 250)
-- `initCart` (línea 276)
-- `openCart` (línea 291)
-- `closeCart` (línea 297)
-- `updateCartUI` (línea 303)
-- `changeQty` (línea 357)
-- `removeFromCart` (línea 372)
-- `saveCart` (línea 378)
-- `stockDisponible` (línea 382)
-- `escapeHtml` (línea 387)
-- `handleCheckout` (línea 396)
-- `initScrollAnimations` (línea 410)
-- `showToast` (línea 428)
-- `renderLookbook` (línea 518)
-- `renderBlog` (línea 547)
-- `renderFAQ` (línea 572)
-- `toggleFAQ` (línea 600)
-- `formatPrice` (línea 625)
-- `initScrollProgress` (línea 632)
-- `initRippleButtons` (línea 646)
-- `TextScramble` (línea 669)
-- `initTextScramble` (línea 715)
-- `initProductPage` (línea 738)
-- `set` (línea 772)
+- `isProductSoldOut` (línea 191)
+- `cardBadgeHtml` (línea 195)
+- `cardInfoHtml` (línea 200)
+- `patchProductCard` (línea 217)
+- `applyLiveStock` (línea 232)
+- `initCardPrefetch` (línea 248)
+- `warm` (línea 252)
+- `initCart` (línea 278)
+- `openCart` (línea 293)
+- `closeCart` (línea 299)
+- `updateCartUI` (línea 305)
+- `changeQty` (línea 359)
+- `removeFromCart` (línea 374)
+- `saveCart` (línea 380)
+- `stockDisponible` (línea 384)
+- `escapeHtml` (línea 389)
+- `handleCheckout` (línea 398)
+- `initScrollAnimations` (línea 412)
+- `showToast` (línea 430)
+- `renderLookbook` (línea 520)
+- `renderBlog` (línea 549)
+- `renderFAQ` (línea 574)
+- `toggleFAQ` (línea 602)
+- `formatPrice` (línea 627)
+- `initScrollProgress` (línea 634)
+- `initRippleButtons` (línea 648)
+- `TextScramble` (línea 671)
+- `initTextScramble` (línea 717)
+- `initProductPage` (línea 740)
+- `set` (línea 774)
 - `patchProductPageStock` (línea 824)
-- `_pdRevealPage` (línea 863)
-- `clearFlag` (línea 864)
-- `_pdInitMobileUX` (línea 878)
-- y 15 más
+- `_pdInitMobileUX` (línea 865)
+- `pdSrcset` (línea 924)
+- `_pdBuildStack` (línea 926)
+- y 13 más
 
 ## Últimos cambios
 
