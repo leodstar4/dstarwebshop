@@ -23,5 +23,6 @@ Parte de: [[Páginas]]
 
 ## Últimos cambios
 
+- 2026-10-12 · `d231e35` · Desktop: logo del hero sin chocar con el header, navegación sin esperas y móviles sin desbordes
 - 2026-10-12 · `17c7774` · Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 

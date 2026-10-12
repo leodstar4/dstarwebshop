@@ -141,11 +141,13 @@ function initNav() {
   let lastScroll = 0;
   let headerTicking = false;
   const header = $('.header');
+  const root = document.documentElement;
   window.addEventListener('scroll', () => {
     if (headerTicking) return;
     headerTicking = true;
     requestAnimationFrame(() => {
       const currentScroll = window.scrollY;
+      root.classList.toggle('is-scrolled', currentScroll > 100);
       header.classList.toggle('header--scrolled', currentScroll > 100);
       header.classList.toggle('header--hidden', currentScroll > 100 && currentScroll > lastScroll);
       lastScroll = currentScroll;
@@ -249,9 +251,7 @@ function initCardPrefetch() {
   const grid = $('#productsGrid');
   if (!grid) return;
   const warmed = new Set();
-  const warm = (e) => {
-    const card = e.target.closest && e.target.closest('a.product-card');
-    if (!card) return;
+  const warm = (card) => {
     const id = new URL(card.href).searchParams.get('id');
     const p = PRODUCTS.find((prod) => prod.id === id);
     if (!p || warmed.has(id)) return;
@@ -267,9 +267,16 @@ function initCardPrefetch() {
     link.href = card.href;
     document.head.appendChild(link);
   };
-  grid.addEventListener('pointerenter', warm, true);
-  grid.addEventListener('pointerdown', warm, true);
-  grid.addEventListener('touchstart', warm, { capture: true, passive: true });
+  const cardOf = (e) => e.target.closest && e.target.closest('a.product-card');
+  let intent = 0;
+  grid.addEventListener('pointerover', (e) => {
+    const card = cardOf(e);
+    clearTimeout(intent);
+    if (card) intent = setTimeout(() => warm(card), 150);
+  });
+  grid.addEventListener('pointerleave', () => clearTimeout(intent));
+  grid.addEventListener('pointerdown', (e) => { const card = cardOf(e); if (card) warm(card); });
+  grid.addEventListener('touchstart', (e) => { const card = cardOf(e); if (card) warm(card); }, { passive: true });
 }
 
 // ============================================

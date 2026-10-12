@@ -125,16 +125,6 @@ ul { list-style: none; }
 ::-webkit-scrollbar-track { background: var(--dark); }
 ::-webkit-scrollbar-thumb { background: var(--concrete); border-radius: 3px; }
 
-/* GPU compositing para elementos de scroll — mejora fluidez en todos los navegadores */
-.product-card,
-.blog-card,
-.lookbook-item,
-.about__value,
-.hero__cta {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
 /* ============================================
    LOADER
    ============================================ */
@@ -484,10 +474,6 @@ html:not(.is-loaded) .hero__cta,
 html:not(.is-loaded) .hero__scroll-indicator {
   animation-play-state: paused;
 }
-.hero--gsap .hero__tagline,
-.hero--gsap .hero__cta {
-  animation: none;
-}
 .hero__scroll-indicator {
   position: absolute;
   bottom: 32px;
@@ -738,13 +724,13 @@ html:not(.is-loaded) .hero__scroll-indicator {
   .product-card:hover .product-card__cta span { transform: translateX(4px); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .product-card__scarcity-dot::after {
+  .product-card:not(.rv) .product-card__scarcity-dot::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: 50%;
     background: currentColor;
-    animation: scarcityPulse 1.8s ease-out infinite;
+    animation: scarcityPulse 1.8s ease-out 3;
   }
 }
 @keyframes cardShine {
@@ -1854,8 +1840,6 @@ html:not(.is-loaded) .hero__scroll-indicator {
   to { transform: scale(5); opacity: 0; }
 }
 
-/* will-change only on pointer:fine (mouse/trackpad) — wastes GPU memory on touch devices */
-
 /* Text scramble chars */
 .scramble-char {
   color: var(--concrete);
@@ -1938,7 +1922,6 @@ html:not(.is-loaded) .hero__scroll-indicator {
   object-fit: cover;
   display: block;
   transition: transform 0.6s var(--ease);
-  will-change: transform;
 }
 .lookbook-panel:hover .lookbook-panel__img-wrap img {
   transform: scale(1.03);
@@ -2192,14 +2175,22 @@ html:not(.is-loaded) .hero__scroll-indicator {
 
 
 /* ============================================
-   SPLIT CHARS — TITLE ANIMATION
+   REVEAL — clases que pone gsap-animations.js; solo opacity + transform
    ============================================ */
-.split-char {
-  display: inline-block;
+.rv {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition: none;
 }
-.split-line-mask {
-  padding: 0 0.12em 0.12em;
-  margin: 0 -0.12em -0.12em;
+.rv.rv--zoom { transform: translate3d(0, 40px, 0) scale(1.06); }
+.rv.rv--line { transform: scaleX(0); }
+.rv.rv--stamp { transform: rotate(-25deg) scale(0.7); }
+.is-scrolled .announcement-bar__track,
+.is-scrolled .hero__scroll-line { animation-play-state: paused; }
+.rv-run {
+  transition:
+    opacity 0.6s var(--ease-out) var(--rv-d, 0s),
+    transform 0.9s var(--ease-out) var(--rv-d, 0s);
 }
 
 /* ============================================
@@ -3376,16 +3367,13 @@ html:not(.is-loaded) .hero__scroll-indicator {
   z-index: 9999;
   transform: translate3d(-50%, -50%, 0);
   opacity: 0;
-  transition: opacity 0.15s ease, width 0.12s ease, height 0.12s ease, background 0.12s ease;
+  transition: opacity 0.15s ease, scale 0.12s ease;
   mix-blend-mode: normal;
   will-change: transform;
 }
 .dstar-cursor.is-active { opacity: 1; }
-.dstar-cursor.is-grow {
-  width: 36px;
-  height: 36px;
-  background: rgba(255,255,255,0.75);
-}
+.dstar-cursor.is-grow { scale: 1.64; }
+.dstar-cursor.is-active.is-grow { opacity: 0.75; }
 /* Solo en desktop con puntero fino: ocultamos cursor nativo en grid + cambiamos a crosshair sobre CTAs */
 @media (hover: hover) and (pointer: fine) and (min-width: 769px) {
   body.dstar-cursor-active .products-grid,

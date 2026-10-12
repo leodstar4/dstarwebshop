@@ -46,7 +46,7 @@
 
     const view = { el, canvas, gl, inView: true, ready: false };
     view.resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.min(560, Math.round(el.clientWidth * dpr));
       const h = Math.round(w * 820 / 560);
       if (w && (canvas.width !== w || canvas.height !== h)) {
@@ -278,9 +278,13 @@
     fetch(SRC).then((r) => (r.ok ? r.arrayBuffer() : null)).then(playDecoded).catch(() => false).then((ok) => { if (!ok) release(); });
   };
 
-  const draw = () => {
+  let lastDraw = 0;
+  const draw = (now) => {
     if (mode !== 'video') return;
-    if (video.readyState >= 2) render(video);
+    if (video.readyState >= 2 && now - lastDraw >= 30) {
+      lastDraw = now;
+      render(video);
+    }
     schedule();
   };
   let pending = false;
@@ -293,8 +297,15 @@
     if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(draw);
     else requestAnimationFrame(draw);
   };
+  let parked = false;
+  const park = () => {
+    const wasParked = parked;
+    parked = !views.some(visible);
+    if (parked && mode === 'video') video.pause();
+    else if (wasParked) play();
+  };
   const play = () => {
-    if (mode !== 'video') return;
+    if (mode !== 'video' || parked) return;
     const p = video.play();
     if (p && p.then) {
       p.then(() => { if (!pending) schedule(); }).catch((err) => {
@@ -311,12 +322,14 @@
       const v = views.find((x) => x.el === e.target);
       if (v) v.inView = e.isIntersecting;
     }
+    park();
   });
+  window.addEventListener('dstar:loaded', park);
   views.forEach((v) => io.observe(v.el));
 
   document.addEventListener('visibilitychange', () => (document.hidden ? video.pause() : play()));
   window.addEventListener('resize', () => views.forEach((v) => v.resize()), { passive: true });
   window.addEventListener('pageshow', (e) => { if (e.persisted) play(); });
   play();
-  setTimeout(() => { if (mode === 'video' && !document.hidden && video.paused && !views.some((v) => v.ready)) fallback(); }, 2500);
+  setTimeout(() => { if (mode === 'video' && !parked && !document.hidden && video.paused && !views.some((v) => v.ready)) fallback(); }, 2500);
 })();

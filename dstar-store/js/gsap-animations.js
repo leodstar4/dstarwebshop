@@ -1,251 +1,68 @@
 /* ============================================
-   DSTAR STORE — ANIMACIONES (GSAP + SplitText)
-   El contenido es visible por defecto en el CSS: aquí se oculta justo antes
-   de animarlo, así que si algo falla nunca se queda invisible.
+   DSTAR STORE — ANIMACIONES
+   Los revelados solo cambian clases: la transición la hace CSS en el compositor
+   (opacity + transform), sin trabajo de JS por cuadro. El contenido es visible por
+   defecto; aquí se oculta justo antes de observarlo.
    ============================================ */
 
-if (window.SplitText) gsap.registerPlugin(SplitText);
-
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const IS_MOBILE = window.innerWidth <= 768;
-const EASE_OUT = 'expo.out';
-const EASE_IN_OUT = 'expo.inOut';
+const REVEAL_MS = 900;
 
-// Reveal de una sola vez con IntersectionObserver: no corre trabajo en cada cuadro del scroll.
-function revealOnEnter(els, onEnter, rootMargin = '0px 0px -10% 0px') {
+function reveal(els, { stagger = 60, rootMargin = '0px 0px 6% 0px', cls = '' } = {}) {
   const list = Array.from(els).filter(Boolean);
   if (!list.length) return;
+  list.forEach((el) => el.classList.add('rv', ...(cls ? [cls] : [])));
   const io = new IntersectionObserver((entries) => {
     const batch = entries.filter((e) => e.isIntersecting).map((e) => e.target);
-    if (!batch.length) return;
-    batch.forEach((el) => io.unobserve(el));
     batch.sort((a, b) => list.indexOf(a) - list.indexOf(b));
-    onEnter(batch);
+    batch.forEach((el, i) => {
+      io.unobserve(el);
+      const delay = Math.min(i * stagger, 300);
+      if (delay) el.style.setProperty('--rv-d', `${delay}ms`);
+      el.classList.add('rv-run');
+      el.classList.remove('rv');
+      setTimeout(() => {
+        el.classList.remove('rv-run', ...(cls ? [cls] : []));
+        el.style.removeProperty('--rv-d');
+      }, REVEAL_MS + delay + 100);
+    });
   }, { rootMargin });
   list.forEach((el) => io.observe(el));
 }
 
-// Si una animación falla a la mitad, devuelve el contenido a su estado visible.
-function safely(roots, fn) {
-  try {
-    fn();
-  } catch (err) {
-    const els = [];
-    Array.from(roots).filter(Boolean).forEach((root) => els.push(root, ...root.querySelectorAll('*')));
-    gsap.set(els, { clearProps: 'opacity,transform,clipPath,visibility' });
-  }
-}
-
-// SplitText mide las líneas con la fuente real; si aún no carga, cortaría mal.
-function fontsReady(maxMs = 1800) {
-  if (!document.fonts || !document.fonts.ready) return Promise.resolve();
-  return Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, maxMs))]);
-}
-
-function splitChars(el) {
-  if (!window.SplitText) return [el];
-  return SplitText.create(el, { type: 'lines,chars', mask: 'lines', linesClass: 'split-line', charsClass: 'split-char' }).chars;
-}
-
-function splitLines(el) {
-  if (!window.SplitText) return [el];
-  return SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line' }).lines;
-}
-
-// ============================================
-// HERO — "TODO CON AMOR" entra letra por letra cuando se va el loader
-// ============================================
-function initHero() {
-  const hero = document.querySelector('.hero');
-  if (!hero || window.__dstarLoaded) return;
-  const tagline = hero.querySelector('.hero__tagline');
-  const cta = hero.querySelector('.hero__cta');
-  if (!tagline) return;
-
-  safely([tagline, cta], () => {
-    hero.classList.add('hero--gsap');
-    const chars = window.SplitText ? SplitText.create(tagline, { type: 'chars', charsClass: 'split-char' }).chars : [tagline];
-    gsap.set(chars, { opacity: 0, yPercent: 45, scale: 1.25, filter: `blur(${IS_MOBILE ? 6 : 12}px)` });
-    if (cta) gsap.set(cta, { opacity: 0, y: 26, clipPath: 'inset(0% 100% 0% 0%)', transition: 'none' });
-
-    const play = () => {
-      gsap.timeline({ delay: 0.32 })
-        .to(chars, { opacity: 1, yPercent: 0, scale: 1, filter: 'blur(0px)', duration: 1.3, stagger: 0.055, ease: EASE_OUT, clearProps: 'filter,transform' })
-        .to(cta, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 1, ease: EASE_IN_OUT, clearProps: 'clipPath,transform,transition' }, '-=0.75');
-    };
-    if (window.__dstarLoaded) play();
-    else window.addEventListener('dstar:loaded', play, { once: true });
-  });
-}
-
-// ============================================
-// TÍTULOS DE SECCIÓN — letras que suben desde una máscara + línea que se dibuja
-// ============================================
-function initSectionHeaders() {
+function initReveals() {
   document.querySelectorAll('.section-header').forEach((header) => {
-    const title = header.querySelector('.section-title');
-    const line = header.querySelector('.section-line');
-    const sub = header.querySelector('.section-sub');
-    safely([header], () => {
-      const chars = title ? splitChars(title) : [];
-      gsap.set(chars, { yPercent: 115, opacity: 0 });
-      if (line) gsap.set(line, { scaleX: 0, transformOrigin: '50% 50%' });
-      if (sub) gsap.set(sub, { opacity: 0, y: 14 });
-      revealOnEnter([header], () => {
-        const tl = gsap.timeline().to(chars, { yPercent: 0, opacity: 1, duration: 1.05, stagger: 0.04, ease: EASE_OUT });
-        if (line) tl.to(line, { scaleX: 1, duration: 1.1, ease: EASE_IN_OUT }, 0.15);
-        if (sub) tl.to(sub, { opacity: 1, y: 0, duration: 0.9, ease: EASE_OUT, clearProps: 'transform' }, 0.45);
-      });
-    });
+    reveal([header.querySelector('.section-title'), header.querySelector('.section-sub')], { stagger: 120 });
+    reveal([header.querySelector('.section-line')], { cls: 'rv--line' });
   });
-}
-
-// ============================================
-// DROPS — cada prenda sube y se asienta, en cascada
-// ============================================
-function initProductReveal() {
-  const cards = Array.from(document.querySelectorAll('.product-card'));
-  if (!cards.length) return;
-  safely(cards, () => {
-    cards.forEach((card) => {
-      gsap.set(card, { opacity: 0 });
-      gsap.set(card.querySelector('.product-card__image'), { yPercent: 10, scale: 0.92 });
-      gsap.set(card.querySelector('.product-card__info'), { opacity: 0, y: 22 });
-    });
-    revealOnEnter(cards, (batch) => {
-      const tl = gsap.timeline();
-      batch.forEach((card, i) => {
-        const at = i * 0.12;
-        tl.to(card, { opacity: 1, duration: 0.9, ease: 'power2.out' }, at)
-          .to(card.querySelector('.product-card__image'), { yPercent: 0, scale: 1, duration: 1.4, ease: EASE_OUT, clearProps: 'transform' }, at)
-          .to(card.querySelector('.product-card__info'), { opacity: 1, y: 0, duration: 1, ease: EASE_OUT, clearProps: 'transform' }, at + 0.18);
-      });
-    }, '0px 0px -6% 0px');
-  });
-}
-
-// ============================================
-// LOOKBOOK — cada foto se descubre de abajo hacia arriba con un zoom que se asienta
-// ============================================
-function initLookbookReveal() {
-  const panels = Array.from(document.querySelectorAll('.lookbook-panel'));
-  if (!panels.length) return;
-  safely(panels, () => {
-    panels.forEach((panel) => {
-      gsap.set(panel, { opacity: 0 });
-      gsap.set(panel.querySelector('.lookbook-panel__img-wrap'), { yPercent: 100, scale: 1.32 });
-      gsap.set(panel.querySelector('.lookbook-panel__num'), { yPercent: 100, opacity: 0 });
-    });
-    revealOnEnter(panels, (batch) => {
-      batch.forEach((panel, i) => {
-        gsap.timeline({ delay: i * 0.13 })
-          .to(panel, { opacity: 1, duration: 0.5, ease: 'power2.out', clearProps: 'opacity' })
-          .to(panel.querySelector('.lookbook-panel__img-wrap'), { yPercent: 0, duration: 1.3, ease: EASE_IN_OUT }, 0)
-          .to(panel.querySelector('.lookbook-panel__img-wrap'), { scale: 1, duration: 1.7, ease: EASE_OUT, clearProps: 'transform' }, 0.1)
-          .to(panel.querySelector('.lookbook-panel__num'), { yPercent: 0, opacity: 1, duration: 0.9, ease: EASE_OUT, clearProps: 'transform,opacity' }, 0.75);
-      });
-    }, '0px 0px -8% 0px');
-  });
-}
-
-// ============================================
-// NOSOTROS — texto por líneas, sello que gira, valores en cascada
-// ============================================
-function initAbout() {
+  reveal(document.querySelectorAll('.product-card'));
+  reveal(document.querySelectorAll('.lookbook-panel'), { cls: 'rv--zoom' });
+  reveal(document.querySelectorAll('.blog-card'), { stagger: 90 });
   const about = document.querySelector('.about');
-  if (!about) return;
-  const title = about.querySelector('.about__title');
-  const subtitle = about.querySelector('.about__subtitle');
-  const desc = about.querySelector('.about__desc');
-  const stamp = about.querySelector('.about__stamp');
-  const heroInner = about.querySelector('.about__hero-inner');
-
-  safely([heroInner], () => {
-    const chars = title ? splitChars(title) : [];
-    const lines = desc ? splitLines(desc) : [];
-    gsap.set(chars, { yPercent: 115, opacity: 0 });
-    gsap.set(subtitle, { opacity: 0, y: 16 });
-    gsap.set(lines, { yPercent: 100, opacity: 0 });
-    gsap.set(stamp, { opacity: 0, rotate: -25, scale: 0.7 });
-    revealOnEnter([heroInner], () => {
-      gsap.timeline()
-        .to(chars, { yPercent: 0, opacity: 1, duration: 1.1, stagger: 0.06, ease: EASE_OUT })
-        .to(subtitle, { opacity: 1, y: 0, duration: 0.9, ease: EASE_OUT, clearProps: 'transform' }, 0.3)
-        .to(lines, { yPercent: 0, opacity: 1, duration: 1, stagger: 0.08, ease: EASE_OUT }, 0.4)
-        .to(stamp, { opacity: 1, rotate: 0, scale: 1, duration: 1.4, ease: EASE_OUT, clearProps: 'transform' }, 0.3);
-    });
-  });
-
-  const values = Array.from(about.querySelectorAll('.about__value'));
-  safely(values, () => {
-    values.forEach((value) => {
-      gsap.set(value.children, { opacity: 0, y: 24 });
-      const num = value.querySelector('.about__value-num');
-      if (num) num.dataset.target = num.textContent.trim();
-    });
-    revealOnEnter(values, (batch) => {
-      batch.forEach((value, i) => {
-        gsap.to(value.children, { opacity: 1, y: 0, duration: 1, stagger: 0.1, delay: i * 0.14, ease: EASE_OUT, clearProps: 'transform' });
-        const num = value.querySelector('.about__value-num');
-        const target = num ? parseInt(num.dataset.target, 10) : NaN;
-        if (isNaN(target)) return;
-        const counter = { n: 0 };
-        gsap.to(counter, {
-          n: target,
-          duration: 1.4,
-          delay: i * 0.14,
-          ease: 'power2.out',
-          onUpdate() { num.textContent = String(Math.round(counter.n)).padStart(2, '0'); }
-        });
-      });
-    });
-  });
+  if (about) {
+    reveal([about.querySelector('.about__title'), about.querySelector('.about__subtitle'), about.querySelector('.about__desc')], { stagger: 110 });
+    reveal([about.querySelector('.about__stamp')], { cls: 'rv--stamp' });
+    reveal(about.querySelectorAll('.about__value'), { stagger: 110 });
+  }
+  ['.lookbook__footer > *', '.contact__text, .contact__link', '.faq__title', '.faq__item', '.footer__inner > *']
+    .forEach((selector) => reveal(document.querySelectorAll(selector), { stagger: 50, rootMargin: '0px' }));
 }
 
-// ============================================
-// BLOG — la imagen se descubre y el texto sube
-// ============================================
-function initBlogReveal() {
-  const cards = Array.from(document.querySelectorAll('.blog-card'));
-  if (!cards.length) return;
-  safely(cards, () => {
-    cards.forEach((card) => {
-      gsap.set(card, { opacity: 0 });
-      gsap.set(card.querySelector('.blog-card__image'), { opacity: 0, scale: 1.08 });
-      gsap.set(card.querySelector('.blog-card__body'), { opacity: 0, y: 26 });
-    });
-    revealOnEnter(cards, (batch) => {
-      batch.forEach((card, i) => {
-        gsap.timeline({ delay: i * 0.12 })
-          .to(card, { opacity: 1, duration: 0.6, ease: 'power2.out' })
-          .to(card.querySelector('.blog-card__image'), { opacity: 1, scale: 1, duration: 1.2, ease: EASE_OUT, clearProps: 'opacity,transform' }, 0)
-          .to(card.querySelector('.blog-card__body'), { opacity: 1, y: 0, duration: 1, ease: EASE_OUT, clearProps: 'transform' }, 0.35);
-      });
-    }, '0px 0px -6% 0px');
-  });
-}
-
-// ============================================
-// RESTO — FAQ, contacto, enlaces y footer suben en cascada
-// ============================================
-function initRiseIns() {
-  const groups = [
-    '.lookbook__footer > *',
-    '.contact__text, .contact__link',
-    '.faq__title',
-    '.faq__item',
-    '.footer__inner > *'
-  ];
-  groups.forEach((selector) => {
-    const els = Array.from(document.querySelectorAll(selector));
-    if (!els.length) return;
-    safely(els, () => {
-      gsap.set(els, { opacity: 0, y: 22 });
-      revealOnEnter(els, (batch) => {
-        gsap.to(batch, { opacity: 1, y: 0, duration: 0.9, stagger: 0.07, ease: EASE_OUT, clearProps: 'transform' });
-      }, '0px');
+function initCounters() {
+  const nums = Array.from(document.querySelectorAll('.about__value-num'));
+  if (!nums.length) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      io.unobserve(entry.target);
+      const num = entry.target;
+      const target = parseInt(num.textContent.trim(), 10);
+      if (isNaN(target)) return;
+      const counter = { n: 0 };
+      gsap.to(counter, { n: target, duration: 1, ease: 'power2.out', onUpdate() { num.textContent = String(Math.round(counter.n)).padStart(2, '0'); } });
     });
   });
+  nums.forEach((num) => io.observe(num));
 }
 
 // ============================================
@@ -595,9 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
       [initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
       return;
     }
-    if (!REDUCED_MOTION) {
-      [initProductReveal, initLookbookReveal, initBlogReveal, initRiseIns].forEach(run);
-      fontsReady().then(() => [initHero, initSectionHeaders, initAbout].forEach(run));
+    if (!REDUCED_MOTION && window.gsap) {
+      [initReveals, initCounters].forEach(run);
     }
     [initLookbook, initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
   });

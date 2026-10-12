@@ -1,15 +1,15 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/css/style.css"
-lineas: 3561
+lineas: 3549
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # style.css
 
-`dstar-store/css/style.css` · 3561 líneas
+`dstar-store/css/style.css` · 3549 líneas
 
-Estilos completos del sitio: BEM, custom properties en :root y mobile-first; incluye la View Transition nativa entre páginas (@view-transition) y el hero de desktop que reserva el alto del header.
+Estilos completos del sitio: BEM, custom properties en :root y mobile-first; incluye la View Transition nativa entre páginas (@view-transition), el hero de desktop que reserva el alto del header y las clases de revelado .rv/.rv-run que usa gsap-animations.js.
 
 Parte de: [[Frontend]]
 
@@ -19,7 +19,7 @@ Parte de: [[Frontend]]
 
 ## Bloques BEM
 
-`.product-card`, `.blog-card`, `.lookbook-item`, `.about`, `.hero`, `.loader`, `.logo-3d`, `.announcement-bar`, `.header`, `.cart-btn`, `.menu-btn`, `.mobile-nav`, `.section-header`, `.section-title`, `.section-line`, `.drops`, `.products-grid`, `.contact`, `.footer`, `.cart-overlay`, `.cart-drawer`, `.cart-item`, `.size-btn`, `.shake`, `.img-fullscreen`, `.cart-particle`, `.toast`, `.section-sub`, `.lookbook`, `.blog`, `.faq`, `.blog-post`, `.ripple`, `.scramble-char`, `.lookbook-panel`, `.lookbook-lb`, `.split-char`, `.split-line-mask`, `.split-word`, `.product-detail`
+`.loader`, `.logo-3d`, `.announcement-bar`, `.header`, `.cart-btn`, `.menu-btn`, `.mobile-nav`, `.hero`, `.section-header`, `.section-title`, `.section-line`, `.drops`, `.products-grid`, `.product-card`, `.about`, `.contact`, `.footer`, `.cart-overlay`, `.cart-drawer`, `.cart-item`, `.size-btn`, `.shake`, `.img-fullscreen`, `.cart-particle`, `.toast`, `.section-sub`, `.lookbook`, `.lookbook-item`, `.blog`, `.blog-card`, `.faq`, `.blog-post`, `.ripple`, `.scramble-char`, `.lookbook-panel`, `.lookbook-lb`, `.rv`, `.is-scrolled`, `.rv-run`, `.split-word`
 
 ## Variables CSS
 
@@ -27,9 +27,9 @@ Parte de: [[Frontend]]
 
 ## Últimos cambios
 
+- 2026-10-12 · `d231e35` · Desktop: logo del hero sin chocar con el header, navegación sin esperas y móviles sin desbordes
 - 2026-10-12 · `17c7774` · Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 - 2026-10-11 · `8d6aea5` · Seguridad: firma obligatoria y guía única en webhook MP, origen permitido en checkout, SRI en GSAP, CSP más estricta; lo
 - 2026-10-10 · `453b5f9` · Fluidez: sin ScrollTrigger (reveals con IntersectionObserver), scroll-driven CSS, galería con srcset y precarga, bfcache
 - 2026-10-10 · `4a93fdf` · Página de producto rápida y sin saltos, transición ligera con precarga, logo 3D gira en loader y sin pausas
-- 2026-10-10 · `d116893` · Logo 3D: MP4 H.264 con alfa compuesto en WebGL (fluido y nítido en iPhone), reemplaza AVIF animada
 

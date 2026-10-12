@@ -9,7 +9,7 @@ Resumen de [[CLAUDE]]; los estilos viven en [[style.css]].
 - Sin comentarios en el código salvo que sean estrictamente necesarios.
 - CSS en BEM (`.bloque__elemento--modificador`), mobile-first y con las custom properties de `:root`.
 - Imágenes siempre desde [[Cloudinary]] con `f_auto,q_auto,dpr_auto` y `w_` responsive, con `loading="lazy"` y `decoding="async"`.
-- Animaciones respetan `prefers-reduced-motion` ([[gsap-animations.js]]).
+- Animaciones respetan `prefers-reduced-motion` ([[gsap-animations.js]]) y solo animan `opacity` y `transform`; los reveals son clases con transición CSS (`.rv` → `.rv-run`) que pone el JS, así que sin JS nada queda oculto; sin `will-change` permanente en tarjetas ni paneles del lookbook.
 - Targets táctiles de 44x44px mínimo y `aria-*` en todo elemento interactivo.
 - `100svh` en hero y secciones a pantalla completa, `100dvh` solo en overlays fijos; nunca `100vh`.
 - `backdrop-filter` solo en elementos chicos y fijos de navegación.

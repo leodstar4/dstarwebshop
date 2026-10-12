@@ -1,15 +1,15 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/logo-3d.js"
-lineas: 323
+lineas: 336
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # logo-3d.js
 
-`dstar-store/js/logo-3d.js` · 323 líneas
+`dstar-store/js/logo-3d.js` · 336 líneas
 
-Logo 3D animado: video con alfa compuesto en WebGL, con modo de ahorro de batería.
+Logo 3D animado: video con alfa compuesto en WebGL (dpr máximo 2, unos 30 fps, video en pausa si ninguna vista es visible), con modo de ahorro de batería.
 
 Parte de: [[Frontend]]
 
@@ -32,9 +32,10 @@ Parte de: [[Frontend]]
 - `resume` (línea 229)
 - `preroll` (línea 241)
 - `fallback` (línea 270)
-- `draw` (línea 281)
-- `schedule` (línea 287)
-- `play` (línea 296)
+- `draw` (línea 282)
+- `schedule` (línea 291)
+- `park` (línea 301)
+- `play` (línea 307)
 
 ## Últimos cambios
 
