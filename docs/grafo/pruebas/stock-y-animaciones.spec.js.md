@@ -9,7 +9,7 @@ lineas: 158
 
 `dstar-store/tests/e2e/stock-y-animaciones.spec.js` · 158 líneas
 
-Pruebas de stock vivo y alertas (descuento por pago, reintento sin doble descuento, sobreventa, monto distinto) y de que el contenido se vea aunque GSAP no cargue y ningún elemento renderizado se quede con .rv u oculto.
+Pruebas de stock vivo y alertas (descuento por pago, reintento sin doble descuento, sobreventa, monto distinto) y de que el contenido se vea aunque GSAP no cargue y ningún elemento renderizado (incluidos los .split-char) se quede con opacidad menor a 0.05.
 
 Parte de: [[Pruebas]]
 
@@ -42,6 +42,7 @@ Parte de: [[Pruebas]]
 
 ## Últimos cambios
 
+- 2026-10-12 · `eef15b5` · Fluidez en desktop: revelados en el compositor, logo 3D en pausa fuera de pantalla y menos trabajo por cuadro
 - 2026-10-12 · `d231e35` · Desktop: logo del hero sin chocar con el header, navegación sin esperas y móviles sin desbordes
 - 2026-10-12 · `17c7774` · Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 

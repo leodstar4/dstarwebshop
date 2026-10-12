@@ -142,11 +142,12 @@ function initNav() {
   let headerTicking = false;
   const header = $('.header');
   const root = document.documentElement;
+  let currentScroll = 0;
   window.addEventListener('scroll', () => {
+    currentScroll = window.scrollY;
     if (headerTicking) return;
     headerTicking = true;
     requestAnimationFrame(() => {
-      const currentScroll = window.scrollY;
       root.classList.toggle('is-scrolled', currentScroll > 100);
       header.classList.toggle('header--scrolled', currentScroll > 100);
       header.classList.toggle('header--hidden', currentScroll > 100 && currentScroll > lastScroll);

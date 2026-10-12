@@ -11,6 +11,7 @@ Parte de: [[DSTAR]]
 
 ## 2026-10-12
 
+- `eef15b5` Fluidez en desktop: revelados en el compositor, logo 3D en pausa fuera de pantalla y menos trabajo por cuadro
 - `d231e35` Desktop: logo del hero sin chocar con el header, navegación sin esperas y móviles sin desbordes
 - `a5ec8ac` Grafo de Obsidian del proyecto y agentes que lo leen y lo mantienen
 - `17c7774` Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido

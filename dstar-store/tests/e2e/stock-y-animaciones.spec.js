@@ -140,8 +140,8 @@ test.describe('Contenido visible y animaciones', () => {
     }
     await page.waitForTimeout(2500);
     const ocultos = await page.evaluate(() => Array.from(document.querySelectorAll(
-      '.product-card, .lookbook-panel, .blog-card, .faq__item, .rv, .about__value, .footer__inner > *'
-    )).filter((e) => e.getClientRects().length && (e.classList.contains('rv') || parseFloat(getComputedStyle(e).opacity) < 0.05)).map((e) => e.className));
+      '.product-card, .lookbook-panel, .blog-card, .faq__item, .split-char, .about__value > *, .footer__inner > *'
+    )).filter((e) => e.getClientRects().length && parseFloat(getComputedStyle(e).opacity) < 0.05).map((e) => e.className));
     expect(ocultos).toEqual([]);
   });
 

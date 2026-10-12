@@ -1,15 +1,15 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/logo-3d.js"
-lineas: 336
+lineas: 332
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # logo-3d.js
 
-`dstar-store/js/logo-3d.js` · 336 líneas
+`dstar-store/js/logo-3d.js` · 332 líneas
 
-Logo 3D animado: video con alfa compuesto en WebGL (dpr máximo 2, unos 30 fps, video en pausa si ninguna vista es visible), con modo de ahorro de batería.
+Logo 3D animado: video con alfa compuesto en WebGL (dpr máximo 2, un dibujo por cuadro de video, video en pausa si ninguna vista es visible), con modo de ahorro de batería.
 
 Parte de: [[Frontend]]
 
@@ -32,16 +32,16 @@ Parte de: [[Frontend]]
 - `resume` (línea 229)
 - `preroll` (línea 241)
 - `fallback` (línea 270)
-- `draw` (línea 282)
-- `schedule` (línea 291)
-- `park` (línea 301)
-- `play` (línea 307)
+- `draw` (línea 281)
+- `schedule` (línea 287)
+- `park` (línea 297)
+- `play` (línea 303)
 
 ## Últimos cambios
 
+- 2026-10-12 · `eef15b5` · Fluidez en desktop: revelados en el compositor, logo 3D en pausa fuera de pantalla y menos trabajo por cuadro
 - 2026-10-12 · `17c7774` · Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 - 2026-10-11 · `89f5597` · Logo 3D: video directo otra vez (la CSP bloqueaba blob: y forzaba el decodificador lento), loader espera al respaldo en 
 - 2026-10-11 · `9948892` · Logo 3D en modo de ahorro: arranca en el loader, ritmo parejo a 30 fps, una sola descarga y un solo canvas activo
 - 2026-10-11 · `8d6aea5` · Seguridad: firma obligatoria y guía única en webhook MP, origen permitido en checkout, SRI en GSAP, CSP más estricta; lo
-- 2026-10-10 · `453b5f9` · Fluidez: sin ScrollTrigger (reveals con IntersectionObserver), scroll-driven CSS, galería con srcset y precarga, bfcache
 

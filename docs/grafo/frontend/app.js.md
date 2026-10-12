@@ -1,13 +1,13 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/app.js"
-lineas: 1394
+lineas: 1395
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # app.js
 
-`dstar-store/js/app.js` · 1394 líneas
+`dstar-store/js/app.js` · 1395 líneas
 
 Lógica principal: render de productos, carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto; marca is-scrolled en <html> y precarga el detalle de producto con intención de hover.
 
@@ -26,48 +26,48 @@ Parte de: [[Frontend]]
 - `initLiveStock` (línea 82)
 - `initNav` (línea 92)
 - `setNav` (línea 97)
-- `renderProducts` (línea 162)
-- `isProductSoldOut` (línea 193)
-- `cardBadgeHtml` (línea 197)
-- `cardInfoHtml` (línea 202)
-- `patchProductCard` (línea 219)
-- `applyLiveStock` (línea 234)
-- `initCardPrefetch` (línea 250)
-- `warm` (línea 254)
-- `cardOf` (línea 270)
-- `initCart` (línea 285)
-- `openCart` (línea 300)
-- `closeCart` (línea 306)
-- `updateCartUI` (línea 312)
-- `changeQty` (línea 366)
-- `removeFromCart` (línea 381)
-- `saveCart` (línea 387)
-- `stockDisponible` (línea 391)
-- `escapeHtml` (línea 396)
-- `handleCheckout` (línea 405)
-- `initScrollAnimations` (línea 419)
-- `showToast` (línea 437)
-- `renderLookbook` (línea 527)
-- `renderBlog` (línea 556)
-- `renderFAQ` (línea 581)
-- `toggleFAQ` (línea 609)
-- `formatPrice` (línea 634)
-- `initScrollProgress` (línea 641)
-- `initRippleButtons` (línea 655)
-- `TextScramble` (línea 678)
-- `initTextScramble` (línea 724)
-- `initProductPage` (línea 747)
-- `set` (línea 781)
-- `patchProductPageStock` (línea 831)
-- `_pdInitMobileUX` (línea 872)
-- `pdSrcset` (línea 931)
+- `renderProducts` (línea 163)
+- `isProductSoldOut` (línea 194)
+- `cardBadgeHtml` (línea 198)
+- `cardInfoHtml` (línea 203)
+- `patchProductCard` (línea 220)
+- `applyLiveStock` (línea 235)
+- `initCardPrefetch` (línea 251)
+- `warm` (línea 255)
+- `cardOf` (línea 271)
+- `initCart` (línea 286)
+- `openCart` (línea 301)
+- `closeCart` (línea 307)
+- `updateCartUI` (línea 313)
+- `changeQty` (línea 367)
+- `removeFromCart` (línea 382)
+- `saveCart` (línea 388)
+- `stockDisponible` (línea 392)
+- `escapeHtml` (línea 397)
+- `handleCheckout` (línea 406)
+- `initScrollAnimations` (línea 420)
+- `showToast` (línea 438)
+- `renderLookbook` (línea 528)
+- `renderBlog` (línea 557)
+- `renderFAQ` (línea 582)
+- `toggleFAQ` (línea 610)
+- `formatPrice` (línea 635)
+- `initScrollProgress` (línea 642)
+- `initRippleButtons` (línea 656)
+- `TextScramble` (línea 679)
+- `initTextScramble` (línea 725)
+- `initProductPage` (línea 748)
+- `set` (línea 782)
+- `patchProductPageStock` (línea 832)
+- `_pdInitMobileUX` (línea 873)
+- `pdSrcset` (línea 932)
 - y 14 más
 
 ## Últimos cambios
 
+- 2026-10-12 · `eef15b5` · Fluidez en desktop: revelados en el compositor, logo 3D en pausa fuera de pantalla y menos trabajo por cuadro
 - 2026-10-12 · `d231e35` · Desktop: logo del hero sin chocar con el header, navegación sin esperas y móviles sin desbordes
 - 2026-10-12 · `17c7774` · Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 - 2026-10-10 · `453b5f9` · Fluidez: sin ScrollTrigger (reveals con IntersectionObserver), scroll-driven CSS, galería con srcset y precarga, bfcache
 - 2026-10-10 · `4a93fdf` · Página de producto rápida y sin saltos, transición ligera con precarga, logo 3D gira en loader y sin pausas
-- 2026-10-10 · `a3628f5` · Carga más rápida: viewport antes de precargas, loader inline, logo 3D a 60fps, lookbook responsive, sin salto de layout
 

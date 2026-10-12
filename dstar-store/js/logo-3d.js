@@ -278,13 +278,9 @@
     fetch(SRC).then((r) => (r.ok ? r.arrayBuffer() : null)).then(playDecoded).catch(() => false).then((ok) => { if (!ok) release(); });
   };
 
-  let lastDraw = 0;
-  const draw = (now) => {
+  const draw = () => {
     if (mode !== 'video') return;
-    if (video.readyState >= 2 && now - lastDraw >= 30) {
-      lastDraw = now;
-      render(video);
-    }
+    if (video.readyState >= 2) render(video);
     schedule();
   };
   let pending = false;

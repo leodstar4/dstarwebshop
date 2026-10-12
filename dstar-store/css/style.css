@@ -454,11 +454,12 @@ ul { list-style: none; }
   .hero {
     min-height: 560px;
     padding: var(--hero-top) 0 var(--hero-bottom);
-    --hero-top: 112px;
-    --hero-bottom: 100px;
+    --hero-top: 76px;
+    --hero-bottom: 109px;
   }
   .hero__content { padding-bottom: 0; }
-  .hero__logo { height: clamp(130px, calc(100svh - var(--hero-top) - var(--hero-bottom) - 270px), 400px); }
+  .hero__tagline { font-size: clamp(44px, 8.5svh, 72px); margin-bottom: clamp(18px, 3svh, 32px); }
+  .hero__logo { height: clamp(150px, calc(100svh - var(--hero-top) - var(--hero-bottom) - 140px - 11.5svh), 560px); }
 }
 @keyframes heroFadeIn {
   from { opacity: 0; transform: translateY(20px); }
@@ -473,6 +474,10 @@ html:not(.is-loaded) .hero__tagline,
 html:not(.is-loaded) .hero__cta,
 html:not(.is-loaded) .hero__scroll-indicator {
   animation-play-state: paused;
+}
+.hero--gsap .hero__tagline,
+.hero--gsap .hero__cta {
+  animation: none;
 }
 .hero__scroll-indicator {
   position: absolute;
@@ -724,13 +729,13 @@ html:not(.is-loaded) .hero__scroll-indicator {
   .product-card:hover .product-card__cta span { transform: translateX(4px); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .product-card:not(.rv) .product-card__scarcity-dot::after {
+  .product-card__scarcity-dot::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: 50%;
     background: currentColor;
-    animation: scarcityPulse 1.8s ease-out 3;
+    animation: scarcityPulse 1.8s ease-out infinite;
   }
 }
 @keyframes cardShine {
@@ -2175,23 +2180,17 @@ html:not(.is-loaded) .hero__scroll-indicator {
 
 
 /* ============================================
-   REVEAL — clases que pone gsap-animations.js; solo opacity + transform
+   SPLIT CHARS — TITLE ANIMATION
    ============================================ */
-.rv {
-  opacity: 0;
-  transform: translate3d(0, 28px, 0);
-  transition: none;
+.split-char {
+  display: inline-block;
 }
-.rv.rv--zoom { transform: translate3d(0, 40px, 0) scale(1.06); }
-.rv.rv--line { transform: scaleX(0); }
-.rv.rv--stamp { transform: rotate(-25deg) scale(0.7); }
+.split-line-mask {
+  padding: 0 0.12em 0.12em;
+  margin: 0 -0.12em -0.12em;
+}
 .is-scrolled .announcement-bar__track,
 .is-scrolled .hero__scroll-line { animation-play-state: paused; }
-.rv-run {
-  transition:
-    opacity 0.6s var(--ease-out) var(--rv-d, 0s),
-    transform 0.9s var(--ease-out) var(--rv-d, 0s);
-}
 
 /* ============================================
    LOOKBOOK — DESKTOP MASONRY GRID (≥1024px)

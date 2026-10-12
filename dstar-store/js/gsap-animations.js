@@ -1,68 +1,273 @@
 /* ============================================
-   DSTAR STORE — ANIMACIONES
-   Los revelados solo cambian clases: la transición la hace CSS en el compositor
-   (opacity + transform), sin trabajo de JS por cuadro. El contenido es visible por
-   defecto; aquí se oculta justo antes de observarlo.
+   DSTAR STORE — ANIMACIONES (GSAP + SplitText + WAAPI)
+   El contenido es visible por defecto en el CSS: aquí se oculta justo antes
+   de animarlo, así que si algo falla nunca se queda invisible.
+   Los revelados de scroll usan element.animate() sobre transform/opacity:
+   corren en el compositor y no escriben estilos en cada cuadro.
    ============================================ */
 
-const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const REVEAL_MS = 900;
+if (window.SplitText) gsap.registerPlugin(SplitText);
 
-function reveal(els, { stagger = 60, rootMargin = '0px 0px 6% 0px', cls = '' } = {}) {
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const IS_MOBILE = window.innerWidth <= 768;
+const EASE_OUT = 'expo.out';
+const EASE_IN_OUT = 'expo.inOut';
+const CSS_EASE = {
+  out: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  inOut: 'cubic-bezier(0.87, 0, 0.13, 1)',
+  soft: 'cubic-bezier(0.33, 1, 0.68, 1)'
+};
+
+function revealOnEnter(els, onEnter, rootMargin = '0px 0px -10% 0px') {
   const list = Array.from(els).filter(Boolean);
   if (!list.length) return;
-  list.forEach((el) => el.classList.add('rv', ...(cls ? [cls] : [])));
   const io = new IntersectionObserver((entries) => {
     const batch = entries.filter((e) => e.isIntersecting).map((e) => e.target);
+    if (!batch.length) return;
+    batch.forEach((el) => io.unobserve(el));
     batch.sort((a, b) => list.indexOf(a) - list.indexOf(b));
-    batch.forEach((el, i) => {
-      io.unobserve(el);
-      const delay = Math.min(i * stagger, 300);
-      if (delay) el.style.setProperty('--rv-d', `${delay}ms`);
-      el.classList.add('rv-run');
-      el.classList.remove('rv');
-      setTimeout(() => {
-        el.classList.remove('rv-run', ...(cls ? [cls] : []));
-        el.style.removeProperty('--rv-d');
-      }, REVEAL_MS + delay + 100);
-    });
+    onEnter(batch);
   }, { rootMargin });
   list.forEach((el) => io.observe(el));
 }
 
-function initReveals() {
-  document.querySelectorAll('.section-header').forEach((header) => {
-    reveal([header.querySelector('.section-title'), header.querySelector('.section-sub')], { stagger: 120 });
-    reveal([header.querySelector('.section-line')], { cls: 'rv--line' });
-  });
-  reveal(document.querySelectorAll('.product-card'));
-  reveal(document.querySelectorAll('.lookbook-panel'), { cls: 'rv--zoom' });
-  reveal(document.querySelectorAll('.blog-card'), { stagger: 90 });
-  const about = document.querySelector('.about');
-  if (about) {
-    reveal([about.querySelector('.about__title'), about.querySelector('.about__subtitle'), about.querySelector('.about__desc')], { stagger: 110 });
-    reveal([about.querySelector('.about__stamp')], { cls: 'rv--stamp' });
-    reveal(about.querySelectorAll('.about__value'), { stagger: 110 });
-  }
-  ['.lookbook__footer > *', '.contact__text, .contact__link', '.faq__title', '.faq__item', '.footer__inner > *']
-    .forEach((selector) => reveal(document.querySelectorAll(selector), { stagger: 50, rootMargin: '0px' }));
+// Oculta el elemento con estilos inline estáticos y devuelve la función que lo revela con WAAPI.
+// La animación termina en el estilo natural del elemento (respeta opacidades y transforms propios).
+function prepare(el, from, duration, easing = CSS_EASE.out) {
+  if (!el) return () => {};
+  Object.assign(el.style, from);
+  return (delay = 0) => {
+    Object.keys(from).forEach((prop) => { el.style[prop] = ''; });
+    el.animate([{ ...from, offset: 0 }], { duration: duration * 1000, delay: delay * 1000, easing, fill: 'backwards' });
+  };
 }
 
-function initCounters() {
-  const nums = Array.from(document.querySelectorAll('.about__value-num'));
-  if (!nums.length) return;
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      io.unobserve(entry.target);
-      const num = entry.target;
-      const target = parseInt(num.textContent.trim(), 10);
-      if (isNaN(target)) return;
-      const counter = { n: 0 };
-      gsap.to(counter, { n: target, duration: 1, ease: 'power2.out', onUpdate() { num.textContent = String(Math.round(counter.n)).padStart(2, '0'); } });
+function prepareAll(els, from, duration, easing) {
+  const starts = Array.from(els).map((el) => prepare(el, from, duration, easing));
+  return (delay = 0, stagger = 0) => starts.forEach((start, i) => start(delay + i * stagger));
+}
+
+function safely(roots, fn) {
+  try {
+    fn();
+  } catch (err) {
+    const els = [];
+    Array.from(roots).filter(Boolean).forEach((root) => els.push(root, ...root.querySelectorAll('*')));
+    gsap.set(els, { clearProps: 'opacity,transform,translate,scale,clipPath,visibility' });
+  }
+}
+
+function fontsReady(maxMs = 1800) {
+  if (!document.fonts || !document.fonts.ready) return Promise.resolve();
+  return Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, maxMs))]);
+}
+
+function splitChars(el) {
+  if (!window.SplitText) return [el];
+  return SplitText.create(el, { type: 'lines,chars', mask: 'lines', linesClass: 'split-line', charsClass: 'split-char' }).chars;
+}
+
+function splitLines(el) {
+  if (!window.SplitText) return [el];
+  return SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line' }).lines;
+}
+
+// ============================================
+// HERO — "TODO CON AMOR" entra letra por letra cuando se va el loader
+// ============================================
+function initHero() {
+  const hero = document.querySelector('.hero');
+  if (!hero || window.__dstarLoaded) return;
+  const tagline = hero.querySelector('.hero__tagline');
+  const cta = hero.querySelector('.hero__cta');
+  if (!tagline) return;
+
+  safely([tagline, cta], () => {
+    hero.classList.add('hero--gsap');
+    const chars = window.SplitText ? SplitText.create(tagline, { type: 'chars', charsClass: 'split-char' }).chars : [tagline];
+    gsap.set(chars, { opacity: 0, yPercent: 45, scale: 1.25, filter: `blur(${IS_MOBILE ? 6 : 12}px)` });
+    if (cta) gsap.set(cta, { opacity: 0, y: 26, clipPath: 'inset(0% 100% 0% 0%)', transition: 'none' });
+
+    const play = () => {
+      gsap.timeline({ delay: 0.32 })
+        .to(chars, { opacity: 1, yPercent: 0, scale: 1, filter: 'blur(0px)', duration: 1.3, stagger: 0.055, ease: EASE_OUT, clearProps: 'filter,transform' })
+        .to(cta, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 1, ease: EASE_IN_OUT, clearProps: 'clipPath,transform,transition' }, '-=0.75');
+    };
+    if (window.__dstarLoaded) play();
+    else window.addEventListener('dstar:loaded', play, { once: true });
+  });
+}
+
+// ============================================
+// TÍTULOS DE SECCIÓN — letras que suben desde una máscara + línea que se dibuja
+// ============================================
+function initSectionHeaders() {
+  document.querySelectorAll('.section-header').forEach((header) => {
+    const title = header.querySelector('.section-title');
+    const line = header.querySelector('.section-line');
+    const sub = header.querySelector('.section-sub');
+    safely([header], () => {
+      const chars = prepareAll(title ? splitChars(title) : [], { transform: 'translateY(115%)', opacity: 0 }, 1.05);
+      const lineIn = prepare(line, { transform: 'scaleX(0)' }, 1.1, CSS_EASE.inOut);
+      const subIn = prepare(sub, { opacity: 0, transform: 'translateY(14px)' }, 0.9);
+      revealOnEnter([header], () => {
+        chars(0, 0.04);
+        lineIn(0.15);
+        subIn(0.45);
+      });
     });
   });
-  nums.forEach((num) => io.observe(num));
+}
+
+// ============================================
+// DROPS — cada prenda sube y se asienta, en cascada
+// ============================================
+function initProductReveal() {
+  const cards = Array.from(document.querySelectorAll('.product-card'));
+  if (!cards.length) return;
+  safely(cards, () => {
+    const starts = cards.map((card) => [
+      prepare(card, { opacity: 0 }, 0.9, CSS_EASE.soft),
+      prepare(card.querySelector('.product-card__image'), { transform: 'translateY(10%) scale(0.92)' }, 1.4),
+      prepare(card.querySelector('.product-card__info'), { opacity: 0, transform: 'translateY(22px)' }, 1)
+    ]);
+    revealOnEnter(cards, (batch) => {
+      batch.forEach((card, i) => {
+        const [cardIn, imageIn, infoIn] = starts[cards.indexOf(card)];
+        const at = i * 0.12;
+        cardIn(at);
+        imageIn(at);
+        infoIn(at + 0.18);
+      });
+    }, '0px 0px -6% 0px');
+  });
+}
+
+// ============================================
+// LOOKBOOK — cada foto se descubre de abajo hacia arriba con un zoom que se asienta
+// ============================================
+function initLookbookReveal() {
+  const panels = Array.from(document.querySelectorAll('.lookbook-panel'));
+  if (!panels.length) return;
+  safely(panels, () => {
+    const starts = panels.map((panel) => {
+      const wrap = panel.querySelector('.lookbook-panel__img-wrap');
+      return [
+        prepare(panel, { opacity: 0 }, 0.5, CSS_EASE.soft),
+        prepare(wrap, { translate: '0 100%' }, 1.3, CSS_EASE.inOut),
+        prepare(wrap, { scale: '1.32' }, 1.7),
+        prepare(panel.querySelector('.lookbook-panel__num'), { transform: 'translateY(100%)', opacity: 0 }, 0.9)
+      ];
+    });
+    revealOnEnter(panels, (batch) => {
+      batch.forEach((panel, i) => {
+        const [panelIn, slideIn, zoomIn, numIn] = starts[panels.indexOf(panel)];
+        const at = i * 0.13;
+        panelIn(at);
+        slideIn(at);
+        zoomIn(at + 0.1);
+        numIn(at + 0.75);
+      });
+    }, '0px 0px -8% 0px');
+  });
+}
+
+// ============================================
+// NOSOTROS — texto por líneas, sello que gira, valores en cascada
+// ============================================
+function initAbout() {
+  const about = document.querySelector('.about');
+  if (!about) return;
+  const title = about.querySelector('.about__title');
+  const subtitle = about.querySelector('.about__subtitle');
+  const desc = about.querySelector('.about__desc');
+  const stamp = about.querySelector('.about__stamp');
+  const heroInner = about.querySelector('.about__hero-inner');
+
+  safely([heroInner], () => {
+    const chars = prepareAll(title ? splitChars(title) : [], { transform: 'translateY(115%)', opacity: 0 }, 1.1);
+    const subIn = prepare(subtitle, { opacity: 0, transform: 'translateY(16px)' }, 0.9);
+    const lines = prepareAll(desc ? splitLines(desc) : [], { transform: 'translateY(100%)', opacity: 0 }, 1);
+    const stampIn = prepare(stamp, { opacity: 0, transform: 'rotate(-25deg) scale(0.7)' }, 1.4);
+    revealOnEnter([heroInner], () => {
+      chars(0, 0.06);
+      subIn(0.3);
+      lines(0.4, 0.08);
+      stampIn(0.3);
+    });
+  });
+
+  const values = Array.from(about.querySelectorAll('.about__value'));
+  safely(values, () => {
+    const starts = values.map((value) => prepareAll(value.children, { opacity: 0, transform: 'translateY(24px)' }, 1));
+    values.forEach((value) => {
+      const num = value.querySelector('.about__value-num');
+      if (num) num.dataset.target = num.textContent.trim();
+    });
+    revealOnEnter(values, (batch) => {
+      batch.forEach((value, i) => {
+        starts[values.indexOf(value)](i * 0.14, 0.1);
+        const num = value.querySelector('.about__value-num');
+        const target = num ? parseInt(num.dataset.target, 10) : NaN;
+        if (isNaN(target)) return;
+        const counter = { n: 0 };
+        gsap.to(counter, {
+          n: target,
+          duration: 1.4,
+          delay: i * 0.14,
+          ease: 'power2.out',
+          onUpdate() { num.textContent = String(Math.round(counter.n)).padStart(2, '0'); }
+        });
+      });
+    });
+  });
+}
+
+// ============================================
+// BLOG — la imagen se descubre y el texto sube
+// ============================================
+function initBlogReveal() {
+  const cards = Array.from(document.querySelectorAll('.blog-card'));
+  if (!cards.length) return;
+  safely(cards, () => {
+    const starts = cards.map((card) => [
+      prepare(card, { opacity: 0 }, 0.6, CSS_EASE.soft),
+      prepare(card.querySelector('.blog-card__image'), { opacity: 0, transform: 'scale(1.08)' }, 1.2),
+      prepare(card.querySelector('.blog-card__body'), { opacity: 0, transform: 'translateY(26px)' }, 1)
+    ]);
+    revealOnEnter(cards, (batch) => {
+      batch.forEach((card, i) => {
+        const [cardIn, imageIn, bodyIn] = starts[cards.indexOf(card)];
+        const at = i * 0.12;
+        cardIn(at);
+        imageIn(at);
+        bodyIn(at + 0.35);
+      });
+    }, '0px 0px -6% 0px');
+  });
+}
+
+// ============================================
+// RESTO — FAQ, contacto, enlaces y footer suben en cascada
+// ============================================
+function initRiseIns() {
+  const groups = [
+    '.lookbook__footer > *',
+    '.contact__text, .contact__link',
+    '.faq__title',
+    '.faq__item',
+    '.footer__inner > *'
+  ];
+  groups.forEach((selector) => {
+    const els = Array.from(document.querySelectorAll(selector));
+    if (!els.length) return;
+    safely(els, () => {
+      const starts = els.map((el) => prepare(el, { opacity: 0, transform: 'translateY(22px)' }, 0.9));
+      revealOnEnter(els, (batch) => {
+        batch.forEach((el, i) => starts[els.indexOf(el)](i * 0.07));
+      }, '0px');
+    });
+  });
 }
 
 // ============================================
@@ -413,7 +618,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (!REDUCED_MOTION && window.gsap) {
-      [initReveals, initCounters].forEach(run);
+      [initProductReveal, initLookbookReveal, initBlogReveal, initRiseIns].forEach(run);
+      fontsReady().then(() => [initHero, initSectionHeaders, initAbout].forEach(run));
     }
     [initLookbook, initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
   });

@@ -31,6 +31,7 @@ Actualizado: 2026-10-12.
 - Alertas por correo a la tienda: guía de Skydropx fallida, monto que no coincide, sobreventa y pago sin datos.
 - Animaciones rehechas sin ocultar contenido si GSAP falla; GSAP servido desde el sitio; sin pantalla negra en transiciones; logo 3D sin rectángulo.
 - Fluidez en desktop: reveals con clases y transición CSS en vez de tweens de GSAP, sin SplitText en el index, logo 3D a 30 fps con dpr máximo 2 y en pausa fuera de pantalla, un solo contexto WebGL en visitas repetidas, marquesina pausada al hacer scroll y prefetch de producto solo con intención de hover.
+- Animaciones ricas de vuelta (hero letra por letra, títulos con SplitText, tarjetas con zoom, cortina del lookbook, Nosotros, blog) con revelados por WAAPI en el compositor en vez de tweens de GSAP o clases `.rv`; logo 3D sin tope de 30 fps (dibuja cada cuadro del video, dpr máximo 2, en pausa fuera de pantalla); logo del hero de desktop más grande sin chocar con el header; scroll de `app.js` sin recálculo forzado de estilos.
 - 136 pruebas E2E pasando.
 
 ## Hecho el 2026-10-11

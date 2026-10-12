@@ -6,7 +6,7 @@ tipo: "librería"
 
 # GSAP
 
-Animación del sitio (contador, cursor, botones magnéticos; SplitText en blog y páginas sueltas). Se sirve desde js/vendor del propio sitio.
+Animación del sitio (hero, contador, cursor, botones magnéticos; SplitText en el index, el blog y páginas sueltas). Se sirve desde js/vendor del propio sitio.
 
 Paquete npm: `gsap`
 
