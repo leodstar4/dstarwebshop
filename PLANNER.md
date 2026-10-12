@@ -1,19 +1,17 @@
 # DSTAR — Lo que falta
 
-Actualizado: 2026-10-11, después de la auditoría de seguridad.
+Actualizado: 2026-10-12.
 
 ## Prioridad alta (afecta ventas o es obligatorio)
 
 - [ ] **Aviso de privacidad.** El checkout pide nombre, correo, teléfono y dirección; en México la LFPDPPP exige un aviso de privacidad visible antes de recolectarlos. Crear `aviso-de-privacidad.html` y enlazarlo en el footer y junto al botón PAGAR.
-- [ ] **Términos, envíos y devoluciones.** PROFECO pide que la tienda en línea informe precio total, tiempos de entrega, política de cambios/devoluciones y datos de contacto. Crear `terminos.html`.
-- [ ] **El stock no baja al vender.** `js/products-data.js` es estático: si quedan 1 pieza talla S y dos personas pagan, se venden 2. Opción simple: guardar el stock en Netlify Blobs, descontarlo en `mp-webhook` y leerlo en `mp-preference` y en la página.
-- [ ] **Alerta de pedidos con problemas.** Si Skydropx falla al crear la guía, o el monto pagado no coincide, solo queda en los logs de Netlify. Mandar un correo a la tienda en esos casos.
-- [ ] **Probar en un iPhone real** el logo 3D con modo de ahorro de batería activado.
+- [ ] **Datos del proveedor en los términos.** PROFECO pide razón social, domicilio y teléfono; agregarlos en `terminos.html`.
+- [ ] **Probar en un iPhone real** el logo 3D con modo de ahorro de batería activado y que drops y lookbook aparezcan.
 
 ## Prioridad media
 
 - [ ] **Enlaces rotos de redes:** INSTAGRAM y TIKTOK con `href="#"` en `index.html`, `producto.html`, `agradecimientos.html` y los 3 artículos del blog.
-- [ ] **Límite de peticiones** en `/api/cotizar-envio` y `/api/mp-preference`. Ya se rechazan peticiones de otros sitios, pero un script puede llamarlas directo. Migrar a Netlify Functions v2 y usar `config.rateLimit`.
+- [ ] **Límite de peticiones** en `/api/cotizar-envio`, `/api/mp-preference` y `/api/stock`. Ya se rechazan peticiones de otros sitios, pero un script puede llamarlas directo. Migrar a Netlify Functions v2 y usar `config.rateLimit`.
 - [ ] **Quitar `'unsafe-inline'` de `script-src`.** Mover los scripts inline (loader, fade de transición, checkout) a archivos `.js`, o usar hashes en la CSP.
 - [ ] **Panel de pedidos.** Hoy los pedidos solo existen en los correos y en Mercado Pago. Una página protegida (Netlify Identity o contraseña) que liste los pedidos de Blobs con su guía.
 - [ ] **SEO básico:** no hay `robots.txt`, `sitemap.xml` ni `<link rel="canonical">`.
@@ -26,7 +24,15 @@ Actualizado: 2026-10-11, después de la auditoría de seguridad.
 - [ ] Analítica respetuosa de privacidad (Plausible o Netlify Analytics).
 - [ ] Prueba E2E del logo con autoplay bloqueado (necesita Chrome con H.264: `channel: 'chrome'`).
 
-## Hecho en esta ronda
+## Hecho el 2026-10-12
+
+- Términos, envíos y devoluciones en `terminos.html`, enlazados en los footers y junto a PAGAR; FAQ de devoluciones actualizada.
+- Stock vivo en Netlify Blobs: el webhook descuenta cada venta una sola vez, `mp-preference` valida contra el stock real y `/api/stock` actualiza tarjetas, tallas y carrito.
+- Alertas por correo a la tienda: guía de Skydropx fallida, monto que no coincide, sobreventa y pago sin datos.
+- Animaciones rehechas sin ocultar contenido si GSAP falla; GSAP servido desde el sitio; sin pantalla negra en transiciones; logo 3D sin rectángulo.
+- 136 pruebas E2E pasando.
+
+## Hecho el 2026-10-11
 
 - Logo 3D idéntico en modo de ahorro de batería (WebCodecs en vez de giro CSS).
 - Webhook de Mercado Pago: rechaza avisos sin firma válida y ya no puede crear dos guías para el mismo pago cuando llegan avisos simultáneos.

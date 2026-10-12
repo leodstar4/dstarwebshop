@@ -9,11 +9,15 @@
 # Dependencias
 node_modules/
 
-# Claude Code local settings
-.claude/
+# Claude Code local settings (los agentes sí van al repo)
+.claude/*
+!.claude/agents/
 
 # Artefactos de test / build (no van al repo)
 dstar-store/test-results/
 dstar-store/playwright-report/
 dstar-store/email-preview.html
 dstar-store/dist/
+
+# Obsidian (configuración local del vault)
+.obsidian/

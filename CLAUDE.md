@@ -44,3 +44,10 @@
   - Console.logs de debug
   - Comentarios de código muerto
   - Errores de accesibilidad
+
+## Contexto del proyecto (grafo)
+- Mapa del proyecto en `docs/`: abre la carpeta del repo como bóveda en Obsidian y empieza por `docs/grafo/hubs/DSTAR.md`
+- Notas de contexto escritas a mano en `docs/contexto/` (flujo de compra, seguridad, despliegue, pendientes)
+- Las notas de `docs/grafo/` se generan con `node docs/generar-grafo.js`; vuelve a correrlo después de agregar o mover archivos de código
+- Antes de planear o implementar un cambio, usa el agente `grafo-contexto` para obtener los archivos, conexiones y reglas relevantes en vez de leer el código completo
+- Después de cambiar código (y antes del commit), usa el agente `grafo-actualizador` para regenerar el grafo, corregir las notas de `docs/contexto/` y marcar pendientes resueltos

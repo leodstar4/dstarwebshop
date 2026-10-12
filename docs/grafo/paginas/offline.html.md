@@ -1,0 +1,20 @@
+---
+tags: [codigo, pagina]
+ruta: "dstar-store/offline.html"
+lineas: 47
+---
+%% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
+
+# offline.html
+
+`dstar-store/offline.html` · 47 líneas
+
+Página sin conexión de la PWA.
+
+Parte de: [[Páginas]]
+
+## Últimos cambios
+
+- 2026-10-10 · `be7be88` · Restaura fondo y cards flotantes, logo 3D nuevo y hero en svh para evitar tirones
+- 2026-10-10 · `8b73af2` · Rediseño premium, seguridad de pagos, fluidez y PWA
+
