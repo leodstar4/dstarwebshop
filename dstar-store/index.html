@@ -73,11 +73,17 @@
         logo && !logo.complete ? wait(logo, 1500) : null,
         css && css.media !== 'all' ? wait(css, 2500) : null,
         matchMedia('(prefers-reduced-motion: reduce)').matches ? null : new Promise(function (resolve) {
-          loader.addEventListener('logo3d:live', function () { setTimeout(resolve, 900); }, { once: true });
-          setTimeout(resolve, 2600);
+          var cap = setTimeout(resolve, 2600);
+          loader.addEventListener('logo3d:live', function () { clearTimeout(cap); setTimeout(resolve, 900); }, { once: true });
+          loader.addEventListener('logo3d:decoding', function () {
+            clearTimeout(cap);
+            cap = setTimeout(resolve, 4200);
+            clearTimeout(hardHide);
+            hardHide = setTimeout(hide, 4600);
+          }, { once: true });
         })
       ]).then(hide);
-      setTimeout(hide, 3000);
+      var hardHide = setTimeout(hide, 3000);
     })();
   </script>
 
@@ -313,7 +319,7 @@
   </div>
 
   <!-- GSAP (local) -->
-  <script src="js/logo-3d.js?v=5" defer></script>
+  <script src="js/logo-3d.js?v=6" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/SplitText.min.js" integrity="sha384-iJQU/7haAHHrfeX4o0uooRF7Po6K7IhD+YU5dustu1NfalmSBYI7pbX6wAtx2f9j" crossorigin="anonymous" defer></script>
   <script src="js/products-data.js?v=1" defer></script>

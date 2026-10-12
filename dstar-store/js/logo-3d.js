@@ -237,8 +237,13 @@
     document.addEventListener('visibilitychange', () => (document.hidden ? (running = false) : resume()));
     window.addEventListener('pageshow', (e) => { if (e.persisted) resume(); });
     const t0 = performance.now();
+    let first = false;
     const preroll = () => {
       if (failed) return;
+      if (!first && queue.length) {
+        first = true;
+        render(queue[0]);
+      }
       if (queue.length >= 6 || performance.now() - t0 > 1500) resume();
       else requestAnimationFrame(preroll);
     };
@@ -258,9 +263,8 @@
   video.setAttribute('aria-hidden', 'true');
   video.setAttribute('tabindex', '-1');
   video.className = 'logo-3d__source';
+  video.src = SRC;
   host.appendChild(video);
-
-  const bytes = fetch(SRC).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
 
   let mode = 'video';
   const fallback = () => {
@@ -270,7 +274,8 @@
     video.removeAttribute('src');
     video.load();
     video.remove();
-    bytes.then(playDecoded).catch(() => false).then((ok) => { if (!ok) release(); });
+    els.forEach((el) => el.dispatchEvent(new CustomEvent('logo3d:decoding', { bubbles: true })));
+    fetch(SRC).then((r) => (r.ok ? r.arrayBuffer() : null)).then(playDecoded).catch(() => false).then((ok) => { if (!ok) release(); });
   };
 
   const draw = () => {
@@ -312,10 +317,6 @@
   document.addEventListener('visibilitychange', () => (document.hidden ? video.pause() : play()));
   window.addEventListener('resize', () => views.forEach((v) => v.resize()), { passive: true });
   window.addEventListener('pageshow', (e) => { if (e.persisted) play(); });
-  bytes.then((buf) => {
-    if (mode !== 'video') return;
-    video.src = buf ? URL.createObjectURL(new Blob([buf], { type: 'video/mp4' })) : SRC;
-    play();
-    setTimeout(() => { if (mode === 'video' && !document.hidden && (video.paused || video.currentTime === 0)) fallback(); }, 1200);
-  });
+  play();
+  setTimeout(() => { if (mode === 'video' && !document.hidden && video.paused && !views.some((v) => v.ready)) fallback(); }, 2500);
 })();
