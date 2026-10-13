@@ -9,9 +9,6 @@
 if (window.SplitText) gsap.registerPlugin(SplitText);
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const IS_MOBILE = window.innerWidth <= 768;
-const EASE_OUT = 'expo.out';
-const BLUR_EASE = (x) => (1 - Math.pow(2, -5 * x)) / (1 - Math.pow(2, -5));
 const CSS_EASE = {
   out: 'cubic-bezier(0.16, 1, 0.3, 1)',
   inOut: 'cubic-bezier(0.87, 0, 0.13, 1)',
@@ -86,14 +83,17 @@ function initHero() {
   safely([tagline, cta], () => {
     hero.classList.add('hero--gsap');
     const chars = window.SplitText ? SplitText.create(tagline, { type: 'chars', charsClass: 'split-char' }).chars : [tagline];
-    gsap.set(chars, { opacity: 0, yPercent: 45, scale: 1.25, filter: `blur(${IS_MOBILE ? 6 : 12}px)` });
-    if (cta) gsap.set(cta, { opacity: 0, y: 26, clipPath: 'inset(0% 100% 0% 0%)', transition: 'none' });
+    const charsIn = prepareAll(chars, { opacity: 0, transform: 'translateY(45%) scale(1.25)' }, 1.3);
+    if (cta) cta.style.opacity = '0';
+    const ctaIn = (delay) => {
+      if (!cta) return;
+      cta.style.opacity = '';
+      cta.animate([{ opacity: 0, transform: 'translateY(26px) scale(0.96)', offset: 0 }], { duration: 800, delay: delay * 1000, easing: CSS_EASE.out, fill: 'backwards' });
+    };
 
     const play = () => {
-      gsap.timeline({ delay: 0.32 })
-        .to(chars, { opacity: 1, yPercent: 0, scale: 1, duration: 1.3, stagger: 0.055, ease: EASE_OUT, clearProps: 'transform' }, 0)
-        .to(chars, { filter: 'blur(0px)', duration: 0.65, stagger: 0.055, ease: BLUR_EASE, clearProps: 'filter' }, 0)
-        .to(cta, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.8, ease: EASE_OUT, clearProps: 'clipPath,transform,transition' }, 0.15);
+      charsIn(0.32, 0.055);
+      ctaIn(0.47);
     };
     if (window.__dstarLoaded) play();
     else window.addEventListener('dstar:loaded', play, { once: true });

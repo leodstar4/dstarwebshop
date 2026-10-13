@@ -9,6 +9,10 @@ Commits del repo, del más reciente al más antiguo. Cada archivo de código lis
 
 Parte de: [[DSTAR]]
 
+## 2026-10-13
+
+- `3ae33e4` Logo 3D más fluido y nítido en celulares y botón VER DROPS que aparece antes
+
 ## 2026-10-12
 
 - `cded92a` Fluidez y proporciones: logo 3D en Web Worker, imágenes AVIF, hero y tarjetas a la medida de cada pantalla

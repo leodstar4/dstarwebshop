@@ -6,7 +6,7 @@
 // está sujeto a la política de autoplay, y se ve idéntico. Si nada de eso existe se queda el póster.
 (function () {
   const SRC = '/assets/brand/logo-3d.mp4?v=2';
-  const WORKER = '/js/logo-3d-worker.js?v=2';
+  const WORKER = '/js/logo-3d-worker.js?v=3';
   const FRAME_MS = 1000 / 60;
   const els = Array.from(document.querySelectorAll('[data-logo-3d]'));
   if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -20,12 +20,18 @@
     const w = Math.min(560, Math.round(width * dpr));
     return { w, h: Math.round(w * 820 / 560) };
   };
-  const shown = (el, inView) => inView && !el.closest('.loader.hidden');
+  const held = () => !window.__dstarLoaded && !!document.getElementById('loader');
 
   function runWorker() {
-    let worker;
+    let worker = window.__logo3dWorker;
+    window.__logo3dWorker = null;
+    if (worker && worker.failed) {
+      worker.terminate();
+      return false;
+    }
+    const early = !!worker;
     try {
-      worker = new Worker(WORKER);
+      if (!worker) worker = new Worker(WORKER);
     } catch (err) {
       return false;
     }
@@ -39,7 +45,8 @@
     let stopped = false;
     const sync = () => {
       if (stopped) return;
-      views.forEach((v) => worker.postMessage({ type: 'visible', id: v.id, visible: shown(v.el, v.inView) }));
+      worker.postMessage({ type: 'hold', held: held() });
+      views.forEach((v) => worker.postMessage({ type: 'visible', id: v.id, visible: v.inView }));
     };
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
@@ -86,9 +93,10 @@
       }
     };
     try {
+      worker.postMessage({ type: 'hold', held: held() });
       views.forEach((v) => {
         const canvas = v.canvas.transferControlToOffscreen();
-        worker.postMessage({ type: 'view', id: v.id, canvas, loader: !!v.el.closest('.loader'), visible: shown(v.el, true), ...sizeOf(v.el) }, [canvas]);
+        worker.postMessage({ type: 'view', id: v.id, canvas, visible: true, ...sizeOf(v.el) }, [canvas]);
       });
     } catch (err) {
       stop();
@@ -100,7 +108,7 @@
     });
     window.addEventListener('dstar:loaded', sync);
     document.addEventListener('visibilitychange', onVisibility);
-    worker.postMessage({ type: 'start', src: SRC });
+    if (!early) worker.postMessage({ type: 'start', src: SRC });
     return true;
   }
 
@@ -154,7 +162,7 @@
       return;
     }
 
-    const visible = (v) => shown(v.el, v.inView);
+    const visible = (v) => v.inView;
 
     let staging = null;
     const upload = (gl, source) => {
@@ -176,11 +184,10 @@
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, staging.canvas);
     };
 
-    const inLoader = (v) => !!v.el.closest('.loader');
     const render = (source) => {
-      const loaderUp = views.some((v) => inLoader(v) && visible(v));
+      const wait = held();
       for (const v of views) {
-        if (!visible(v) || (loaderUp && v.ready && !inLoader(v))) continue;
+        if (!visible(v) || (wait && v.ready)) continue;
         upload(v.gl, source);
         v.gl.drawArrays(v.gl.TRIANGLE_STRIP, 0, 4);
         if (!v.ready) {
@@ -370,7 +377,6 @@
       video.removeAttribute('src');
       video.load();
       video.remove();
-      els.forEach((el) => el.dispatchEvent(new CustomEvent('logo3d:decoding', { bubbles: true })));
       fetch(SRC).then((r) => (r.ok ? r.arrayBuffer() : null)).then(playDecoded).catch(() => false).then((ok) => { if (!ok) release(); });
     };
 

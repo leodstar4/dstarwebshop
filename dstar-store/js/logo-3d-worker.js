@@ -14,6 +14,8 @@ let rafId = 0;
 let last = 0;
 let debt = 0;
 let hidden = false;
+let held = false;
+let spare = null;
 let primed = false;
 let started = 0;
 
@@ -136,10 +138,8 @@ function feed() {
 }
 
 function draw(frame) {
-  const list = [...views.values()];
-  const loaderUp = list.some((v) => v.loader && v.visible);
-  for (const v of list) {
-    if (!v.visible || (loaderUp && v.ready && !v.loader)) continue;
+  for (const v of views.values()) {
+    if (!v.visible || (held && v.ready)) continue;
     v.gl.texImage2D(v.gl.TEXTURE_2D, 0, v.gl.RGBA, v.gl.RGBA, v.gl.UNSIGNED_BYTE, frame);
     v.gl.drawArrays(v.gl.TRIANGLE_STRIP, 0, 4);
     v.dirty = false;
@@ -173,7 +173,7 @@ function tick(now) {
 }
 
 function update() {
-  const want = !failed && !hidden && primed && [...views.values()].some((v) => v.visible);
+  const want = !failed && !hidden && !held && primed && [...views.values()].some((v) => v.visible);
   if (want && !running) {
     running = true;
     last = 0;
@@ -186,9 +186,13 @@ function update() {
   }
 }
 
+function prime() {
+  if (!failed && queue.length && [...views.values()].some((v) => v.visible && !v.ready)) draw(queue[0]);
+}
+
 function preroll() {
   if (failed || primed) return;
-  if (queue.length && [...views.values()].some((v) => v.visible && !v.ready)) draw(queue[0]);
+  prime();
   if (queue.length >= 6 || performance.now() - started > 1500) {
     primed = true;
     update();
@@ -200,7 +204,9 @@ function preroll() {
 async function start(src) {
   try {
     if (!('VideoDecoder' in self) || typeof requestAnimationFrame !== 'function') return fail('sin-soporte');
-    const res = await fetch(src);
+    const req = fetch(src);
+    if (!views.size && typeof OffscreenCanvas === 'function') spare = createGL(new OffscreenCanvas(1, 1));
+    const res = await req;
     if (!res.ok) return fail('http');
     mp4 = parseMp4(await res.arrayBuffer());
     if (!mp4) return fail('mp4');
@@ -229,15 +235,25 @@ onmessage = (e) => {
   if (m.type === 'view') {
     const gl = createGL(m.canvas);
     if (!gl) return fail('webgl');
-    const v = { id: m.id, canvas: m.canvas, gl, loader: m.loader, visible: m.visible, ready: false, dirty: true };
+    const v = { id: m.id, canvas: m.canvas, gl, visible: m.visible, ready: false, dirty: true };
     views.set(m.id, v);
     resize(v, m.w, m.h);
+    if (spare) {
+      const lose = spare.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
+      spare = null;
+    }
+    prime();
   } else if (m.type === 'size') {
     const v = views.get(m.id);
     if (v) resize(v, m.w, m.h);
   } else if (m.type === 'visible') {
     const v = views.get(m.id);
     if (v) v.visible = m.visible;
+    prime();
+    update();
+  } else if (m.type === 'hold') {
+    held = m.held;
     update();
   } else if (m.type === 'hidden') {
     hidden = m.hidden;

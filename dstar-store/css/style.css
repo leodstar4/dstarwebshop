@@ -141,9 +141,10 @@ ul { list-style: none; }
   align-items: center;
   justify-content: center;
   gap: 24px;
-  transition: opacity 0.6s var(--ease), visibility 0.6s;
+  transition: opacity 0.6s var(--ease);
 }
-.loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader.hidden { opacity: 0; pointer-events: none; }
+.loader--gone { visibility: hidden; }
 .loader.hidden .loader__fill { animation: none; }
 .logo-3d { position: relative; aspect-ratio: 560 / 820; }
 .logo-3d img,
@@ -155,6 +156,7 @@ ul { list-style: none; }
 .loader__logo {
   height: clamp(140px, 28dvh, 280px);
 }
+.loader__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: lighten; }
 .loader__bar {
   width: 120px;
   height: 2px;

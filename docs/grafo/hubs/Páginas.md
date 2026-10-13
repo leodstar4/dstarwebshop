@@ -18,7 +18,7 @@ Parte de: [[DSTAR]]
 - [[dstar-preview.html]] — Vista previa estática grande del sitio, en la raíz del repo.
 - [[error-pago.html]] — Pantalla cuando el pago falla.
 - [[gracias.html]] — Confirmación después de un pago exitoso.
-- [[index.html]] — Página principal: loader (solo en la primera visita de la sesión, sessionStorage dstar-intro), hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
+- [[index.html]] — Página principal: loader cuyo script inline cambia el póster por un `<video>` (logo-3d-loader.mp4, sin alfa, con mix-blend-mode: lighten), crea temprano el worker de logo-3d-worker.js y solo en la primera visita de la sesión (sessionStorage dstar-intro) espera a que gire y a que el logo del hero esté listo; hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
 - [[offline.html]] — Página sin conexión de la PWA.
 - [[pago-pendiente.html]] — Pantalla cuando el pago queda pendiente de confirmar.
 - [[producto.html]] — Detalle de producto: galería, selector de talla y botón de compra; precarga desde el `<head>` la primera foto en AVIF con las mismas URLs e imagesizes que usa app.js.

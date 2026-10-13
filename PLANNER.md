@@ -1,12 +1,12 @@
 # DSTAR — Lo que falta
 
-Actualizado: 2026-10-12.
+Actualizado: 2026-10-13.
 
 ## Prioridad alta (afecta ventas o es obligatorio)
 
 - [ ] **Aviso de privacidad.** El checkout pide nombre, correo, teléfono y dirección; en México la LFPDPPP exige un aviso de privacidad visible antes de recolectarlos. Crear `aviso-de-privacidad.html` y enlazarlo en el footer y junto al botón PAGAR.
 - [ ] **Datos del proveedor en los términos.** PROFECO pide razón social, domicilio y teléfono; agregarlos en `terminos.html`.
-- [ ] **Probar en un iPhone real** el logo 3D con modo de ahorro de batería activado y que drops y lookbook aparezcan.
+- [ ] **Probar en un iPhone real** el logo 3D con modo de ahorro de batería activado, el video del loader (`logo-3d-loader.mp4`) y que drops y lookbook aparezcan.
 
 ## Prioridad media
 

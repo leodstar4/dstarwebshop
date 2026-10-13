@@ -28,19 +28,21 @@
     .css-pending body > :not(#loader) { visibility: hidden; }
     .no-tr *:not(#loader), .no-tr *::before, .no-tr *::after { transition: none !important; }
     body { margin: 0; background: #0a0a0a; }
-    .loader { position: fixed; inset: 0; z-index: 9999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.6s; }
-    .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader { position: fixed; inset: 0; z-index: 9999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+    .loader.hidden { opacity: 0; pointer-events: none; }
+    .loader--gone { visibility: hidden; }
     .loader.hidden .loader__fill { animation: none; }
     .logo-3d { position: relative; aspect-ratio: 560 / 820; }
     .logo-3d img, .logo-3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
     .loader__logo { display: block; height: clamp(140px, 28dvh, 280px); }
+    .loader__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: lighten; }
     .loader__bar { width: 120px; height: 2px; background: #5c5c57; border-radius: 2px; overflow: hidden; }
     .loader__fill { height: 100%; background: #f0ede8; transform-origin: 0 50%; animation: loadBar 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=35" media="print" onload="this.media='all';var d=document.documentElement;d.classList.remove('css-pending');requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('no-tr')})})">
-  <noscript><link rel="stylesheet" href="css/style.css?v=35"></noscript>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=36" media="print" onload="this.media='all';var d=document.documentElement;d.classList.remove('css-pending');requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('no-tr')})})">
+  <noscript><link rel="stylesheet" href="css/style.css?v=36"></noscript>
 </head>
 <body>
   <!-- SCROLL PROGRESS -->
@@ -48,7 +50,7 @@
 
   <!-- LOADER -->
   <div id="loader" class="loader">
-    <div class="loader__logo logo-3d" data-logo-3d>
+    <div class="loader__logo logo-3d">
       <img src="/assets/brand/logo-3d-poster-640.webp?v=1" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 192px, 130px" width="192" height="280" alt="DSTAR" fetchpriority="high" loading="eager" decoding="async">
     </div>
     <div class="loader__bar"><div class="loader__fill"></div></div>
@@ -56,6 +58,9 @@
   <script>
     (function () {
       var loader = document.getElementById('loader');
+      var box = loader.querySelector('.loader__logo');
+      var logo = box.querySelector('img');
+      var video = null;
       var hide = function () {
         if (window.__dstarLoaded) return;
         window.__dstarLoaded = true;
@@ -63,6 +68,14 @@
         document.documentElement.classList.add('is-loaded');
         loader.classList.add('hidden');
         window.dispatchEvent(new Event('dstar:loaded'));
+        setTimeout(function () {
+          loader.classList.add('loader--gone');
+          if (!video) return;
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+          video.remove();
+        }, 650);
       };
       var wait = function (el, ms) {
         return new Promise(function (resolve) {
@@ -72,32 +85,55 @@
           setTimeout(resolve, ms);
         });
       };
-      var logo = loader.querySelector('img');
       var css = document.getElementById('mainCss');
       var visto = false;
       try { visto = sessionStorage.getItem('dstar-intro') === '1'; sessionStorage.setItem('dstar-intro', '1'); } catch (e) {}
+      var quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!quieto && navigator.userAgentData && 'transferControlToOffscreen' in HTMLCanvasElement.prototype && 'VideoDecoder' in window) {
+        try {
+          var worker = new Worker('/js/logo-3d-worker.js?v=3');
+          worker.onmessage = function (e) { if (e.data.type === 'error') worker.failed = true; };
+          worker.onerror = function () { worker.failed = true; };
+          worker.postMessage({ type: 'start', src: '/assets/brand/logo-3d.mp4?v=2' });
+          window.__logo3dWorker = worker;
+        } catch (e) {}
+      }
+      if (!quieto) {
+        video = document.createElement('video');
+        video.muted = true;
+        video.defaultMuted = true;
+        video.loop = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        ['muted', 'autoplay', 'loop', 'playsinline'].forEach(function (a) { video.setAttribute(a, ''); });
+        video.setAttribute('aria-hidden', 'true');
+        video.setAttribute('tabindex', '-1');
+        video.className = 'loader__video';
+        video.poster = logo.getAttribute('src');
+        video.src = '/assets/brand/logo-3d-loader.mp4?v=1';
+        box.replaceChild(video, logo);
+        var play = video.play();
+        if (play && play.catch) play.catch(function () {});
+      }
       if (visto) {
         loader.style.transition = 'none';
-        loader.querySelector('[data-logo-3d]').removeAttribute('data-logo-3d');
         Promise.resolve(css && css.media !== 'all' ? wait(css, 2500) : null).then(hide);
         return;
       }
       Promise.all([
         new Promise(function (resolve) { setTimeout(resolve, 450); }),
-        logo && !logo.complete ? wait(logo, 1500) : null,
         css && css.media !== 'all' ? wait(css, 2500) : null,
-        matchMedia('(prefers-reduced-motion: reduce)').matches ? null : new Promise(function (resolve) {
+        quieto ? null : new Promise(function (resolve) {
           var cap = setTimeout(resolve, 2600);
-          loader.addEventListener('logo3d:live', function () { clearTimeout(cap); setTimeout(resolve, 900); }, { once: true });
-          loader.addEventListener('logo3d:decoding', function () {
-            clearTimeout(cap);
-            cap = setTimeout(resolve, 4200);
-            clearTimeout(hardHide);
-            hardHide = setTimeout(hide, 4600);
-          }, { once: true });
+          var girado = false;
+          var listo = false;
+          var check = function () { if (girado && listo) { clearTimeout(cap); resolve(); } };
+          video.addEventListener('playing', function () { setTimeout(function () { girado = true; check(); }, 900); }, { once: true });
+          document.addEventListener('logo3d:live', function () { listo = true; check(); }, { once: true });
         })
       ]).then(hide);
-      var hardHide = setTimeout(hide, 3000);
+      setTimeout(hide, 3000);
     })();
   </script>
 
@@ -334,13 +370,13 @@
   </div>
 
   <!-- GSAP (local) -->
-  <script src="js/logo-3d.js?v=11" defer></script>
+  <script src="js/logo-3d.js?v=12" defer></script>
   <script src="js/vendor/gsap.min.js?v=3.14.2" defer></script>
   <script src="js/vendor/SplitText.min.js?v=3.14.2" defer></script>
   <script src="js/products-data.js?v=1" defer></script>
   <script src="js/cart-store.js?v=2" defer></script>
   <script src="js/app.js?v=35" defer></script>
-  <script src="js/gsap-animations.js?v=16" defer></script>
+  <script src="js/gsap-animations.js?v=17" defer></script>
   <script src="js/blog-transitions.js?v=7" defer></script>
 </body>
 </html>
