@@ -6,7 +6,7 @@ tipo: "librería"
 
 # GSAP
 
-Animación del sitio (hero, contador, cursor, botones magnéticos; SplitText en el index, el blog y páginas sueltas). Se sirve desde js/vendor del propio sitio.
+Animación del sitio (hero, contador, cursor, botones magnéticos; SplitText en el index, el blog y términos). Se sirve desde js/vendor del propio sitio.
 
 Paquete npm: `gsap`
 
@@ -14,7 +14,6 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
-- [[agradecimientos.html]]
 - [[born-to-shine-detras-del-drop.html]]
 - [[como-cuidar-tu-ropa.html]]
 - [[streetwear-mexico-escena.html]]

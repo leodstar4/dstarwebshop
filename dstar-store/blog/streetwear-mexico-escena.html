@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="../css/style.css?v=33">
+  <link rel="stylesheet" href="../css/style.css?v=34">
 </head>
 <body>
 
@@ -96,8 +96,11 @@
 
   <!-- IMAGEN DESTACADA -->
   <div class="blog-post__featured">
-    <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,w_900/blog02_ayh36o.jpg" alt="Streetwear México"
-         onerror="this.style.background='#141414'; this.style.minHeight='300px'" fetchpriority="high" decoding="async">
+    <picture>
+      <source type="image/avif" srcset="https://res.cloudinary.com/dflyysqln/image/upload/f_avif,q_auto,dpr_auto,c_fill,ar_16:9,g_center,w_600/blog02_ayh36o.jpg 600w, https://res.cloudinary.com/dflyysqln/image/upload/f_avif,q_auto,dpr_auto,c_fill,ar_16:9,g_center,w_900/blog02_ayh36o.jpg 900w, https://res.cloudinary.com/dflyysqln/image/upload/f_avif,q_auto,dpr_auto,c_fill,ar_16:9,g_center,w_1300/blog02_ayh36o.jpg 1300w" sizes="(max-width: 900px) calc(100vw - 40px), 860px">
+      <img src="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,dpr_auto,c_fill,ar_16:9,g_center,w_900/blog02_ayh36o.jpg" srcset="https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,dpr_auto,c_fill,ar_16:9,g_center,w_600/blog02_ayh36o.jpg 600w, https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,dpr_auto,c_fill,ar_16:9,g_center,w_900/blog02_ayh36o.jpg 900w, https://res.cloudinary.com/dflyysqln/image/upload/f_auto,q_auto,dpr_auto,c_fill,ar_16:9,g_center,w_1300/blog02_ayh36o.jpg 1300w" sizes="(max-width: 900px) calc(100vw - 40px), 860px" alt="Streetwear México" width="860" height="484"
+           onerror="this.style.background='#141414'; this.style.minHeight='300px'" fetchpriority="high" decoding="async">
+    </picture>
   </div>
 
   <!-- CONTENIDO -->
@@ -218,7 +221,7 @@
 
   <script src="../js/products-data.js?v=1"></script>
   <script src="../js/cart-store.js?v=2"></script>
-  <script src="../js/app.js?v=34"></script>
+  <script src="../js/app.js?v=35"></script>
   <script src="../js/vendor/gsap.min.js?v=3.14.2"></script>
   <script src="../js/vendor/SplitText.min.js?v=3.14.2"></script>
   <script src="../js/blog-transitions.js?v=7"></script>

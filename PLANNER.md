@@ -33,6 +33,8 @@ Actualizado: 2026-10-12.
 - Fluidez en desktop: reveals con clases y transición CSS en vez de tweens de GSAP, sin SplitText en el index, logo 3D a 30 fps con dpr máximo 2 y en pausa fuera de pantalla, un solo contexto WebGL en visitas repetidas, marquesina pausada al hacer scroll y prefetch de producto solo con intención de hover.
 - Animaciones ricas de vuelta (hero letra por letra, títulos con SplitText, tarjetas con zoom, cortina del lookbook, Nosotros, blog) con revelados por WAAPI en el compositor en vez de tweens de GSAP o clases `.rv`; logo 3D sin tope de 30 fps (dibuja cada cuadro del video, dpr máximo 2, en pausa fuera de pantalla); logo del hero de desktop más grande sin chocar con el header; scroll de `app.js` sin recálculo forzado de estilos.
 - 136 pruebas E2E pasando.
+- Auditoría de fluidez y proporciones: logo 3D en un Web Worker en Chromium (`logo-3d-worker.js`, WebCodecs + OffscreenCanvas) con el `<video>` como respaldo y canvas medido con ResizeObserver; fotos en AVIF con `<picture>` y `f_auto` de respaldo (tarjetas, lookbook, blog, carrito, producto y checkout, que ya no baja las fotos originales); service worker con imágenes de Cloudinary cache-first; hero de móvil sin `min-height: 700px` y con regla para celular en horizontal; tarjetas en 4:3; ficha de producto a dos columnas en tablets verticales; blur del hero más corto; revelados que no se pierden con un scroll rápido; sin transiciones al aplicarse el CSS asíncrono; escalonado del menú móvil restaurado; `vh` cambiado a `svh`/`dvh`.
+- 133 pruebas E2E pasando después de la auditoría (23 omitidas, 0 fallando).
 
 ## Hecho el 2026-10-11
 

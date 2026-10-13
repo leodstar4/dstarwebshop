@@ -11,7 +11,7 @@
 - NO agregues comentarios al código a menos que sea estrictamente necesario
 - Sigue la convención BEM para CSS: `.bloque__elemento--modificador`
 - Usa las custom properties de CSS de `:root` en vez de valores hardcodeados
-- Las imágenes SIEMPRE deben cargarse desde Cloudinary con `f_auto,q_auto,dpr_auto` y tamaño responsive (`w_`)
+- Las imágenes SIEMPRE deben cargarse desde Cloudinary en AVIF con `<picture>`: `<source type="image/avif">` con `f_avif,q_auto,dpr_auto` y un `<img>` de respaldo con `f_auto,q_auto,dpr_auto`, ambos con tamaño responsive (`w_`). En JS usa `cdnPicture()` de `app.js`; en CSS, `image-set()` con `type('image/avif')`. Nunca `f_auto` solo: Cloudinary entrega JPEG XL, que pesa más y tarda más en decodificarse
 - Todo JS debe ser vanilla, sin TypeScript
 - Las animaciones deben respetar `prefers-reduced-motion`
 - Los targets táctiles mínimos: 44x44px

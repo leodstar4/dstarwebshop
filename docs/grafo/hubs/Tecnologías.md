@@ -11,10 +11,10 @@ Parte de: [[DSTAR]]
 
 ## Contenido
 
-- [[Cloudinary]] — servicio. CDN de imágenes: f_auto, q_auto, dpr_auto y ancho responsive.
+- [[Cloudinary]] — servicio. CDN de imágenes: q_auto, dpr_auto y ancho responsive; AVIF (f_avif) en `<picture>` con f_auto de respaldo y recorte c_fill,ar_16:9 en las fotos del blog.
 - [[Gmail SMTP]] — servicio. Correo transaccional con nodemailer: confirmación al cliente y aviso a la tienda.
 - [[Google Fonts]] — servicio. Tipografías (fonts.googleapis.com y fonts.gstatic.com) con font-display: swap.
-- [[GSAP]] — librería. Animación del sitio (hero, contador, cursor, botones magnéticos; SplitText en el index, el blog y páginas sueltas). Se sirve desde js/vendor del propio sitio.
+- [[GSAP]] — librería. Animación del sitio (hero, contador, cursor, botones magnéticos; SplitText en el index, el blog y términos). Se sirve desde js/vendor del propio sitio.
 - [[http-server]] — herramienta. Servidor estático que usa netlify dev como target en local.
 - [[Lighthouse]] — herramienta. Auditoría de rendimiento, accesibilidad y SEO (Lighthouse CI).
 - [[Mercado Pago]] — servicio. Pasarela de pago: preferencias de checkout, webhooks de pago y firma de notificaciones.

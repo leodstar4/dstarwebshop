@@ -12,13 +12,15 @@ const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 const IS_MOBILE = window.innerWidth <= 768;
 const EASE_OUT = 'expo.out';
 const EASE_IN_OUT = 'expo.inOut';
+const BLUR_EASE = (x) => (1 - Math.pow(2, -5 * x)) / (1 - Math.pow(2, -5));
 const CSS_EASE = {
   out: 'cubic-bezier(0.16, 1, 0.3, 1)',
   inOut: 'cubic-bezier(0.87, 0, 0.13, 1)',
   soft: 'cubic-bezier(0.33, 1, 0.68, 1)'
 };
 
-function revealOnEnter(els, onEnter, rootMargin = '0px 0px -10% 0px') {
+// El margen superior enorme hace que un elemento que ya quedó arriba (scroll rápido) también se revele.
+function revealOnEnter(els, onEnter, bottom = '-10%') {
   const list = Array.from(els).filter(Boolean);
   if (!list.length) return;
   const io = new IntersectionObserver((entries) => {
@@ -27,7 +29,7 @@ function revealOnEnter(els, onEnter, rootMargin = '0px 0px -10% 0px') {
     batch.forEach((el) => io.unobserve(el));
     batch.sort((a, b) => list.indexOf(a) - list.indexOf(b));
     onEnter(batch);
-  }, { rootMargin });
+  }, { rootMargin: `100000px 0px ${bottom} 0px` });
   list.forEach((el) => io.observe(el));
 }
 
@@ -90,7 +92,8 @@ function initHero() {
 
     const play = () => {
       gsap.timeline({ delay: 0.32 })
-        .to(chars, { opacity: 1, yPercent: 0, scale: 1, filter: 'blur(0px)', duration: 1.3, stagger: 0.055, ease: EASE_OUT, clearProps: 'filter,transform' })
+        .to(chars, { opacity: 1, yPercent: 0, scale: 1, duration: 1.3, stagger: 0.055, ease: EASE_OUT, clearProps: 'transform' }, 0)
+        .to(chars, { filter: 'blur(0px)', duration: 0.65, stagger: 0.055, ease: BLUR_EASE, clearProps: 'filter' }, 0)
         .to(cta, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 1, ease: EASE_IN_OUT, clearProps: 'clipPath,transform,transition' }, '-=0.75');
     };
     if (window.__dstarLoaded) play();
@@ -139,7 +142,7 @@ function initProductReveal() {
         imageIn(at);
         infoIn(at + 0.18);
       });
-    }, '0px 0px -6% 0px');
+    }, '-6%');
   });
 }
 
@@ -168,7 +171,7 @@ function initLookbookReveal() {
         zoomIn(at + 0.1);
         numIn(at + 0.75);
       });
-    }, '0px 0px -8% 0px');
+    }, '-8%');
   });
 }
 
@@ -243,7 +246,7 @@ function initBlogReveal() {
         imageIn(at);
         bodyIn(at + 0.35);
       });
-    }, '0px 0px -6% 0px');
+    }, '-6%');
   });
 }
 
@@ -293,9 +296,10 @@ function initLookbook() {
       <div id="lookbookLightbox__counter" aria-live="polite">1 / ${panels.length}</div>
       <div id="lookbookLightbox__track">
         ${panels.map((panel, i) => {
+          const attrs = `alt="Lookbook ${i + 1}" loading="lazy" decoding="async" draggable="false"`;
+          if (window.cdnPicture && panel.dataset.src) return `<div class="lookbook-lb__slide">${cdnPicture(panel.dataset.src, { w: 1600, attrs })}</div>`;
           const img = panel.querySelector('img');
-          const src = img ? img.src.replace(/w_\d+/, 'w_1600') : '';
-          return `<div class="lookbook-lb__slide"><img src="${src}" alt="Lookbook ${i + 1}" loading="lazy" decoding="async" draggable="false"></div>`;
+          return `<div class="lookbook-lb__slide"><img src="${img ? img.src.replace(/w_\d+/, 'w_1600') : ''}" ${attrs}></div>`;
         }).join('')}
       </div>
     `;
@@ -536,8 +540,10 @@ function initCustomCursor() {
   gsap.set(dot, { xPercent: -50, yPercent: -50, x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const moveX = gsap.quickTo(dot, 'x', { duration: 0.25, ease: 'power3.out' });
   const moveY = gsap.quickTo(dot, 'y', { duration: 0.25, ease: 'power3.out' });
+  let following = false;
 
   document.addEventListener('mousemove', e => {
+    if (!following) return;
     moveX(e.clientX);
     moveY(e.clientY);
   }, { passive: true });
@@ -545,8 +551,16 @@ function initCustomCursor() {
   // Mostrar dot solo sobre el grid de productos (spec del user)
   const grid = document.getElementById('productsGrid');
   if (grid) {
-    grid.addEventListener('mouseenter', () => dot.classList.add('is-active'));
-    grid.addEventListener('mouseleave', () => dot.classList.remove('is-active'));
+    grid.addEventListener('mouseenter', (e) => {
+      moveX(e.clientX, e.clientX);
+      moveY(e.clientY, e.clientY);
+      following = true;
+      dot.classList.add('is-active');
+    });
+    grid.addEventListener('mouseleave', () => {
+      following = false;
+      dot.classList.remove('is-active');
+    });
     // Crece sobre cada product-card
     grid.addEventListener('mouseover', e => {
       if (e.target.closest('.product-card')) dot.classList.add('is-grow');

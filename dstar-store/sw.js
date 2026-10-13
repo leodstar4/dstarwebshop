@@ -1,4 +1,4 @@
-const VERSION = 'dstar-v6';
+const VERSION = 'dstar-v7';
 const SHELL = `${VERSION}-shell`;
 const IMAGES = `${VERSION}-img`;
 const MAX_IMAGES = 80;
@@ -19,7 +19,7 @@ const PRECACHE = [
   '/assets/brand/favicon-32.png?v=2'
 ];
 
-const NEVER_CACHE = [/^\/\.netlify\//, /^\/api\//, /^\/checkout/, /^\/gracias/, /^\/error-pago/, /^\/pago-pendiente/, /^\/sw\.js$/];
+const NEVER_CACHE = [/^\/\.netlify\//, /^\/api\//, /^\/checkout/, /^\/gracias/, /^\/error-pago/, /^\/pago-pendiente/, /^\/sw\.js$/, /\.mp4$/];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(SHELL).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
@@ -53,21 +53,20 @@ async function trim(cacheName, max) {
   for (let i = 0; i < keys.length - max; i++) await cache.delete(keys[i]);
 }
 
-async function imageCache(request) {
-  const cache = await caches.open(IMAGES);
+async function cacheFirst(request, cacheName, max) {
+  const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  const update = fetch(request).then((response) => {
-    if (response.ok || response.type === 'opaque') {
-      cache.put(request, response.clone()).then(() => trim(IMAGES, MAX_IMAGES));
-    }
-    return response;
-  }).catch(() => cached);
-  return cached || update;
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok || response.type === 'opaque') {
+    cache.put(request, response.clone()).then(() => (max ? trim(cacheName, max) : null)).catch(() => {});
+  }
+  return response;
 }
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  if (request.method !== 'GET') return;
+  if (request.method !== 'GET' || request.headers.has('range')) return;
   const url = new URL(request.url);
 
   if (url.origin === self.location.origin) {
@@ -77,6 +76,6 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.hostname === 'res.cloudinary.com' && request.destination === 'image') {
-    event.respondWith(imageCache(request));
+    event.respondWith(cacheFirst(request, IMAGES, MAX_IMAGES));
   }
 });

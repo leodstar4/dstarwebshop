@@ -19,7 +19,7 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
   <!-- ?v=18 — cache-buster: fuerza recarga en navegadores con la versión inmutable anterior -->
-  <link rel="stylesheet" href="css/style.css?v=33">
+  <link rel="stylesheet" href="css/style.css?v=34">
   <script src="js/products-data.js?v=1"></script>
   <script>
     (function () {
@@ -27,16 +27,16 @@
       var p = (window.DSTAR_PRODUCTS || []).find(function (x) { return x.id === id; });
       if (!p) return;
       var src = (p.gallery && p.gallery[0]) || p.image;
-      var jpg = /\.(jpe?g)(\?|$)/i.test(src);
       var url = function (w) {
-        return src.replace('/image/upload/', '/image/upload/' + ['f_auto', 'q_auto', 'dpr_auto'].concat(jpg ? ['fl_progressive'] : [], ['w_' + w]).join(',') + '/');
+        return src.replace('/image/upload/', '/image/upload/f_avif,q_auto,dpr_auto,w_' + w + '/');
       };
       var link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
+      link.type = 'image/avif';
       link.setAttribute('fetchpriority', 'high');
       link.setAttribute('imagesrcset', [600, 900, 1200, 1600].map(function (w) { return url(w) + ' ' + w + 'w'; }).join(', '));
-      link.setAttribute('imagesizes', '(max-width: 768px) 100vw, (max-width: 1440px) 52vw, 744px');
+      link.setAttribute('imagesizes', '(max-width: 768px) 100vw, (max-width: 980px) and (max-height: 600px) 100vw, (max-width: 1440px) 52vw, 744px');
       link.href = url(1200);
       document.head.appendChild(link);
     })();
@@ -144,7 +144,7 @@
     <button id="pdLbClose" aria-label="Cerrar">✕</button>
     <div id="pdLbThumbs"></div>
     <div id="pdLbMain">
-      <img id="pdLbImg" src="" alt="">
+      <picture><source id="pdLbSource" type="image/avif"><img id="pdLbImg" alt=""></picture>
       <button id="pdLbPrev" aria-label="Anterior">↑</button>
       <button id="pdLbNext" aria-label="Siguiente">↓</button>
     </div>
@@ -197,9 +197,9 @@
   <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
   <script src="js/cart-store.js?v=2" defer></script>
-  <script src="js/app.js?v=34" defer></script>
+  <script src="js/app.js?v=35" defer></script>
   <script src="js/vendor/gsap.min.js?v=3.14.2" defer></script>
-  <script src="js/gsap-animations.js?v=14" defer></script>
+  <script src="js/gsap-animations.js?v=15" defer></script>
   <script src="js/blog-transitions.js?v=7" defer></script>
 </body>
 </html>

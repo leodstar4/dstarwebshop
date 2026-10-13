@@ -6,7 +6,7 @@ tipo: "servicio"
 
 # Cloudinary
 
-CDN de imágenes: f_auto, q_auto, dpr_auto y ancho responsive.
+CDN de imágenes: q_auto, dpr_auto y ancho responsive; AVIF (f_avif) en `<picture>` con f_auto de respaldo y recorte c_fill,ar_16:9 en las fotos del blog.
 
 Paquete npm: `cloudinary`
 

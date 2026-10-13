@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/checkout.html"
-lineas: 1245
+lineas: 1257
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # checkout.html
 
-`dstar-store/checkout.html` · 1245 líneas
+`dstar-store/checkout.html` · 1257 líneas
 
 Checkout: datos del cliente, cotización de envío y pago con Mercado Pago.
 
@@ -24,15 +24,17 @@ Parte de: [[Páginas]]
 
 ## Funciones y clases
 
-- `calcularPeso` (línea 732)
-- `escapeHtml` (línea 736)
-- `formatPrice` (línea 743)
-- `showToast` (línea 750)
-- `renderOrderSummary` (línea 780)
-- `actualizarTotal` (línea 813)
-- `cotizarEnvio` (línea 836)
-- `renderTarifas` (línea 924)
-- `validarFormulario` (línea 1033)
+- `calcularPeso` (línea 733)
+- `escapeHtml` (línea 737)
+- `thumbUrl` (línea 742)
+- `thumbSrcset` (línea 746)
+- `formatPrice` (línea 751)
+- `showToast` (línea 758)
+- `renderOrderSummary` (línea 788)
+- `actualizarTotal` (línea 825)
+- `cotizarEnvio` (línea 848)
+- `renderTarifas` (línea 936)
+- `validarFormulario` (línea 1045)
 
 ## Últimos cambios
 

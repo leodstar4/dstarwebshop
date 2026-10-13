@@ -7,15 +7,43 @@ const PRODUCTS = window.DSTAR_PRODUCTS || [];
 // ============================================
 // CDN HELPER — inyecta transformaciones Cloudinary
 // ============================================
-function cdnOpt(url, w, h, { limit = false } = {}) {
+function cdnOpt(url, w, h, { limit = false, avif = false, crop = '' } = {}) {
   if (!url || !url.includes('cloudinary.com')) return url;
   const isJpg = /\.(jpe?g|jpg)(\?|$)/i.test(url);
-  const transforms = ['f_auto', 'q_auto', 'dpr_auto'];
-  if (isJpg) transforms.push('fl_progressive');
+  const transforms = [avif ? 'f_avif' : 'f_auto', 'q_auto', 'dpr_auto'];
+  if (isJpg && !avif) transforms.push('fl_progressive');
+  if (crop) transforms.push(crop);
   if (w) transforms.push(`w_${w}`);
   if (h) transforms.push(`h_${h}`);
   if (limit) transforms.push('c_limit');
   return url.replace('/image/upload/', `/image/upload/${transforms.join(',')}/`);
+}
+
+// f_auto entrega JPEG XL a Chrome y Safari: pesa más que AVIF y tarda más en decodificar.
+// AVIF va en <source> y f_auto queda como respaldo para navegadores sin AVIF.
+function cdnSrcset(url, widths, opts = {}) {
+  return widths.map((w) => `${cdnOpt(url, w, null, opts)} ${w}w`).join(', ');
+}
+
+function cdnPicture(url, { w, widths, sizes, limit = false, crop = '', attrs = '' }) {
+  const sizesAttr = sizes ? ` sizes="${sizes}"` : '';
+  const avif = widths ? cdnSrcset(url, widths, { limit, crop, avif: true }) : cdnOpt(url, w, null, { limit, crop, avif: true });
+  const srcset = widths ? ` srcset="${escapeHtml(cdnSrcset(url, widths, { limit, crop }))}"` : '';
+  return `<picture><source type="image/avif" srcset="${escapeHtml(avif)}"${sizesAttr}><img src="${escapeHtml(cdnOpt(url, w, null, { limit, crop }))}"${srcset}${sizesAttr} ${attrs}></picture>`;
+}
+
+const IMG_PLACEHOLDER = {
+  card: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 400%22/%3E',
+  blog: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 225%22%3E%3Crect fill=%22%23141414%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E',
+  cart: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 90%22%3E%3Crect fill=%22%23141414%22 width=%2270%22 height=%2290%22/%3E%3C/svg%3E'
+};
+
+function imgFallback(img, kind) {
+  img.onerror = null;
+  if (img.parentElement && img.parentElement.tagName === 'PICTURE') img.parentElement.querySelectorAll('source').forEach((s) => s.remove());
+  img.removeAttribute('srcset');
+  if (IMG_PLACEHOLDER[kind]) img.src = IMG_PLACEHOLDER[kind];
+  else img.style.visibility = 'hidden';
 }
 
 // ============================================
@@ -142,16 +170,15 @@ function initNav() {
   let headerTicking = false;
   const header = $('.header');
   const root = document.documentElement;
-  let currentScroll = 0;
   window.addEventListener('scroll', () => {
-    currentScroll = window.scrollY;
     if (headerTicking) return;
     headerTicking = true;
     requestAnimationFrame(() => {
-      root.classList.toggle('is-scrolled', currentScroll > 100);
-      header.classList.toggle('header--scrolled', currentScroll > 100);
-      header.classList.toggle('header--hidden', currentScroll > 100 && currentScroll > lastScroll);
-      lastScroll = currentScroll;
+      const y = window.scrollY;
+      root.classList.toggle('is-scrolled', y > 100);
+      header.classList.toggle('header--scrolled', y > 100);
+      header.classList.toggle('header--hidden', y > 100 && y > lastScroll);
+      lastScroll = y;
       headerTicking = false;
     });
   }, { passive: true });
@@ -178,11 +205,13 @@ function renderProducts() {
            data-product-index="${i}"
            ${attrs}>
         <div class="product-card__image">
-          <img src="${cdnOpt(p.image, 600, null, { limit: true })}" alt="${name}"
-               srcset="${cdnOpt(p.image, 400, null, { limit: true })} 400w, ${cdnOpt(p.image, 600, null, { limit: true })} 600w, ${cdnOpt(p.image, 900, null, { limit: true })} 900w"
-               sizes="(max-width: 1024px) 50vw, 380px"
-               width="600" height="800" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"
-               onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 300 400%22/%3E'">
+          ${cdnPicture(p.image, {
+            w: 600,
+            widths: [400, 600, 900],
+            sizes: '(max-width: 1024px) 50vw, 380px',
+            limit: true,
+            attrs: `alt="${name}" width="600" height="400" loading="lazy" decoding="async" onerror="imgFallback(this,'card')"`
+          })}
           ${cardBadgeHtml(p, isSoldOut)}
         </div>
         <div class="product-card__info">${cardInfoHtml(p, isSoldOut)}</div>
@@ -258,8 +287,14 @@ function initCardPrefetch() {
     if (!p || warmed.has(id)) return;
     warmed.add(id);
     const src = (p.gallery && p.gallery[0]) || p.image;
-    const img = new Image();
+    const picture = document.createElement('picture');
+    const source = document.createElement('source');
+    source.type = 'image/avif';
+    source.sizes = PD_SIZES;
+    source.srcset = pdSrcset(src, true);
+    const img = document.createElement('img');
     img.decoding = 'async';
+    picture.append(source, img);
     img.sizes = PD_SIZES;
     img.srcset = pdSrcset(src);
     img.src = cdnOpt(src, 1200);
@@ -345,8 +380,12 @@ function updateCartUI() {
       const atMax = item.qty >= stockDisponible(item.id, item.size);
       return `
       <div class="cart-item">
-        <img class="cart-item__image" src="${escapeHtml(cdnOpt(item.image, 150))}" alt="${name}" loading="lazy" decoding="async"
-             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 90%22%3E%3Crect fill=%22%23141414%22 width=%2270%22 height=%2290%22/%3E%3C/svg%3E'">
+        ${cdnPicture(item.image, {
+          w: 150,
+          widths: [150, 300],
+          sizes: '72px',
+          attrs: `class="cart-item__image" alt="${name}" width="72" height="92" loading="lazy" decoding="async" onerror="imgFallback(this,'cart')"`
+        })}
         <div class="cart-item__info">
           <div class="cart-item__name">${name}</div>
           <div class="cart-item__size">TALLA: ${size}</div>
@@ -449,12 +488,12 @@ function showToast(msg) {
 // Recomendado: fotos en imágenes/lookbook/
 // ============================================
 const LOOKBOOK = [
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook01_lvl7hb.jpg', caption: '' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook02_gztk5q.jpg', caption: '' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook03_zxfrhr.jpg', caption: '' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook04_hrbtc3.jpg', caption: '' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook05_r49ynl.jpg', caption: '' },
-  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook06_g3utzp.jpg', caption: '' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook01_lvl7hb.jpg', caption: '', focus: '50% 30%' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook05_r49ynl.jpg', caption: '', focus: '50% 30%' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook03_zxfrhr.jpg', caption: '', focus: '50% 30%' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook04_hrbtc3.jpg', caption: '', focus: '50% 30%' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook02_gztk5q.jpg', caption: '', focus: '50% 60%' },
+  { image: 'https://res.cloudinary.com/dflyysqln/image/upload/lookbook06_g3utzp.jpg', caption: '', focus: '50% 30%' },
 ];
 
 // ============================================
@@ -469,6 +508,7 @@ const BLOG_POSTS = [
     category: 'DROPS',
     excerpt: 'El proceso detrás del primer drop de DSTAR. Cómo nacieron Born to Shine y Over as F**k, y qué significa esta colección para nosotros.',
     image: 'https://res.cloudinary.com/dflyysqln/image/upload/blog01_beoifd.jpg',
+    gravity: 'g_center',
   },
   {
     slug: 'streetwear-mexico-escena',
@@ -477,6 +517,7 @@ const BLOG_POSTS = [
     category: 'CULTURA',
     excerpt: 'Qué está pasando con el streetwear nacional. Las marcas, los colectivos y los espacios que están definiendo la moda de la calle.',
     image: 'https://res.cloudinary.com/dflyysqln/image/upload/blog02_ayh36o.jpg',
+    gravity: 'g_center',
   },
   {
     slug: 'como-cuidar-tu-ropa',
@@ -485,6 +526,7 @@ const BLOG_POSTS = [
     category: 'TIPS',
     excerpt: 'Guía completa para que tus piezas duren lo que tienen que durar. Lavado, secado y almacenaje para prendas de calidad.',
     image: 'https://res.cloudinary.com/dflyysqln/image/upload/dstar/blog/post-03.webp',
+    gravity: 'g_auto',
   },
 ];
 
@@ -533,15 +575,14 @@ function renderLookbook() {
   grid.className = 'lookbook__horiz-track';
 
   grid.innerHTML = LOOKBOOK.map((item, i) => `
-    <div class="lookbook-panel">
+    <div class="lookbook-panel" data-src="${item.image}">
       <div class="lookbook-panel__img-wrap">
-        <img src="${cdnOpt(item.image, 600)}"
-             srcset="${cdnOpt(item.image, 400)} 400w, ${cdnOpt(item.image, 600)} 600w, ${cdnOpt(item.image, 900)} 900w"
-             sizes="(min-width: 1024px) 540px, (min-width: 768px) 30vw, 48vw"
-             alt="${item.caption}"
-             loading="lazy"
-             decoding="async"
-             onerror="this.parentElement.style.background='var(--dark)'">
+        ${cdnPicture(item.image, {
+          w: 600,
+          widths: [400, 600, 900, 1200],
+          sizes: '(min-width: 1024px) 540px, (min-width: 769px) 80vw, (min-width: 641px) 33vw, 50vw',
+          attrs: `alt="${item.caption}" loading="lazy" decoding="async" style="object-position: ${item.focus || 'center'}" onerror="imgFallback(this)"`
+        })}
       </div>
       <div class="lookbook-panel__caption">
         <span class="lookbook-panel__num">0${i + 1}</span>
@@ -561,9 +602,13 @@ function renderBlog() {
   grid.innerHTML = BLOG_POSTS.map((post) => `
     <a href="blog/${post.slug}.html" class="blog-card fade-in">
       <div class="blog-card__image">
-        <img src="${cdnOpt(post.image, 600)}" alt="${post.title}"
-             loading="lazy" decoding="async"
-             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 225%22%3E%3Crect fill=%22%23141414%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%235c5c57%22 font-family=%22monospace%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EDSTAR%3C/text%3E%3C/svg%3E'">
+        ${cdnPicture(post.image, {
+          w: 600,
+          widths: [400, 600, 900, 1200],
+          sizes: '(max-width: 600px) 100vw, (max-width: 900px) 50vw, 380px',
+          crop: `c_fill,ar_16:9,${post.gravity || 'g_auto'}`,
+          attrs: `alt="${post.title}" width="600" height="338" loading="lazy" decoding="async" onerror="imgFallback(this,'blog')"`
+        })}
         <span class="blog-card__cat">${post.category}</span>
       </div>
       <div class="blog-card__body">
@@ -643,11 +688,22 @@ function initScrollProgress() {
   if (window.ScrollTrigger) return;
   const bar = $('#scrollProgress');
   if (!bar || CSS.supports('animation-timeline: scroll()')) return;
+  let total = 0;
+  let ticking = false;
+  const measure = () => { total = document.documentElement.scrollHeight - window.innerHeight; };
+  const paint = () => {
+    ticking = false;
+    if (!total) measure();
+    bar.style.transform = `scaleX(${total > 0 ? Math.min(1, window.scrollY / total) : 0})`;
+  };
   window.addEventListener('scroll', () => {
-    const scrolled = window.scrollY;
-    const total = document.documentElement.scrollHeight - window.innerHeight;
-    bar.style.transform = `scaleX(${total > 0 ? scrolled / total : 0})`;
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(paint);
   }, { passive: true });
+  window.addEventListener('resize', () => { total = 0; }, { passive: true });
+  window.addEventListener('load', () => { total = 0; });
+  if (window.ResizeObserver) new ResizeObserver(() => { total = 0; }).observe(document.body);
 }
 
 // ============================================
@@ -928,8 +984,10 @@ function _pdInitMobileUX(p, isSoldOut) {
 }
 
 // ── Desktop: render all gallery images as a vertical stack ──
-const PD_SIZES = '(max-width: 768px) 100vw, (max-width: 1440px) 52vw, 744px';
-const pdSrcset = (src) => [600, 900, 1200, 1600].map((w) => cdnOpt(src, w) + ' ' + w + 'w').join(', ');
+const PD_SIZES = '(max-width: 768px) 100vw, (max-width: 980px) and (max-height: 600px) 100vw, (max-width: 1440px) 52vw, 744px';
+const PD_WIDTHS = [600, 900, 1200, 1600];
+const pdSrcset = (src, avif = false) => cdnSrcset(src, PD_WIDTHS, { avif });
+const pdPicture = (src, attrs) => cdnPicture(src, { w: 1200, widths: PD_WIDTHS, sizes: PD_SIZES, attrs });
 
 function _pdBuildStack(gallery, productName) {
   const stack = document.getElementById('pdGalleryStack');
@@ -937,10 +995,7 @@ function _pdBuildStack(gallery, productName) {
 
   stack.innerHTML = gallery.map((src, i) => `
     <div class="pd-gallery-img pd-gallery-img--loading" data-index="${i}">
-      <img src="${cdnOpt(src, 1200)}" srcset="${pdSrcset(src)}" sizes="${PD_SIZES}"
-           alt="${productName} — foto ${i + 1}"
-           fetchpriority="${i === 0 ? 'high' : 'low'}"
-           decoding="async">
+      ${pdPicture(src, `alt="${productName} — foto ${i + 1}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`)}
     </div>`).join('');
 
   stack.querySelectorAll('.pd-gallery-img').forEach(el => {
@@ -971,11 +1026,7 @@ function _pdBuildCarousel(gallery, productName) {
   // suficientes píxeles para que el carrusel se vea nítido al contain
   carousel.innerHTML = gallery.map((src, i) => `
     <div class="pd-carousel__item pd-carousel__item--loading" data-index="${i}">
-      <img src="${cdnOpt(src, 1200)}" srcset="${pdSrcset(src)}" sizes="${PD_SIZES}"
-           alt="${productName} — foto ${i + 1}"
-           loading="${i === 0 ? 'eager' : 'lazy'}"
-           fetchpriority="${i === 0 ? 'high' : 'auto'}"
-           decoding="async">
+      ${pdPicture(src, `alt="${productName} — foto ${i + 1}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`)}
     </div>`).join('');
 
   // Drop shimmer once each image settles (load or error)
@@ -1064,7 +1115,7 @@ function _pdBuildLightbox(gallery, productName) {
   thumbsEl.innerHTML = gallery.map((src, i) => `
     <button class="pd-lb-thumb${i === 0 ? ' pd-lb-thumb--active' : ''}"
             data-index="${i}" aria-label="Foto ${i + 1}">
-      <img src="${cdnOpt(src, 150)}" alt="${productName} foto ${i + 1}" loading="lazy" decoding="async">
+      ${cdnPicture(src, { w: 150, widths: [150, 300], sizes: '72px', attrs: `alt="${productName} foto ${i + 1}" loading="lazy" decoding="async"` })}
     </button>`).join('');
 
   thumbsEl.querySelectorAll('.pd-lb-thumb').forEach(btn => {
@@ -1151,17 +1202,19 @@ function pdLightboxGo(index) {
   const gallery = (p.gallery && p.gallery.length) ? p.gallery : [p.image];
   index = Math.max(0, Math.min(gallery.length - 1, index));
 
-  const newSrc = cdnOpt(gallery[index], 1400, null, { limit: true });
-  const newAlt = p.name + ` — foto ${index + 1}`;
+  const source = document.getElementById('pdLbSource');
+  const swap = () => {
+    if (source) source.srcset = cdnOpt(gallery[index], 1400, null, { limit: true, avif: true });
+    img.src = cdnOpt(gallery[index], 1400, null, { limit: true });
+    img.alt = p.name + ` — foto ${index + 1}`;
+    window._pdLightboxIndex = index;
+  };
 
   if (window.gsap && window._pdLightboxIndex !== index) {
-    // Slide current image out, then swap and slide in
     gsap.to(img, {
       x: -20, opacity: 0, duration: 0.18, ease: 'power2.in',
       onComplete() {
-        img.src = newSrc;
-        img.alt = newAlt;
-        window._pdLightboxIndex = index;
+        swap();
         gsap.fromTo(img,
           { x: 20, opacity: 0 },
           { x: 0, opacity: 1, duration: 0.22, ease: 'power3.out' }
@@ -1169,9 +1222,7 @@ function pdLightboxGo(index) {
       }
     });
   } else {
-    img.src = newSrc;
-    img.alt = newAlt;
-    window._pdLightboxIndex = index;
+    swap();
   }
 
   if (thumbsEl) {
@@ -1197,9 +1248,7 @@ function _pdBuildMobileLightbox(gallery, productName) {
     <div id="pdLightboxMobile__track">
       ${gallery.map((src, i) => `
         <div class="pd-lb-m__slide">
-          <img src="${cdnOpt(src, 1600, null, { limit: true })}"
-               alt="${productName} — foto ${i + 1}"
-               loading="lazy" decoding="async" draggable="false">
+          ${cdnPicture(src, { w: 1600, limit: true, attrs: `alt="${productName} — foto ${i + 1}" loading="lazy" decoding="async" draggable="false"` })}
         </div>
       `).join('')}
     </div>

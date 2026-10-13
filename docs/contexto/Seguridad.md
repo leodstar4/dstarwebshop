@@ -10,6 +10,7 @@ Headers, CSP y redirects están en [[netlify.toml (dstar-store)]].
 - [[GSAP]] se sirve desde el propio sitio (`js/vendor/`), así que la CSP ya no permite cdn.jsdelivr.net; `rel="noopener noreferrer"` en enlaces externos.
 - El stock se valida en el servidor contra [[stock-store.js]] antes de crear el pago, y el webhook avisa a la tienda por correo de pagos que requieren revisión manual.
 - CSP estricta, Permissions-Policy y Cross-Origin-Opener-Policy; /dist/, /test-results/, /tests/, /netlify/ y archivos internos responden 404.
+- La CSP permite `worker-src 'self'`: el logo 3D de Chromium corre en [[logo-3d-worker.js]], cargado desde el propio sitio. Si la CSP lo bloqueara, el worker falla y [[logo-3d.js]] cae al `<video>` en el hilo principal.
 - Secretos solo por nombre en [[Variables de entorno]]; el `.env` real está en .gitignore.
 - Pendiente: quitar `'unsafe-inline'` de script-src y limitar peticiones a las funciones (ver [[Pendientes]]).
 
