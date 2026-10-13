@@ -5,8 +5,8 @@
 // si lo bloquea (modo de bajo consumo) decodifica el mismo MP4 con WebCodecs, que no
 // está sujeto a la política de autoplay, y se ve idéntico. Si nada de eso existe se queda el póster.
 (function () {
-  const SRC = '/assets/brand/logo-3d.mp4?v=1';
-  const WORKER = '/js/logo-3d-worker.js?v=1';
+  const SRC = '/assets/brand/logo-3d.mp4?v=2';
+  const WORKER = '/js/logo-3d-worker.js?v=2';
   const FRAME_MS = 1000 / 60;
   const els = Array.from(document.querySelectorAll('[data-logo-3d]'));
   if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -16,7 +16,7 @@
 
   const release = () => els.forEach((el) => el.dispatchEvent(new CustomEvent('logo3d:live', { bubbles: true })));
   const sizeOf = (el, width = el.clientWidth) => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const w = Math.min(560, Math.round(width * dpr));
     return { w, h: Math.round(w * 820 / 560) };
   };
@@ -302,14 +302,13 @@
         if (!running || failed) return;
         if (last) debt += Math.min(now - last, 100) / FRAME_MS;
         last = now;
-        let advance = Math.round(debt);
-        debt -= advance;
         let frame = null;
-        while (advance > 0 && queue.length) {
+        while (debt >= 0.5 && queue.length) {
           if (frame) frame.close();
           frame = queue.shift();
-          advance--;
+          debt--;
         }
+        debt = Math.min(debt, 3);
         if (frame) {
           render(frame);
           frame.close();

@@ -16,7 +16,7 @@ Dónde toca cada tema pendiente:
 
 Sugeridos tras la auditoría de fluidez del 2026-10-12, todavía no están en [[PLANNER]]:
 
-- Probar en dispositivos reales el logo en el worker en Android y las fotos AVIF en Safari: [[logo-3d-worker.js]], [[logo-3d.js]], [[app.js]].
+- Probar en dispositivos reales el logo en el worker en Android y las fotos AVIF en Safari: [[logo-3d-worker.js]], [[logo-3d.js]], [[app.js]]. Incluye el MP4 re-exportado del 2026-10-13 (sin cuadros B), el canvas a DPR 3 y el salto de hasta 3 cuadros cuando el decodificador se atrasa; hasta ahora solo se probó con emulación móvil de Chrome y la CPU limitada 4x.
 - Agregar `viewport-fit=cover` al meta viewport: ninguna de las 12 páginas lo tiene aunque [[style.css]] usa `env(safe-area-inset-*)`; por ejemplo [[index.html]], [[producto.html]], [[checkout.html]].
 
 Parte de: [[DSTAR]]

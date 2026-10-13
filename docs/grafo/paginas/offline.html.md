@@ -15,6 +15,7 @@ Parte de: [[Páginas]]
 
 ## Últimos cambios
 
+- 2026-10-12 · `cded92a` · Fluidez y proporciones: logo 3D en Web Worker, imágenes AVIF, hero y tarjetas a la medida de cada pantalla
 - 2026-10-10 · `be7be88` · Restaura fondo y cards flotantes, logo 3D nuevo y hero en svh para evitar tirones
 - 2026-10-10 · `8b73af2` · Rediseño premium, seguridad de pagos, fluidez y PWA
 

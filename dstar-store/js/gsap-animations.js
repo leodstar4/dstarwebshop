@@ -11,7 +11,6 @@ if (window.SplitText) gsap.registerPlugin(SplitText);
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const IS_MOBILE = window.innerWidth <= 768;
 const EASE_OUT = 'expo.out';
-const EASE_IN_OUT = 'expo.inOut';
 const BLUR_EASE = (x) => (1 - Math.pow(2, -5 * x)) / (1 - Math.pow(2, -5));
 const CSS_EASE = {
   out: 'cubic-bezier(0.16, 1, 0.3, 1)',
@@ -94,7 +93,7 @@ function initHero() {
       gsap.timeline({ delay: 0.32 })
         .to(chars, { opacity: 1, yPercent: 0, scale: 1, duration: 1.3, stagger: 0.055, ease: EASE_OUT, clearProps: 'transform' }, 0)
         .to(chars, { filter: 'blur(0px)', duration: 0.65, stagger: 0.055, ease: BLUR_EASE, clearProps: 'filter' }, 0)
-        .to(cta, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 1, ease: EASE_IN_OUT, clearProps: 'clipPath,transform,transition' }, '-=0.75');
+        .to(cta, { opacity: 1, y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.8, ease: EASE_OUT, clearProps: 'clipPath,transform,transition' }, 0.15);
     };
     if (window.__dstarLoaded) play();
     else window.addEventListener('dstar:loaded', play, { once: true });

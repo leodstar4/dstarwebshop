@@ -11,6 +11,7 @@ Parte de: [[DSTAR]]
 
 ## 2026-10-12
 
+- `cded92a` Fluidez y proporciones: logo 3D en Web Worker, imágenes AVIF, hero y tarjetas a la medida de cada pantalla
 - `88d021f` Animaciones ricas de vuelta (en el compositor), logo 3D a 60 fps y más grande en desktop
 - `eef15b5` Fluidez en desktop: revelados en el compositor, logo 3D en pausa fuera de pantalla y menos trabajo por cuadro
 - `d231e35` Desktop: logo del hero sin chocar con el header, navegación sin esperas y móviles sin desbordes

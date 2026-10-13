@@ -155,14 +155,13 @@ function tick(now) {
   if (!running || failed) return;
   if (last) debt += Math.min(now - last, 100) / FRAME_MS;
   last = now;
-  let advance = Math.round(debt);
-  debt -= advance;
   let frame = null;
-  while (advance > 0 && queue.length) {
+  while (debt >= 0.5 && queue.length) {
     if (frame) frame.close();
     frame = queue.shift();
-    advance--;
+    debt--;
   }
+  debt = Math.min(debt, 3);
   if (frame) {
     draw(frame);
     frame.close();
