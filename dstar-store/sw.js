@@ -1,4 +1,4 @@
-const VERSION = 'dstar-v9';
+const VERSION = 'dstar-v10';
 const SHELL = `${VERSION}-shell`;
 const IMAGES = `${VERSION}-img`;
 const MAX_IMAGES = 80;
@@ -57,8 +57,14 @@ async function cacheFirst(request, cacheName, max) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
   if (cached) return cached;
-  const response = await fetch(request);
-  if (response.ok || response.type === 'opaque') {
+  let response;
+  try {
+    const accept = request.headers.get('accept');
+    response = await fetch(request.url, { mode: 'cors', credentials: 'omit', headers: accept ? { accept } : {} });
+  } catch {
+    return fetch(request);
+  }
+  if (response.ok) {
     cache.put(request, response.clone()).then(() => (max ? trim(cacheName, max) : null)).catch(() => {});
   }
   return response;

@@ -3,7 +3,7 @@ tags: [contexto]
 ---
 # Flujo de compra
 
-1. **Catálogo.** [[index.html]] pinta los drops con [[app.js]] a partir de [[products-data.js]]. El detalle vive en [[producto.html]].
+1. **Catálogo.** [[index.html]] pinta los drops con [[app.js]] a partir de [[products-data.js]]. El detalle vive en [[producto.html]] (galería con lightbox). Al agregar o cambiar fotos en [[products-data.js]] hay que correr `node scripts/calentar-cloudinary.js` ([[calentar-cloudinary.js]]) para que [[Cloudinary]] tenga generados todos los tamaños.
 2. **Carrito.** [[cart-store.js]] guarda el carrito en localStorage (`dstar_cart`) y pide el stock en vivo a [[stock.js]] (`/api/stock`), que lee [[stock-store.js]].
 3. **Checkout.** [[checkout.html]] cotiza el envío con [[cotizar-envio.js]] ([[Skydropx]]) y crea el pago con [[mp-preference.js]] ([[Mercado Pago]]). El envío se cobra junto con la prenda en el mismo pago.
 4. **Validación.** [[validate.js]] revisa datos del cliente y pedido contra el catálogo y el stock, y rechaza peticiones hechas desde otros sitios.

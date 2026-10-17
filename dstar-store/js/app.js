@@ -298,6 +298,7 @@ function initCardPrefetch() {
     img.sizes = PD_SIZES;
     img.srcset = pdSrcset(src);
     img.src = cdnOpt(src, 1200);
+    (p.gallery || []).forEach((g) => { new Image().src = pdLqipUrl(g, true); });
     const link = document.createElement('link');
     link.rel = 'prefetch';
     link.href = card.href;
@@ -819,8 +820,8 @@ function initProductPage() {
     _pdBuildCarousel(gallery, p.name);
   } else {
     _pdBuildStack(gallery, p.name);
-    _pdBuildLightbox(gallery, p.name);
   }
+  _pdBuildLightbox(gallery, p.name);
 
   // Badge
   const badgeEl = document.getElementById('pdBadge');
@@ -879,7 +880,6 @@ function initProductPage() {
   // Store product reference
   window._pdProduct      = p;
   window._pdSelectedSize = null;
-  window._pdLightboxIndex = 0;
 
   // ── MOBILE UX: sticky CTA bar + size-label pulse + smart-scroll ──
   _pdInitMobileUX(p, isSoldOut);
@@ -983,82 +983,91 @@ function _pdInitMobileUX(p, isSoldOut) {
   }
 }
 
-// ── Desktop: render all gallery images as a vertical stack ──
 const PD_SIZES = '(max-width: 768px) 100vw, (max-width: 980px) and (max-height: 600px) 100vw, (max-width: 1440px) 52vw, 744px';
 const PD_WIDTHS = [600, 900, 1200, 1600];
+const PD_LB_WIDTHS = [600, 900, 1200, 1600, 2400];
+const PD_LB_ZOOM = 2.5;
 const pdSrcset = (src, avif = false) => cdnSrcset(src, PD_WIDTHS, { avif });
 const pdPicture = (src, attrs) => cdnPicture(src, { w: 1200, widths: PD_WIDTHS, sizes: PD_SIZES, attrs });
+const pdLqipUrl = (src, avif) => cdnOpt(src, 48, null, { avif, crop: 'e_blur:200' });
+const pdLqipStyle = (src) => `--pd-lqip: image-set(url('${pdLqipUrl(src, true)}') type('image/avif'), url('${pdLqipUrl(src, false)}') 1x)`;
+const pdReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pdFinePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+const pdRatios = new Map();
+
+function pdMeasure(src) {
+  if (pdRatios.has(src)) return Promise.resolve(pdRatios.get(src));
+  return new Promise((resolve) => {
+    const probe = new Image();
+    probe.onload = () => {
+      if (!pdRatios.has(src) && probe.naturalHeight) pdRatios.set(src, probe.naturalWidth / probe.naturalHeight);
+      resolve(pdRatios.get(src) || null);
+    };
+    probe.onerror = () => resolve(null);
+    probe.src = pdLqipUrl(src, true);
+  });
+}
+
+function pdTrackLoad(el, src, loadingClass) {
+  const img = el.querySelector('img');
+  if (!img) return;
+  pdMeasure(src).then((r) => { if (r) el.style.setProperty('--pd-r', r); });
+  let retried = false;
+  const done = () => {
+    if (img.naturalWidth) pdRatios.set(src, img.naturalWidth / img.naturalHeight);
+    el.classList.remove(loadingClass);
+  };
+  const fail = () => {
+    const source = img.closest('picture')?.querySelector('source');
+    if (retried || !source) { el.classList.remove(loadingClass); return; }
+    retried = true;
+    source.remove();
+  };
+  img.addEventListener('load', done);
+  img.addEventListener('error', fail);
+  if (img.complete && img.naturalWidth) done();
+}
 
 function _pdBuildStack(gallery, productName) {
   const stack = document.getElementById('pdGalleryStack');
   if (!stack) return;
-
+  const name = escapeHtml(productName);
   stack.innerHTML = gallery.map((src, i) => `
-    <div class="pd-gallery-img pd-gallery-img--loading" data-index="${i}">
-      ${pdPicture(src, `alt="${productName} — foto ${i + 1}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`)}
-    </div>`).join('');
+    <button type="button" class="pd-gallery-img pd-gallery-img--loading" data-index="${i}" style="${escapeHtml(pdLqipStyle(src))}" aria-haspopup="dialog" aria-label="Ampliar ${name}, foto ${i + 1} de ${gallery.length}">
+      ${pdPicture(src, `alt="" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`)}
+      <span class="pd-gallery-img__zoom" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg></span>
+    </button>`).join('');
 
-  stack.querySelectorAll('.pd-gallery-img').forEach(el => {
-    // Drop the shimmer (and its 3:4 placeholder box) once the image
-    // settles — whether it loaded or errored — so the wrapper can
-    // collapse to the image's natural height.
-    const img = el.querySelector('img');
-    if (img) {
-      const done = () => el.classList.remove('pd-gallery-img--loading');
-      if (img.complete) {
-        done();
-      } else {
-        img.addEventListener('load',  done, { once: true });
-        img.addEventListener('error', done, { once: true });
-      }
-    }
-    el.addEventListener('click', () => pdLightboxOpen(parseInt(el.dataset.index)));
+  stack.querySelectorAll('.pd-gallery-img').forEach((el) => {
+    const i = Number(el.dataset.index);
+    pdTrackLoad(el, gallery[i], 'pd-gallery-img--loading');
+    el.addEventListener('click', () => pdLightboxOpen(i, el));
   });
 }
 
-// ── Mobile: horizontal swipe carousel with dot indicators ──
 function _pdBuildCarousel(gallery, productName) {
   const carousel = document.getElementById('pdCarousel');
   const dotsEl   = document.getElementById('pdCarouselDots');
   if (!carousel) return;
+  const name = escapeHtml(productName);
 
-  // w=1200 + dpr_auto: en retina @2-3x la pantalla recibe 1200×(dpr),
-  // suficientes píxeles para que el carrusel se vea nítido al contain
   carousel.innerHTML = gallery.map((src, i) => `
-    <div class="pd-carousel__item pd-carousel__item--loading" data-index="${i}">
-      ${pdPicture(src, `alt="${productName} — foto ${i + 1}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`)}
-    </div>`).join('');
+    <button type="button" class="pd-carousel__item pd-carousel__item--loading" data-index="${i}" style="${escapeHtml(pdLqipStyle(src))}" aria-haspopup="dialog" aria-label="Ampliar ${name}, foto ${i + 1} de ${gallery.length}">
+      ${pdPicture(src, `alt="" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" draggable="false"`)}
+    </button>`).join('');
 
-  // Drop shimmer once each image settles (load or error)
-  carousel.querySelectorAll('.pd-carousel__item').forEach(el => {
-    const img = el.querySelector('img');
-    if (!img) return;
-    const done = () => el.classList.remove('pd-carousel__item--loading');
-    if (img.complete) {
-      done();
-    } else {
-      img.addEventListener('load',  done, { once: true });
-      img.addEventListener('error', done, { once: true });
-    }
+  carousel.querySelectorAll('.pd-carousel__item').forEach((el) => {
+    const i = Number(el.dataset.index);
+    pdTrackLoad(el, gallery[i], 'pd-carousel__item--loading');
+    el.addEventListener('click', () => pdLightboxOpen(i, el));
   });
 
-  // Tap en item: abre lightbox mobile en esa imagen
-  _pdBuildMobileLightbox(gallery, productName);
-  carousel.querySelectorAll('.pd-carousel__item').forEach(el => {
-    el.addEventListener('click', () => {
-      pdLightboxMobileOpen(parseInt(el.dataset.index));
-    });
-  });
-
-  // SWIPE HINT: muestra "SWIPE →" debajo del carrusel si hay más de una imagen;
-  // desaparece tras el primer scroll. Inserta una sola vez por carga de página.
   if (gallery.length > 1) {
     const galleryEl = carousel.parentElement;
     if (galleryEl && !galleryEl.querySelector('.pd-swipe-hint')) {
       const hint = document.createElement('div');
       hint.className = 'pd-swipe-hint';
       hint.innerHTML = '<span>SWIPE</span><span aria-hidden="true">→</span>';
-      // Insertar entre carrusel y dots
       if (dotsEl && dotsEl.parentNode === galleryEl) {
         galleryEl.insertBefore(hint, dotsEl);
       } else {
@@ -1069,14 +1078,14 @@ function _pdBuildCarousel(gallery, productName) {
     }
   }
 
-  // Image counter overlay (mobile only — desktop uses stacked gallery)
   const galleryEl = carousel.parentElement;
   if (galleryEl) galleryEl.style.position = 'relative';
   const counterEl = document.createElement('div');
   counterEl.className = 'pd-carousel-counter';
   counterEl.textContent = gallery.length > 1 ? `1 / ${gallery.length}` : '';
-  counterEl.style.display = 'block'; // visible on mobile via CSS; hidden on desktop via @media
-  if (galleryEl) galleryEl.appendChild(counterEl);
+  counterEl.style.display = 'block';
+  counterEl.setAttribute('aria-hidden', 'true');
+  if (galleryEl && gallery.length > 1) galleryEl.appendChild(counterEl);
 
   if (!dotsEl) return;
 
@@ -1084,218 +1093,638 @@ function _pdBuildCarousel(gallery, productName) {
 
   dotsEl.innerHTML = gallery.map((_, i) => `
     <button class="pd-carousel-dot${i === 0 ? ' pd-carousel-dot--active' : ''}"
-            data-index="${i}" aria-label="Foto ${i + 1}"></button>`).join('');
+            data-index="${i}" aria-label="Foto ${i + 1}" aria-current="${i === 0}"></button>`).join('');
 
   const dots = Array.from(dotsEl.querySelectorAll('.pd-carousel-dot'));
 
-  // Scroll → update active dot + counter
   carousel.addEventListener('scroll', () => {
     const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
-    dots.forEach((d, i) => d.classList.toggle('pd-carousel-dot--active', i === idx));
+    dots.forEach((d, i) => {
+      d.classList.toggle('pd-carousel-dot--active', i === idx);
+      d.setAttribute('aria-current', String(i === idx));
+    });
     counterEl.textContent = `${idx + 1} / ${gallery.length}`;
   }, { passive: true });
 
-  // Dot click → scroll to image
   dots.forEach(dot => {
     dot.addEventListener('click', () => {
-      carousel.scrollTo({ left: parseInt(dot.dataset.index) * carousel.offsetWidth, behavior: 'smooth' });
+      carousel.scrollTo({ left: parseInt(dot.dataset.index) * carousel.offsetWidth, behavior: pdReducedMotion() ? 'instant' : 'smooth' });
     });
   });
 }
 
-// ── Desktop: build lightbox structure (thumbnails + main view) ──
+const pdLb = {
+  el: null, track: null, scrim: null, ghost: null, ui: [], slides: [], thumbs: [], segs: [], gallery: [],
+  index: -1, target: null, origin: null, closing: false, wheelAt: 0, touchAt: 0, tapAt: 0, tapX: 0, tapY: 0, tapTimer: 0, scrollRaf: 0,
+  pointers: new Map(), gesture: null,
+  zoom: { s: 1, x: 0, y: 0, ts: 1, tx: 0, ty: 0, raf: 0, last: 0 }
+};
+
 function _pdBuildLightbox(gallery, productName) {
-  const thumbsEl = document.getElementById('pdLbThumbs');
-  const closeBtn = document.getElementById('pdLbClose');
-  const prevBtn  = document.getElementById('pdLbPrev');
-  const nextBtn  = document.getElementById('pdLbNext');
-  const lb       = document.getElementById('pdLightbox');
-  if (!thumbsEl || !lb) return;
-
-  thumbsEl.innerHTML = gallery.map((src, i) => `
-    <button class="pd-lb-thumb${i === 0 ? ' pd-lb-thumb--active' : ''}"
-            data-index="${i}" aria-label="Foto ${i + 1}">
-      ${cdnPicture(src, { w: 150, widths: [150, 300], sizes: '72px', attrs: `alt="${productName} foto ${i + 1}" loading="lazy" decoding="async"` })}
-    </button>`).join('');
-
-  thumbsEl.querySelectorAll('.pd-lb-thumb').forEach(btn => {
-    btn.addEventListener('click', () => pdLightboxGo(parseInt(btn.dataset.index)));
-  });
-
-  if (closeBtn) closeBtn.addEventListener('click', pdLightboxClose);
-
-  if (prevBtn) prevBtn.addEventListener('click', () => {
-    const total = gallery.length;
-    pdLightboxGo((window._pdLightboxIndex - 1 + total) % total);
-  });
-  if (nextBtn) nextBtn.addEventListener('click', () => {
-    const total = gallery.length;
-    pdLightboxGo((window._pdLightboxIndex + 1) % total);
-  });
-
-  // ESC + arrow key navigation
-  document.addEventListener('keydown', e => {
-    const open = lb.classList.contains('is-open');
-    if (!open) return;
-    if (e.key === 'Escape') { pdLightboxClose(); return; }
-    const total = gallery.length;
-    if (e.key === 'ArrowDown'  || e.key === 'ArrowRight') pdLightboxGo((window._pdLightboxIndex + 1) % total);
-    if (e.key === 'ArrowUp'    || e.key === 'ArrowLeft')  pdLightboxGo((window._pdLightboxIndex - 1 + total) % total);
-  });
-}
-
-// ── Open lightbox at a given image index ──
-function pdLightboxOpen(index) {
-  const lb  = document.getElementById('pdLightbox');
-  const img = document.getElementById('pdLbImg');
-  if (!lb) return;
-  lb.classList.add('is-open');
-  document.body.style.overflow = 'hidden';
-  pdLightboxGo(index);
-  if (window.gsap) {
-    const thumbs = Array.from(document.querySelectorAll('.pd-lb-thumb'));
-    gsap.killTweensOf([lb, img, ...thumbs]);
-    gsap.fromTo(lb,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.28, ease: 'power3.out' }
-    );
-    if (img) {
-      gsap.fromTo(img,
-        { scale: 0.92, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.36, ease: 'power3.out', delay: 0.06 }
-      );
-    }
-    if (thumbs.length) {
-      gsap.fromTo(thumbs,
-        { x: -20, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.32, stagger: 0.05, ease: 'power3.out', delay: 0.08 }
-      );
-    }
-  }
-}
-
-// ── Close lightbox ──
-function pdLightboxClose() {
-  const lb = document.getElementById('pdLightbox');
-  if (!lb) return;
-  if (window.gsap) {
-    gsap.to(lb, {
-      opacity: 0, duration: 0.22, ease: 'power2.in',
-      onComplete() {
-        lb.classList.remove('is-open');
-        document.body.style.overflow = '';
-      }
-    });
-  } else {
-    lb.classList.remove('is-open');
-    document.body.style.overflow = '';
-  }
-}
-
-// ── Navigate lightbox to a given index ──
-function pdLightboxGo(index) {
-  const img      = document.getElementById('pdLbImg');
-  const thumbsEl = document.getElementById('pdLbThumbs');
-  const p        = window._pdProduct;
-  if (!img || !p) return;
-
-  const gallery = (p.gallery && p.gallery.length) ? p.gallery : [p.image];
-  index = Math.max(0, Math.min(gallery.length - 1, index));
-
-  const source = document.getElementById('pdLbSource');
-  const swap = () => {
-    if (source) source.srcset = cdnOpt(gallery[index], 1400, null, { limit: true, avif: true });
-    img.src = cdnOpt(gallery[index], 1400, null, { limit: true });
-    img.alt = p.name + ` — foto ${index + 1}`;
-    window._pdLightboxIndex = index;
-  };
-
-  if (window.gsap && window._pdLightboxIndex !== index) {
-    gsap.to(img, {
-      x: -20, opacity: 0, duration: 0.18, ease: 'power2.in',
-      onComplete() {
-        swap();
-        gsap.fromTo(img,
-          { x: 20, opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.22, ease: 'power3.out' }
-        );
-      }
-    });
-  } else {
-    swap();
-  }
-
-  if (thumbsEl) {
-    thumbsEl.querySelectorAll('.pd-lb-thumb').forEach((btn, i) => {
-      btn.classList.toggle('pd-lb-thumb--active', i === index);
-    });
-    const active = thumbsEl.querySelector('.pd-lb-thumb--active');
-    if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-}
-
-// ── Mobile: build/open/close lightbox (swipe track fullscreen) ──
-function _pdBuildMobileLightbox(gallery, productName) {
-  // Idempotent: si ya existe, sólo re-sincroniza los slides al gallery actual
-  let lb = document.getElementById('pdLightboxMobile');
-  if (lb) lb.remove();
-
-  lb = document.createElement('div');
-  lb.id = 'pdLightboxMobile';
-  lb.innerHTML = `
-    <button id="pdLightboxMobile__close" aria-label="Cerrar">✕</button>
-    <div id="pdLightboxMobile__counter" aria-live="polite">1 / ${gallery.length}</div>
-    <div id="pdLightboxMobile__track">
-      ${gallery.map((src, i) => `
-        <div class="pd-lb-m__slide">
-          ${cdnPicture(src, { w: 1600, limit: true, attrs: `alt="${productName} — foto ${i + 1}" loading="lazy" decoding="async" draggable="false"` })}
-        </div>
-      `).join('')}
-    </div>
-  `;
-  document.body.appendChild(lb);
-
-  const track   = lb.querySelector('#pdLightboxMobile__track');
-  const counter = lb.querySelector('#pdLightboxMobile__counter');
-  const closeBtn = lb.querySelector('#pdLightboxMobile__close');
+  const el = document.getElementById('pdLightbox');
+  if (!el || typeof el.showModal !== 'function') return;
+  const name = escapeHtml(productName);
   const total = gallery.length;
 
-  closeBtn.addEventListener('click', pdLightboxMobileClose);
-  track.addEventListener('scroll', () => {
-    const idx = Math.round(track.scrollLeft / track.offsetWidth);
-    counter.textContent = `${idx + 1} / ${total}`;
-  }, { passive: true });
-  // Tap en slide fuera del IMG cierra
-  track.addEventListener('click', (e) => {
-    if (e.target.tagName !== 'IMG') pdLightboxMobileClose();
+  pdLb.el = el;
+  pdLb.gallery = gallery;
+  pdLb.track = document.getElementById('pdLbTrack');
+  pdLb.scrim = el.querySelector('.pd-lightbox__scrim');
+  pdLb.ghost = el.querySelector('.pd-lightbox__ghost');
+  pdLb.ui = Array.from(el.querySelectorAll('.pd-lightbox__top, .pd-lightbox__progress, .pd-lightbox__bottom, .pd-lightbox__nav'));
+  document.getElementById('pdLbTitle').textContent = productName;
+  document.getElementById('pdLbTotal').textContent = String(total).padStart(2, '0');
+  el.classList.toggle('pd-lightbox--single', total < 2);
+
+  pdLb.track.innerHTML = gallery.map((src, i) => `
+    <figure class="pd-lightbox__slide" role="group" aria-roledescription="diapositiva" aria-label="Foto ${i + 1} de ${total}" aria-hidden="true">
+      <div class="pd-lightbox__frame" style="${escapeHtml(pdLqipStyle(src))}">
+        ${cdnPicture(src, { w: 1200, widths: PD_LB_WIDTHS, sizes: '100vw', attrs: `class="pd-lightbox__img" alt="${name} — foto ${i + 1}" loading="lazy" decoding="async" draggable="false"` })}
+        <span class="pd-lightbox__loader" aria-hidden="true"></span>
+      </div>
+    </figure>`).join('');
+
+  const thumbsEl = document.getElementById('pdLbThumbs');
+  thumbsEl.innerHTML = total > 1 ? gallery.map((src, i) => `
+    <button type="button" class="pd-lightbox__thumb" data-index="${i}" aria-label="Ver foto ${i + 1} de ${total}">
+      ${cdnPicture(src, { w: 150, widths: [150, 300], sizes: '56px', attrs: 'alt="" loading="lazy" decoding="async" draggable="false"' })}
+    </button>`).join('') : '';
+
+  const progressEl = document.getElementById('pdLbProgress');
+  progressEl.innerHTML = total > 1 ? gallery.map(() => '<span class="pd-lightbox__seg"></span>').join('') : '';
+
+  pdLb.slides = Array.from(pdLb.track.children).map((slide) => ({
+    slide,
+    frame: slide.querySelector('.pd-lightbox__frame'),
+    img: slide.querySelector('img'),
+    hires: false
+  }));
+  pdLb.thumbs = Array.from(thumbsEl.children);
+  pdLb.segs = Array.from(progressEl.children);
+
+  pdLb.slides.forEach(({ frame, img }, i) => {
+    img.addEventListener('load', () => {
+      if (img.naturalWidth) {
+        pdRatios.set(gallery[i], img.naturalWidth / img.naturalHeight);
+        frame.style.setProperty('--pd-r', pdRatios.get(gallery[i]));
+      }
+      frame.classList.add('pd-lightbox__frame--loaded');
+    });
+    img.addEventListener('error', () => {
+      const source = img.closest('picture')?.querySelector('source');
+      if (source) source.remove();
+      else frame.classList.add('pd-lightbox__frame--failed');
+    });
   });
-  // ESC
-  const onKey = (e) => {
-    if (e.key === 'Escape' && lb.classList.contains('is-open')) pdLightboxMobileClose();
+
+  document.getElementById('pdLbClose').addEventListener('click', pdLightboxClose);
+  document.getElementById('pdLbZoom').addEventListener('click', () => pdLbToggleZoom());
+  [['pdLbPrev', -1], ['pdLbNext', 1]].forEach(([id, step]) => {
+    const btn = document.getElementById(id);
+    btn.addEventListener('click', () => { if (btn.getAttribute('aria-disabled') !== 'true') pdLightboxGo(pdLb.index + step); });
+  });
+  pdLb.thumbs.forEach((btn) => btn.addEventListener('click', () => pdLightboxGo(Number(btn.dataset.index))));
+
+  el.addEventListener('cancel', (e) => { e.preventDefault(); pdLightboxClose(); });
+  el.addEventListener('close', pdLbCleanup);
+  el.addEventListener('keydown', pdLbOnKey);
+  el.addEventListener('wheel', pdLbOnWheel, { passive: false });
+  pdLb.track.addEventListener('scroll', pdLbOnScroll, { passive: true });
+  pdLb.track.addEventListener('scrollend', () => { pdLb.target = null; pdLbOnScroll(); });
+  pdLb.track.addEventListener('click', pdLbOnClick);
+  pdLb.track.addEventListener('pointerdown', pdLbOnPointerDown);
+  pdLb.track.addEventListener('pointermove', pdLbOnPointerMove);
+  pdLb.track.addEventListener('pointerup', pdLbOnPointerUp);
+  pdLb.track.addEventListener('pointercancel', pdLbOnPointerUp);
+  window.addEventListener('resize', () => {
+    if (!el.open) return;
+    pdLbResetZoom();
+    pdLbLayout();
+    pdLb.track.scrollTo({ left: pdLb.index * pdLb.track.clientWidth, behavior: 'instant' });
+  });
+}
+
+function pdLbPageItem(i) {
+  const items = document.querySelectorAll(`.pd-gallery-img[data-index="${i}"], .pd-carousel__item[data-index="${i}"]`);
+  return Array.from(items).find((n) => n.offsetParent) || null;
+}
+
+function pdLbContain(rect, r) {
+  if (!r) return rect;
+  const w = Math.min(rect.width, rect.height * r);
+  const h = w / r;
+  return { left: rect.left + (rect.width - w) / 2, top: rect.top + (rect.height - h) / 2, width: w, height: h };
+}
+
+function pdLbOriginRect(i) {
+  const item = pdLbPageItem(i);
+  const img = item && item.querySelector('img');
+  if (!img || !img.naturalWidth) return null;
+  const rect = pdLbContain(img.getBoundingClientRect(), img.naturalWidth / img.naturalHeight);
+  const visible = rect.width > 0 && rect.top < window.innerHeight && rect.top + rect.height > 0 && rect.left < window.innerWidth && rect.left + rect.width > 0;
+  return visible ? { rect, src: img.currentSrc } : null;
+}
+
+function pdLbSizesFor(slide) {
+  const st = getComputedStyle(slide.slide);
+  const w = slide.slide.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
+  const h = slide.slide.clientHeight - parseFloat(st.paddingTop) - parseFloat(st.paddingBottom);
+  const r = parseFloat(slide.frame.style.getPropertyValue('--pd-r')) || 0.75;
+  const px = Math.ceil(Math.min(w, h * r) * (slide.hires ? PD_LB_ZOOM : 1));
+  return `${Math.max(px, 100)}px`;
+}
+
+function pdLbApplySizes(slide) {
+  const sizes = pdLbSizesFor(slide);
+  slide.slide.querySelectorAll('source, img').forEach((n) => { if (n.sizes !== sizes) n.sizes = sizes; });
+}
+
+function pdLbLayout() {
+  const top = pdLb.el.querySelector('.pd-lightbox__top');
+  const progress = pdLb.el.querySelector('.pd-lightbox__progress');
+  const bottom = pdLb.el.querySelector('.pd-lightbox__bottom');
+  const topEdge = progress.offsetParent ? progress.offsetTop + progress.offsetHeight : top.offsetTop + top.offsetHeight;
+  pdLb.el.style.setProperty('--pd-lb-top', `${Math.round(topEdge)}px`);
+  pdLb.el.style.setProperty('--pd-lb-bottom', `${Math.round(pdLb.el.clientHeight - bottom.offsetTop)}px`);
+  pdLb.slides.forEach((slide, i) => {
+    const r = pdRatios.get(pdLb.gallery[i]);
+    if (r) slide.frame.style.setProperty('--pd-r', r);
+    const pageImg = pdLbPageItem(i)?.querySelector('img');
+    if (pageImg && pageImg.naturalWidth && pageImg.currentSrc) slide.frame.style.setProperty('--pd-lb-preview', `url("${pageImg.currentSrc}")`);
+  });
+  pdLb.slides.forEach(pdLbApplySizes);
+}
+
+function pdLbSetIndex(i, scroll, instant) {
+  const total = pdLb.slides.length;
+  i = Math.max(0, Math.min(total - 1, i));
+  if (scroll) {
+    const smooth = !instant && !pdReducedMotion();
+    pdLb.target = smooth ? i : null;
+    pdLb.track.scrollTo({ left: i * pdLb.track.clientWidth, behavior: smooth ? 'smooth' : 'instant' });
+  }
+  if (i === pdLb.index) return;
+  pdLbResetZoom();
+  pdLb.index = i;
+
+  const n = String(i + 1).padStart(2, '0');
+  document.getElementById('pdLbCurrent').textContent = n;
+  document.getElementById('pdLbLive').textContent = `Foto ${i + 1} de ${total}`;
+  document.getElementById('pdLbPrev').setAttribute('aria-disabled', String(i === 0));
+  document.getElementById('pdLbNext').setAttribute('aria-disabled', String(i === total - 1));
+  pdLb.slides.forEach((s, k) => s.slide.setAttribute('aria-hidden', String(k !== i)));
+  pdLb.segs.forEach((seg, k) => {
+    seg.classList.toggle('pd-lightbox__seg--done', k < i);
+    seg.classList.toggle('pd-lightbox__seg--active', k === i);
+  });
+  pdLb.thumbs.forEach((btn, k) => btn.setAttribute('aria-current', k === i ? 'true' : 'false'));
+  const thumb = pdLb.thumbs[i];
+  if (thumb) {
+    const strip = thumb.parentElement;
+    strip.scrollTo({ left: thumb.offsetLeft - (strip.clientWidth - thumb.offsetWidth) / 2, behavior: instant || pdReducedMotion() ? 'instant' : 'smooth' });
+  }
+  [i, i + 1, i - 1].forEach((k) => { const s = pdLb.slides[k]; if (s) s.img.loading = 'eager'; });
+}
+
+function pdLightboxGo(i) {
+  if (!pdLb.el || !pdLb.el.open || pdLb.closing) return;
+  pdLbSetIndex(i, true);
+}
+
+function pdLbOnScroll() {
+  if (pdLb.scrollRaf) return;
+  pdLb.scrollRaf = requestAnimationFrame(() => {
+    pdLb.scrollRaf = 0;
+    const w = pdLb.track.clientWidth;
+    if (!w || pdLb.closing) return;
+    if (pdLb.target !== null) {
+      if (Math.abs(pdLb.track.scrollLeft - pdLb.target * w) > 2) return;
+      pdLb.target = null;
+    }
+    pdLbSetIndex(Math.round(pdLb.track.scrollLeft / w), false);
+  });
+}
+
+function pdLightboxOpen(index, originEl) {
+  const el = pdLb.el;
+  if (!el || el.open) return;
+  pdLb.origin = originEl || null;
+  pdLb.closing = false;
+  pdLb.index = -1;
+  el.classList.remove('pd-lightbox--immersive', 'pd-lightbox--dragging', 'pd-lightbox--zoomed');
+  el.showModal();
+  document.documentElement.classList.add('pd-lightbox-open');
+  pdLbLayout();
+  pdLbSetIndex(index, true, true);
+  pdLbAnimateIn(pdLb.index);
+}
+
+function pdLbAnimateIn(i) {
+  if (!window.gsap) return;
+  const { scrim, ui, ghost } = pdLb;
+  const cur = pdLb.slides[i];
+  gsap.killTweensOf([scrim, ghost, cur.frame, ...ui]);
+  if (pdReducedMotion()) {
+    gsap.fromTo(pdLb.el, { opacity: 0 }, { opacity: 1, duration: 0.2, clearProps: 'opacity' });
+    return;
+  }
+  gsap.fromTo(scrim, { opacity: 0 }, { opacity: 1, duration: 0.45, ease: 'power2.out' });
+  gsap.fromTo(ui,
+    { opacity: 0, y: (k, t) => (t.classList.contains('pd-lightbox__bottom') ? 18 : t.classList.contains('pd-lightbox__nav') ? 0 : -10) },
+    { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out', delay: 0.16, stagger: 0.04, clearProps: 'opacity,transform' }
+  );
+  const from = pdLbOriginRect(i);
+  if (from) {
+    pdLbFly(cur.frame, from.rect, from.src, false);
+  } else {
+    gsap.fromTo(cur.frame, { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out', clearProps: 'opacity,transform' });
+  }
+}
+
+function pdLbFly(frame, rect, src, reverse, onDone) {
+  const ghost = pdLb.ghost;
+  gsap.killTweensOf(ghost);
+  const to = frame.getBoundingClientRect();
+  if (!to.width || !src) { if (onDone) onDone(); return; }
+  Object.assign(ghost.style, { left: `${to.left}px`, top: `${to.top}px`, width: `${to.width}px`, height: `${to.height}px`, backgroundImage: `url("${src}")` });
+  ghost.hidden = false;
+  frame.style.visibility = 'hidden';
+  const away = { x: rect.left - to.left, y: rect.top - to.top, scaleX: rect.width / to.width, scaleY: rect.height / to.height };
+  const home = { x: 0, y: 0, scaleX: 1, scaleY: 1 };
+  gsap.fromTo(ghost, reverse ? home : away, {
+    ...(reverse ? away : home),
+    duration: reverse ? 0.45 : 0.62,
+    ease: reverse ? 'power3.inOut' : 'expo.out',
+    onComplete() {
+      if (!reverse) {
+        frame.style.visibility = '';
+        ghost.hidden = true;
+        gsap.set(ghost, { clearProps: 'transform' });
+      }
+      if (onDone) onDone();
+    }
+  });
+}
+
+function pdLbSyncPage(i) {
+  const item = pdLbPageItem(i);
+  if (!item) return;
+  const carousel = item.closest('.pd-carousel');
+  if (carousel) {
+    carousel.scrollTo({ left: i * carousel.offsetWidth, behavior: 'instant' });
+    return;
+  }
+  const rect = item.getBoundingClientRect();
+  if (rect.top < 80 || rect.bottom > window.innerHeight) item.scrollIntoView({ block: 'center', behavior: 'instant' });
+}
+
+function pdLightboxClose() {
+  const el = pdLb.el;
+  if (!el || !el.open || pdLb.closing) return;
+  pdLb.closing = true;
+  const i = pdLb.index;
+  const cur = pdLb.slides[i];
+  clearTimeout(pdLb.tapTimer);
+
+  const finish = () => el.close();
+
+  pdLbSyncPage(i);
+  if (!window.gsap) { finish(); return; }
+  if (pdReducedMotion()) {
+    gsap.to(el, { opacity: 0, duration: 0.15, onComplete() { gsap.set(el, { clearProps: 'opacity' }); finish(); } });
+    return;
+  }
+  pdLbResetZoom();
+  gsap.killTweensOf([pdLb.scrim, pdLb.ghost, cur.frame, ...pdLb.ui]);
+  gsap.to(pdLb.scrim, { opacity: 0, duration: 0.42, ease: 'power2.inOut' });
+  gsap.to(pdLb.ui, { opacity: 0, duration: 0.18, ease: 'power1.out' });
+  const to = pdLbOriginRect(i);
+  const src = cur.img.naturalWidth ? cur.img.currentSrc : to && to.src;
+  if (to && src) {
+    pdLbFly(cur.frame, to.rect, src, true, finish);
+  } else {
+    gsap.to(cur.frame, { opacity: 0, scale: 0.94, duration: 0.3, ease: 'power2.in', onComplete: finish });
+  }
+}
+
+function pdLbCleanup() {
+  const i = pdLb.index;
+  const nodes = [pdLb.el, pdLb.scrim, pdLb.ghost, ...pdLb.ui, ...pdLb.slides.map((s) => s.frame)];
+  clearTimeout(pdLb.tapTimer);
+  pdLb.pointers.clear();
+  pdLb.gesture = null;
+  pdLbResetZoom();
+  document.documentElement.classList.remove('pd-lightbox-open');
+  pdLb.el.classList.remove('pd-lightbox--dragging', 'pd-lightbox--immersive');
+  if (window.gsap) {
+    gsap.killTweensOf(nodes);
+    gsap.set(nodes, { clearProps: 'opacity,transform' });
+  }
+  pdLb.slides.forEach((s) => { s.frame.style.visibility = ''; });
+  pdLb.ghost.hidden = true;
+  pdLbSyncInert();
+  pdLb.closing = false;
+  const target = pdLbPageItem(i) || (pdLb.origin && pdLb.origin.offsetParent ? pdLb.origin : document.querySelector('.pd-gallery-img, .pd-carousel__item'));
+  if (target) target.focus({ preventScroll: true });
+}
+
+function pdLbSetImmersive(on) {
+  pdLb.el.classList.toggle('pd-lightbox--immersive', on);
+  pdLbSyncInert();
+}
+
+function pdLbSyncInert() {
+  const el = pdLb.el;
+  const immersive = el.classList.contains('pd-lightbox--immersive');
+  const zoomed = el.classList.contains('pd-lightbox--zoomed');
+  const hidden = (n) => immersive || (zoomed && !n.classList.contains('pd-lightbox__top'));
+  if (pdLb.ui.some((n) => hidden(n) && n.contains(document.activeElement))) el.focus({ preventScroll: true });
+  pdLb.ui.forEach((n) => { n.inert = hidden(n); });
+}
+
+function pdLbToggleZoom() {
+  if (!pdLbCurrent()) return;
+  if (pdLb.zoom.ts > 1) pdLbZoomTo(1, 0, 0);
+  else pdLbZoomTo(PD_LB_ZOOM, 0, 0);
+}
+
+function pdLbOnKey(e) {
+  if (pdLb.el.classList.contains('pd-lightbox--immersive')) pdLbSetImmersive(false);
+  if (pdLb.closing || e.altKey || e.ctrlKey || e.metaKey) return;
+  const z = pdLb.zoom;
+  if (e.key === '+' || e.key === '=') {
+    e.preventDefault();
+    if (z.ts <= 1) pdLbToggleZoom();
+    return;
+  }
+  if (e.key === '-' || e.key === '_' || e.key === '0') {
+    if (z.ts > 1) { e.preventDefault(); pdLbZoomTo(1, 0, 0); }
+    return;
+  }
+  if (z.ts > 1 && e.key.startsWith('Arrow')) {
+    e.preventDefault();
+    const d = 120;
+    pdLbZoomTo(z.ts, z.tx + ({ ArrowLeft: d, ArrowRight: -d }[e.key] || 0), z.ty + ({ ArrowUp: d, ArrowDown: -d }[e.key] || 0));
+    return;
+  }
+  if (e.shiftKey) return;
+  const keys = { ArrowRight: pdLb.index + 1, ArrowLeft: pdLb.index - 1, Home: 0, End: pdLb.slides.length - 1 };
+  if (!(e.key in keys)) return;
+  e.preventDefault();
+  pdLightboxGo(keys[e.key]);
+}
+
+function pdLbOnWheel(e) {
+  if (pdLb.zoom.ts > 1 || pdLb.closing) { e.preventDefault(); return; }
+  if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;
+  e.preventDefault();
+  const now = performance.now();
+  const idle = now - pdLb.wheelAt > 350;
+  pdLb.wheelAt = now;
+  if (idle && Math.abs(e.deltaY) > 4) pdLightboxGo(pdLb.index + Math.sign(e.deltaY));
+}
+
+function pdLbCurrent() {
+  return pdLb.slides[pdLb.index];
+}
+
+function pdLbBounds(s) {
+  const cur = pdLbCurrent();
+  const sr = cur.slide.getBoundingClientRect();
+  const fr = cur.frame.getBoundingClientRect();
+  const cx = fr.left + fr.width / 2;
+  const cy = fr.top + fr.height / 2;
+  const axis = (lo, hi, center, half) => {
+    const a = hi - center - half;
+    const b = lo - center + half;
+    return [Math.min(a, b), Math.max(a, b)];
   };
-  document.addEventListener('keydown', onKey);
-  lb._pdKeyHandler = onKey;
+  return { sr, cx, cy, x: axis(sr.left, sr.right, cx, (fr.width * s) / 2), y: axis(sr.top, sr.bottom, cy, (fr.height * s) / 2) };
 }
 
-function pdLightboxMobileOpen(index) {
-  const lb = document.getElementById('pdLightboxMobile');
-  if (!lb) return;
-  const track = lb.querySelector('#pdLightboxMobile__track');
-  const counter = lb.querySelector('#pdLightboxMobile__counter');
-  const total = track.children.length;
-  lb.classList.add('is-open');
-  document.body.style.overflow = 'hidden';
-  requestAnimationFrame(() => {
-    track.scrollLeft = index * track.offsetWidth;
-    counter.textContent = `${index + 1} / ${total}`;
-  });
+function pdLbClamp(s, x, y) {
+  const b = pdLbBounds(s);
+  return { x: Math.min(b.x[1], Math.max(b.x[0], x)), y: Math.min(b.y[1], Math.max(b.y[0], y)) };
 }
 
-function pdLightboxMobileClose() {
-  const lb = document.getElementById('pdLightboxMobile');
-  if (!lb) return;
-  lb.classList.remove('is-open');
-  document.body.style.overflow = '';
+function pdLbPanFor(e, s) {
+  const b = pdLbBounds(s);
+  const fx = Math.min(1, Math.max(0, (e.clientX - b.sr.left) / b.sr.width));
+  const fy = Math.min(1, Math.max(0, (e.clientY - b.sr.top) / b.sr.height));
+  return { x: b.x[1] + (b.x[0] - b.x[1]) * fx, y: b.y[1] + (b.y[0] - b.y[1]) * fy };
+}
+
+function pdLbCenter() {
+  const b = pdLbBounds(1);
+  return { x: b.cx, y: b.cy };
+}
+
+function pdLbSetZoomed(on) {
+  const el = pdLb.el;
+  const cur = pdLbCurrent();
+  if (on && cur && !cur.hires) {
+    cur.hires = true;
+    pdLbApplySizes(cur);
+  }
+  if (el.classList.contains('pd-lightbox--zoomed') === on) return;
+  el.classList.toggle('pd-lightbox--zoomed', on);
+  const btn = document.getElementById('pdLbZoom');
+  btn.setAttribute('aria-pressed', String(on));
+  btn.setAttribute('aria-label', on ? 'Alejar foto' : 'Acercar foto');
+  pdLbSyncInert();
+}
+
+function pdLbPaint() {
+  const cur = pdLbCurrent();
+  if (!cur) return;
+  const z = pdLb.zoom;
+  cur.img.style.transform = z.s > 1.001 ? `translate3d(${z.x}px, ${z.y}px, 0) scale(${z.s})` : '';
+}
+
+function pdLbTick(now) {
+  const z = pdLb.zoom;
+  const dt = Math.min(64, now - (z.last || now - 16.7));
+  z.last = now;
+  const k = 1 - Math.pow(0.8, dt / 16.7);
+  z.s += (z.ts - z.s) * k;
+  z.x += (z.tx - z.x) * k;
+  z.y += (z.ty - z.y) * k;
+  const settled = Math.abs(z.ts - z.s) < 0.002 && Math.abs(z.tx - z.x) < 0.3 && Math.abs(z.ty - z.y) < 0.3;
+  if (settled) { z.s = z.ts; z.x = z.tx; z.y = z.ty; }
+  pdLbPaint();
+  z.raf = settled ? 0 : requestAnimationFrame(pdLbTick);
+  if (settled) z.last = 0;
+}
+
+function pdLbZoomTo(s, x, y, instant) {
+  if (!pdLbCurrent()) return;
+  const z = pdLb.zoom;
+  const c = pdLbClamp(s, x, y);
+  z.ts = s; z.tx = c.x; z.ty = c.y;
+  pdLbSetZoomed(s > 1);
+  if (instant || pdReducedMotion()) {
+    cancelAnimationFrame(z.raf);
+    z.raf = 0;
+    z.s = s; z.x = c.x; z.y = c.y;
+    pdLbPaint();
+    return;
+  }
+  if (!z.raf) z.raf = requestAnimationFrame(pdLbTick);
+}
+
+function pdLbResetZoom() {
+  const z = pdLb.zoom;
+  cancelAnimationFrame(z.raf);
+  Object.assign(z, { s: 1, x: 0, y: 0, ts: 1, tx: 0, ty: 0, raf: 0, last: 0 });
+  pdLb.slides.forEach((s) => { s.img.style.transform = ''; });
+  if (pdLb.el) pdLbSetZoomed(false);
+}
+
+function pdLbOnClick(e) {
+  if (performance.now() - pdLb.touchAt < 800 || pdLb.closing) return;
+  const cur = pdLbCurrent();
+  if (!cur) return;
+  if (cur.frame.contains(e.target)) {
+    if (pdLb.zoom.ts > 1) pdLbZoomTo(1, 0, 0);
+    else { const p = pdLbPanFor(e, PD_LB_ZOOM); pdLbZoomTo(PD_LB_ZOOM, p.x, p.y); }
+  } else if (pdLb.zoom.ts > 1) {
+    pdLbZoomTo(1, 0, 0);
+  } else {
+    pdLightboxClose();
+  }
+}
+
+function pdLbOnPointerDown(e) {
+  if (e.pointerType === 'mouse' || pdLb.closing) return;
+  pdLb.touchAt = performance.now();
+  pdLb.target = null;
+  pdLb.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const z = pdLb.zoom;
+  if (pdLb.pointers.size === 2) {
+    const [a, b] = [...pdLb.pointers.values()];
+    clearTimeout(pdLb.tapTimer);
+    cancelAnimationFrame(z.raf);
+    z.raf = 0;
+    pdLb.gesture = { type: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, s0: z.s, x0: z.x, y0: z.y, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    pdLbSetZoomed(true);
+  } else if (pdLb.pointers.size === 1) {
+    pdLb.gesture = { type: 'pending', sx: e.clientX, sy: e.clientY, x0: z.x, y0: z.y, t0: performance.now() };
+  }
+}
+
+function pdLbOnPointerMove(e) {
+  const z = pdLb.zoom;
+  if (e.pointerType === 'mouse') {
+    if (z.ts > 1 && !pdLb.closing) { const p = pdLbPanFor(e, z.ts); pdLbZoomTo(z.ts, p.x, p.y); }
+    return;
+  }
+  if (!pdLb.pointers.has(e.pointerId)) return;
+  pdLb.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const g = pdLb.gesture;
+  if (!g) return;
+
+  if (g.type === 'pinch' && pdLb.pointers.size >= 2) {
+    const [a, b] = [...pdLb.pointers.values()];
+    const s = Math.min(4, Math.max(1, g.s0 * Math.hypot(a.x - b.x, a.y - b.y) / g.d0));
+    const c = pdLbCenter();
+    const px = (g.mx - c.x - g.x0) / g.s0;
+    const py = (g.my - c.y - g.y0) / g.s0;
+    pdLbZoomTo(s, (a.x + b.x) / 2 - c.x - px * s, (a.y + b.y) / 2 - c.y - py * s, true);
+    return;
+  }
+
+  const dx = e.clientX - g.sx;
+  const dy = e.clientY - g.sy;
+  if (g.type === 'pending') {
+    if (Math.hypot(dx, dy) < 8) return;
+    clearTimeout(pdLb.tapTimer);
+    if (z.s > 1) g.type = 'pan';
+    else if (dy > 0 && Math.abs(dy) > Math.abs(dx) * 1.2) g.type = 'dismiss';
+    else { pdLb.gesture = null; return; }
+  }
+  if (g.type === 'pan') pdLbZoomTo(z.s, g.x0 + dx, g.y0 + dy, true);
+  if (g.type === 'dismiss') pdLbDrag(Math.max(0, dy));
+}
+
+function pdLbOnPointerUp(e) {
+  if (!pdLb.pointers.has(e.pointerId)) return;
+  pdLb.pointers.delete(e.pointerId);
+  const g = pdLb.gesture;
+  const z = pdLb.zoom;
+  pdLb.touchAt = performance.now();
+
+  if (g && g.type === 'pinch') {
+    if (pdLb.pointers.size === 1) {
+      if (z.s < 1.08) { pdLb.gesture = null; pdLbZoomTo(1, 0, 0); return; }
+      const [p] = [...pdLb.pointers.values()];
+      pdLb.gesture = { type: 'pan', sx: p.x, sy: p.y, x0: z.x, y0: z.y };
+      return;
+    }
+    pdLb.gesture = null;
+    if (z.s < 1.08) pdLbZoomTo(1, 0, 0);
+    else pdLbSetZoomed(true);
+    return;
+  }
+  if (pdLb.pointers.size) return;
+  pdLb.gesture = null;
+  if (!g) return;
+  if (g.type === 'pan' && z.s < 1.08) { pdLbZoomTo(1, 0, 0); return; }
+  if (g.type === 'dismiss') {
+    const dy = e.type === 'pointerup' ? e.clientY - g.sy : 0;
+    pdLbDragEnd(dy, performance.now() - g.t0);
+    return;
+  }
+  if (g.type === 'pending' && e.type === 'pointerup') pdLbTap(e);
+}
+
+function pdLbTap(e) {
+  const now = performance.now();
+  const isDouble = now - pdLb.tapAt < 300 && Math.hypot(e.clientX - pdLb.tapX, e.clientY - pdLb.tapY) < 40;
+  clearTimeout(pdLb.tapTimer);
+  if (isDouble) {
+    pdLb.tapAt = 0;
+    if (pdLb.zoom.ts > 1) {
+      pdLbZoomTo(1, 0, 0);
+    } else {
+      const c = pdLbCenter();
+      const s = PD_LB_ZOOM;
+      pdLbZoomTo(s, -(e.clientX - c.x) * (s - 1), -(e.clientY - c.y) * (s - 1));
+    }
+    return;
+  }
+  pdLb.tapAt = now;
+  pdLb.tapX = e.clientX;
+  pdLb.tapY = e.clientY;
+  pdLb.tapTimer = setTimeout(() => {
+    if (pdLb.zoom.ts === 1) pdLbSetImmersive(!pdLb.el.classList.contains('pd-lightbox--immersive'));
+  }, 300);
+}
+
+function pdLbDrag(dy) {
+  const cur = pdLbCurrent();
+  const p = Math.min(1, dy / 420);
+  pdLb.el.classList.add('pd-lightbox--dragging');
+  if (window.gsap) {
+    gsap.set(cur.frame, { y: dy, scale: 1 - p * 0.18 });
+    gsap.set(pdLb.scrim, { opacity: 1 - p * 0.9 });
+  } else {
+    cur.frame.style.transform = `translate3d(0, ${dy}px, 0) scale(${1 - p * 0.18})`;
+    pdLb.scrim.style.opacity = String(1 - p * 0.9);
+  }
+}
+
+function pdLbDragEnd(dy, dt) {
+  if (dy > 110 || (dy > 40 && dy / Math.max(dt, 1) > 0.65)) { pdLightboxClose(); return; }
+  const cur = pdLbCurrent();
+  pdLb.el.classList.remove('pd-lightbox--dragging');
+  if (window.gsap && !pdReducedMotion()) {
+    gsap.to(cur.frame, { y: 0, scale: 1, duration: 0.45, ease: 'power3.out', clearProps: 'transform' });
+    gsap.to(pdLb.scrim, { opacity: 1, duration: 0.3, ease: 'power2.out', clearProps: 'opacity' });
+  } else {
+    if (window.gsap) gsap.set([cur.frame, pdLb.scrim], { clearProps: 'transform,opacity' });
+    cur.frame.style.transform = '';
+    pdLb.scrim.style.opacity = '';
+  }
 }
 
 function pdSelectSize(size, btn) {

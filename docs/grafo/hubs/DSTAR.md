@@ -7,7 +7,7 @@ tags: [hub]
 
 Mapa del proyecto: notas de contexto, páginas, código del navegador, backend, pruebas, servicios y variables de entorno, todo conectado.
 
-Archivos de código mapeados: 44 · tecnologías: 15 · variables de entorno: 23 · commits: 49
+Archivos de código mapeados: 45 · tecnologías: 15 · variables de entorno: 23 · commits: 50
 
 ## Contexto
 
@@ -33,7 +33,7 @@ Archivos de código mapeados: 44 · tecnologías: 15 · variables de entorno: 23
 - [[Frontend]] — JavaScript del navegador, estilos y service worker.
 - [[Backend]] — Netlify Functions y las librerías que comparten.
 - [[Pruebas]] — Pruebas E2E, medición de rendimiento y su configuración.
-- [[Herramientas]] — Scripts de apoyo (imágenes, Lighthouse).
+- [[Herramientas]] — Scripts de apoyo (imágenes, caché de Cloudinary, Lighthouse).
 - [[Configuración]] — Netlify, package.json, manifest y otros archivos de configuración.
 - [[Tecnologías]] — Servicios externos, librerías y herramientas que usa el proyecto.
 - [[Variables de entorno]] — Nombres de las variables que lee el backend (sin valores).

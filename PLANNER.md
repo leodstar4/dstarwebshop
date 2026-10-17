@@ -1,6 +1,6 @@
 # DSTAR — Lo que falta
 
-Actualizado: 2026-10-13.
+Actualizado: 2026-10-17.
 
 ## Prioridad alta (afecta ventas o es obligatorio)
 
@@ -23,6 +23,13 @@ Actualizado: 2026-10-13.
 - [ ] Agregar productos sin tocar código (Cloudinary + JSON o un CMS ligero).
 - [ ] Analítica respetuosa de privacidad (Plausible o Netlify Analytics).
 - [ ] Prueba E2E del logo con autoplay bloqueado (necesita Chrome con H.264: `channel: 'chrome'`).
+
+## Hecho el 2026-10-17
+
+- Galería de producto con placeholder borroso (LQIP) que reserva el alto, y un solo lightbox en `<dialog>` para móvil y desktop: animación FLIP al abrir y cerrar, zoom con click, teclado, doble tap y pellizco, deslizar hacia abajo para cerrar y fotos de hasta 2400 px solo con zoom.
+- Service worker `dstar-v10`: las imágenes de Cloudinary se piden en modo CORS y solo se guardan si responden bien; una foto que fallaba una vez ya no queda rota en caché.
+- `scripts/calentar-cloudinary.js` para generar de antemano todas las variantes de Cloudinary (correrlo tras agregar o cambiar fotos).
+- Prueba E2E del lightbox; 136 pasando con `--workers=2`.
 
 ## Hecho el 2026-10-12
 

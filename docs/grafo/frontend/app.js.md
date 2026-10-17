@@ -1,15 +1,15 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/app.js"
-lineas: 1444
+lineas: 1873
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # app.js
 
-`dstar-store/js/app.js` · 1444 líneas
+`dstar-store/js/app.js` · 1873 líneas
 
-Lógica principal: render de productos, detalle de producto (galería, carrusel y lightbox), carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto; arma las fotos de Cloudinary como `<picture>` con AVIF y f_auto de respaldo (cdnPicture, que también usa gsap-animations.js), marca is-scrolled en `<html>` y precarga el detalle de producto con intención de hover.
+Lógica principal: render de productos, detalle de producto (galería y carrusel con placeholder borroso LQIP, y lightbox en `<dialog>` con vuelo FLIP, zoom, gestos táctiles y teclado), carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto; arma las fotos de Cloudinary como `<picture>` con AVIF y f_auto de respaldo (cdnPicture, que también usa gsap-animations.js), marca is-scrolled en `<html>` y precarga el detalle de producto (primera foto y LQIP de la galería) con intención de hover.
 
 Parte de: [[Frontend]]
 
@@ -37,31 +37,31 @@ Parte de: [[Frontend]]
 - `applyLiveStock` (línea 264)
 - `initCardPrefetch` (línea 280)
 - `warm` (línea 284)
-- `cardOf` (línea 306)
-- `initCart` (línea 321)
-- `openCart` (línea 336)
-- `closeCart` (línea 342)
-- `updateCartUI` (línea 348)
-- `changeQty` (línea 406)
-- `removeFromCart` (línea 421)
-- `saveCart` (línea 427)
-- `stockDisponible` (línea 431)
-- `escapeHtml` (línea 436)
-- `handleCheckout` (línea 445)
-- `initScrollAnimations` (línea 459)
-- `showToast` (línea 477)
-- `renderLookbook` (línea 570)
-- `renderBlog` (línea 598)
-- `renderFAQ` (línea 627)
-- `toggleFAQ` (línea 655)
-- `formatPrice` (línea 680)
-- `initScrollProgress` (línea 687)
-- `measure` (línea 693)
-- `paint` (línea 694)
-- `initRippleButtons` (línea 712)
-- `TextScramble` (línea 735)
-- `initTextScramble` (línea 781)
-- y 21 más
+- `cardOf` (línea 307)
+- `initCart` (línea 322)
+- `openCart` (línea 337)
+- `closeCart` (línea 343)
+- `updateCartUI` (línea 349)
+- `changeQty` (línea 407)
+- `removeFromCart` (línea 422)
+- `saveCart` (línea 428)
+- `stockDisponible` (línea 432)
+- `escapeHtml` (línea 437)
+- `handleCheckout` (línea 446)
+- `initScrollAnimations` (línea 460)
+- `showToast` (línea 478)
+- `renderLookbook` (línea 571)
+- `renderBlog` (línea 599)
+- `renderFAQ` (línea 628)
+- `toggleFAQ` (línea 656)
+- `formatPrice` (línea 681)
+- `initScrollProgress` (línea 688)
+- `measure` (línea 694)
+- `paint` (línea 695)
+- `initRippleButtons` (línea 713)
+- `TextScramble` (línea 736)
+- `initTextScramble` (línea 782)
+- y 60 más
 
 ## Últimos cambios
 

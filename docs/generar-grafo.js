@@ -18,7 +18,7 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
 const DESC = {
   'dstar-store/index.html': 'Página principal: loader cuyo script inline cambia el póster por un `<video>` (logo-3d-loader.mp4, sin alfa, con mix-blend-mode: lighten), crea temprano el worker de logo-3d-worker.js y solo en la primera visita de la sesión (sessionStorage dstar-intro) espera a que gire y a que el logo del hero esté listo; hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.',
-  'dstar-store/producto.html': 'Detalle de producto: galería, selector de talla y botón de compra; precarga desde el `<head>` la primera foto en AVIF con las mismas URLs e imagesizes que usa app.js.',
+  'dstar-store/producto.html': 'Detalle de producto: galería, selector de talla y botón de compra, con un solo `<dialog class="pd-lightbox">` (#pdLightbox) para móvil y desktop que llena app.js; precarga desde el `<head>` la primera foto en AVIF con las mismas URLs e imagesizes que usa app.js.',
   'dstar-store/checkout.html': 'Checkout: datos del cliente, cotización de envío y pago con Mercado Pago.',
   'dstar-store/gracias.html': 'Confirmación después de un pago exitoso.',
   'dstar-store/error-pago.html': 'Pantalla cuando el pago falla.',
@@ -30,15 +30,15 @@ const DESC = {
   'dstar-store/blog/como-cuidar-tu-ropa.html': 'Artículo del blog: cómo cuidar tu ropa.',
   'dstar-store/blog/streetwear-mexico-escena.html': 'Artículo del blog: la escena del streetwear en México.',
   'dstar-preview.html': 'Vista previa estática grande del sitio, en la raíz del repo.',
-  'dstar-store/css/style.css': 'Estilos completos del sitio: BEM, custom properties en :root y mobile-first; incluye el loader (.loader__video, desvanecido solo de opacity y .loader--gone), la View Transition nativa entre páginas (@view-transition), el hero de desktop que reserva el alto del header, el fondo body::before con image-set (AVIF y f_auto), `picture { display: contents }` para los `<picture>` de app.js y las clases .split-char, .split-line-mask y .hero--gsap que usa gsap-animations.js.',
-  'dstar-store/js/app.js': 'Lógica principal: render de productos, detalle de producto (galería, carrusel y lightbox), carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto; arma las fotos de Cloudinary como `<picture>` con AVIF y f_auto de respaldo (cdnPicture, que también usa gsap-animations.js), marca is-scrolled en `<html>` y precarga el detalle de producto con intención de hover.',
+  'dstar-store/css/style.css': 'Estilos completos del sitio: BEM, custom properties en :root y mobile-first; incluye el loader (.loader__video, desvanecido solo de opacity y .loader--gone), la View Transition nativa entre páginas (@view-transition), el hero de desktop que reserva el alto del header, el fondo body::before con image-set (AVIF y f_auto), `picture { display: contents }` para los `<picture>` de app.js, el lightbox de producto (.pd-lightbox), el placeholder borroso --pd-lqip de la galería y las clases .split-char, .split-line-mask y .hero--gsap que usa gsap-animations.js.',
+  'dstar-store/js/app.js': 'Lógica principal: render de productos, detalle de producto (galería y carrusel con placeholder borroso LQIP, y lightbox en `<dialog>` con vuelo FLIP, zoom, gestos táctiles y teclado), carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto; arma las fotos de Cloudinary como `<picture>` con AVIF y f_auto de respaldo (cdnPicture, que también usa gsap-animations.js), marca is-scrolled en `<html>` y precarga el detalle de producto (primera foto y LQIP de la galería) con intención de hover.',
   'dstar-store/js/cart-store.js': 'Carrito en localStorage (dstar_cart) y sincronización del stock con /api/stock.',
   'dstar-store/js/products-data.js': 'Catálogo estático de productos; lo leen el navegador y el backend (validación de precios y stock).',
   'dstar-store/js/logo-3d.js': 'Logo 3D animado del hero: en Chromium adopta el worker que creó el loader de index.html (window.__logo3dWorker) o crea uno, y le pasa cada canvas (runWorker, OffscreenCanvas); si no hay soporte o el worker falla usa runVideo: `<video>` + WebGL en el hilo principal (Safari/iPhone) con respaldo WebCodecs cuando el autoplay está bloqueado (modo de ahorro); mientras el loader está visible solo dibuja el primer cuadro (held), mide el canvas con ResizeObserver (dpr máximo 3, tope de 560 px), conserva hasta 3 cuadros de atraso y pausa si ninguna vista es visible.',
   'dstar-store/js/logo-3d-worker.js': 'Web Worker del logo 3D en Chromium: descarga el MP4 apilado (color arriba, alfa abajo), lo decodifica con WebCodecs y lo dibuja con WebGL a 60 fps sobre los OffscreenCanvas que le pasa logo-3d.js (si se atrasa salta hasta 3 cuadros), calienta un contexto WebGL mientras descarga, solo dibuja el primer cuadro mientras está en hold y se pausa si ninguna vista es visible o la pestaña está oculta; recibe view, size, visible, hold, hidden y start, y responde live o error.',
   'dstar-store/js/gsap-animations.js': 'Animaciones del index y del detalle: hero letra por letra (SplitText) y CTA con element.animate() al recibir dstar:loaded, revelados de scroll con IntersectionObserver y element.animate() (WAAPI, en el compositor), contador de Nosotros, lookbook en móvil/tablet, cursor y botones magnéticos con GSAP desde js/vendor. El contenido es visible por defecto y respeta prefers-reduced-motion.',
   'dstar-store/js/blog-transitions.js': 'Animaciones de los artículos del blog: entrada del encabezado, título palabra por palabra con SplitText, reveal del contenido con IntersectionObserver y barra de progreso de lectura con ScrollTrigger cuando el navegador no soporta animation-timeline.',
-  'dstar-store/sw.js': 'Service worker de la PWA: precache del shell, network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80); no intercepta /api, el checkout, las páginas de resultado del pago, los .mp4 ni las peticiones con Range.',
+  'dstar-store/sw.js': 'Service worker de la PWA: precache del shell, network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, los .mp4 ni las peticiones con Range.',
   'dstar-store/manifest.webmanifest': 'Manifest de la PWA (nombre, íconos, colores).',
   'dstar-store/netlify/functions/cotizar-envio.js': 'Función /api/cotizar-envio: cotiza tarifas de envío con Skydropx Pro.',
   'dstar-store/netlify/functions/mp-preference.js': 'Función /api/mp-preference: valida el pedido, el stock y el precio del envío, y crea la preferencia de pago en Mercado Pago.',
@@ -50,7 +50,8 @@ const DESC = {
   'dstar-store/netlify/lib/validate.js': 'Validación de datos del cliente y del pedido, y verificación del origen de la petición.',
   'dstar-store/optimize-images.js': 'Optimiza imágenes con sharp (carpetas y archivos extra del sitio).',
   'scripts/optimize-images.js': 'Genera tamaños optimizados de las fotos de productos con sharp.',
-  'dstar-store/tests/e2e/flujo-compra.spec.js': 'Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto y selector de talla.',
+  'scripts/calentar-cloudinary.js': 'Pide una vez a Cloudinary todas las variantes que usa la web a partir de products-data.js (tarjetas, galería y lightbox hasta 2400, miniaturas y LQIP) para que ningún cliente espere a que se generen; se corre tras agregar o cambiar fotos.',
+  'dstar-store/tests/e2e/flujo-compra.spec.js': 'Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto, selector de talla y lightbox de la galería (teclado, zoom y cierre con Escape).',
   'dstar-store/tests/e2e/stock-y-animaciones.spec.js': 'Pruebas de stock vivo y alertas (descuento por pago, reintento sin doble descuento, sobreventa, monto distinto) y de que el contenido se vea aunque GSAP no cargue y ningún elemento renderizado (incluidos los .split-char) se quede con opacidad menor a 0.05.',
   'dstar-store/tests/e2e/audit-bugs.spec.js': 'Pruebas de regresión de la auditoría: stock por talla, localStorage corrupto, código postal del checkout, firma del webhook y origen.',
   'dstar-store/tests/perf/diagnostico.js': 'Mide fluidez y carga con Playwright en varios perfiles y escribe reportes en tests/perf/reportes.',
@@ -108,7 +109,7 @@ function categoria(rel) {
   if (/^dstar-store\/tests\//.test(rel) || /playwright\.config/.test(rel)) return 'pruebas';
   if (rel.endsWith('.html')) return 'paginas';
   if (/^dstar-store\/js\//.test(rel) || rel.endsWith('.css') || rel === 'dstar-store/sw.js') return 'frontend';
-  if (/optimize-images\.js$/.test(rel) || /lighthouserc/.test(rel)) return 'herramientas';
+  if (/optimize-images\.js$/.test(rel) || /lighthouserc/.test(rel) || rel.startsWith('scripts/')) return 'herramientas';
   return 'config';
 }
 
@@ -461,7 +462,7 @@ const HUB_DESC = {
   'Frontend': 'JavaScript del navegador, estilos y service worker.',
   'Backend': 'Netlify Functions y las librerías que comparten.',
   'Pruebas': 'Pruebas E2E, medición de rendimiento y su configuración.',
-  'Herramientas': 'Scripts de apoyo (imágenes, Lighthouse).',
+  'Herramientas': 'Scripts de apoyo (imágenes, caché de Cloudinary, Lighthouse).',
   'Configuración': 'Netlify, package.json, manifest y otros archivos de configuración.',
   'Tecnologías': 'Servicios externos, librerías y herramientas que usa el proyecto.',
   'Variables de entorno': 'Nombres de las variables que lee el backend (sin valores).',

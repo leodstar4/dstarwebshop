@@ -1,15 +1,15 @@
 ---
 tags: [codigo, prueba]
 ruta: "dstar-store/tests/e2e/flujo-compra.spec.js"
-lineas: 259
+lineas: 285
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # flujo-compra.spec.js
 
-`dstar-store/tests/e2e/flujo-compra.spec.js` · 259 líneas
+`dstar-store/tests/e2e/flujo-compra.spec.js` · 285 líneas
 
-Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto y selector de talla.
+Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto, selector de talla y lightbox de la galería (teclado, zoom y cierre con Escape).
 
 Parte de: [[Pruebas]]
 
@@ -22,7 +22,7 @@ Parte de: [[Pruebas]]
 
 ## Funciones y clases
 
-- `gotoCheckoutConCarrito` (línea 119)
+- `gotoCheckoutConCarrito` (línea 145)
 
 ## Casos de prueba
 
@@ -37,6 +37,7 @@ Parte de: [[Pruebas]]
 - carga y muestra información del producto
 - selector de talla muestra opciones
 - botón comprar bloqueado sin talla y se desbloquea al elegir
+- galería abre el lightbox, navega con teclado y cierra con Escape
 - Navegación móvil
 - menú hamburguesa abre y cierra
 - Checkout

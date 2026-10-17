@@ -83,6 +83,32 @@ test.describe('Página de producto', () => {
     await page.locator('#pdSizes .size-btn:not([disabled])').first().click();
     await expect(addBtn).not.toHaveAttribute('data-state', 'locked');
   });
+
+  test('galería abre el lightbox, navega con teclado y cierra con Escape', async ({ page }) => {
+    await page.goto(PRODUCT_URL);
+    const opener = page.locator('.pd-gallery-img:visible, .pd-carousel__item:visible').first();
+    await expect(opener).toBeVisible({ timeout: 8000 });
+    await opener.click();
+
+    const lightbox = page.locator('#pdLightbox');
+    await expect(lightbox).toHaveAttribute('open', '');
+    await expect(page.locator('#pdLbCurrent')).toHaveText('01');
+    await expect(page.locator('.pd-lightbox__frame').first()).toHaveClass(/pd-lightbox__frame--loaded/, { timeout: 8000 });
+
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('#pdLbCurrent')).toHaveText('02');
+    await expect(page.locator('#pdLbLive')).toHaveText(/Foto 2 de/);
+
+    await page.keyboard.press('+');
+    await expect(page.locator('#pdLbZoom')).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('-');
+    await expect(page.locator('#pdLbZoom')).toHaveAttribute('aria-pressed', 'false');
+
+    await page.keyboard.press('Escape');
+    await expect(lightbox).not.toHaveAttribute('open', '');
+    await expect(page.locator('html')).not.toHaveClass(/pd-lightbox-open/);
+    await expect(page.locator('.pd-gallery-img[data-index="1"]:visible, .pd-carousel__item[data-index="1"]:visible')).toBeFocused();
+  });
 });
 
 test.describe('Navegación móvil', () => {
