@@ -1,15 +1,15 @@
 ---
 tags: [codigo, backend]
 ruta: "dstar-store/netlify/lib/skydropx.js"
-lineas: 52
+lineas: 106
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # skydropx.js
 
-`dstar-store/netlify/lib/skydropx.js` · 52 líneas
+`dstar-store/netlify/lib/skydropx.js` · 106 líneas
 
-Cliente de Skydropx: token OAuth con caché y consulta del precio de una tarifa.
+Cliente de Skydropx: token OAuth con caché, consulta del precio de una tarifa (con carrier y service) y cotizar(destino, parcel), que usan cotizar-envio.js y mp-webhook.js.
 
 Parte de: [[Backend]]
 
@@ -23,6 +23,8 @@ Parte de: [[Backend]]
 - `clean` (línea 5)
 - `getSkydropxToken` (línea 7)
 - `getRatePrice` (línea 34)
+- `sleep` (línea 53)
+- `cotizar` (línea 57)
 
 ## Últimos cambios
 

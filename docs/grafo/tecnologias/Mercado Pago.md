@@ -12,8 +12,6 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
-- [[checkout.html]]
-- [[gracias.html]]
 - [[mp-preference.js]]
 - [[mp-webhook.js]]
 - [[netlify.toml (dstar-store)]]

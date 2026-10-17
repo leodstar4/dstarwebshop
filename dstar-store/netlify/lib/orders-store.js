@@ -11,6 +11,11 @@ function openStore(event) {
     return {
       get: (key) => store.get(key, { type: 'json' }),
       set: (key, value) => store.setJSON(key, value),
+      list: async () => {
+        const { blobs } = await store.list();
+        const valores = await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' }).catch(() => null)));
+        return blobs.map((b, i) => ({ id: b.key, ...(valores[i] || {}) }));
+      },
       claim: async (key, staleMs) => {
         const actual = await store.getWithMetadata(key, { type: 'json' });
         const valor = { ...(actual && actual.data), status: 'processing', at: Date.now() };
@@ -26,6 +31,7 @@ function openStore(event) {
     return {
       get: async (key) => memory.get(key) || null,
       set: async (key, value) => { memory.set(key, value); },
+      list: async () => [...memory.entries()].map(([id, v]) => ({ id, ...v })),
       claim: async (key, staleMs) => {
         if (!disponible(memory.get(key), staleMs)) return false;
         memory.set(key, { ...memory.get(key), status: 'processing', at: Date.now() });

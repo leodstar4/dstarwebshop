@@ -1,21 +1,21 @@
 ---
 tags: [codigo, backend]
 ruta: "dstar-store/netlify/functions/mp-preference.js"
-lineas: 92
+lineas: 100
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # mp-preference.js
 
-`dstar-store/netlify/functions/mp-preference.js` · 92 líneas
+`dstar-store/netlify/functions/mp-preference.js` · 100 líneas
 
-Función /api/mp-preference: valida el pedido, el stock y el precio del envío, y crea la preferencia de pago en Mercado Pago.
+Función /api/mp-preference: valida el pedido, el stock y el precio del envío y crea la preferencia de pago en Mercado Pago con vencimiento a 3 días (OXXO) y quotation_id y envio en metadata; límite de 10 peticiones por IP cada 10 min.
 
 Parte de: [[Backend]]
 
 ## Conexiones
 
-- Importa: [[validate.js]], [[skydropx.js]], [[stock-store.js]]
+- Importa: [[validate.js]], [[skydropx.js]], [[stock-store.js]], [[rate-limit.js]]
 - Llama a la API: [[mp-webhook.js]] (`/api/mp-webhook`)
 - Referencia a: [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]]
 - Usa: [[Netlify]], [[Mercado Pago]], [[Skydropx]]
@@ -23,8 +23,9 @@ Parte de: [[Backend]]
 
 ## Funciones y clases
 
-- `reply` (línea 15)
-- `handler` (línea 17)
+- `reply` (línea 16)
+- `horaMexico` (línea 18)
+- `handler` (línea 20)
 
 ## Últimos cambios
 

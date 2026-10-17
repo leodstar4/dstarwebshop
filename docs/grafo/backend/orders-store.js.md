@@ -1,15 +1,15 @@
 ---
 tags: [codigo, backend]
 ruta: "dstar-store/netlify/lib/orders-store.js"
-lineas: 39
+lineas: 45
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # orders-store.js
 
-`dstar-store/netlify/lib/orders-store.js` · 39 líneas
+`dstar-store/netlify/lib/orders-store.js` · 45 líneas
 
-Registro de pedidos en Netlify Blobs (evita guías duplicadas); en memoria en local.
+Registro de pedidos en Netlify Blobs (evita guías duplicadas y guarda pedido y guía de cada pago); list() alimenta el panel; en memoria en local.
 
 Parte de: [[Backend]]
 

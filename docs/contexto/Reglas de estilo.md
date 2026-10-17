@@ -15,4 +15,10 @@ Resumen de [[CLAUDE]]; los estilos viven en [[style.css]].
 - `backdrop-filter` solo en elementos chicos y fijos de navegación.
 - `font-display: swap` en todas las fuentes ([[Google Fonts]]).
 
+Convenciones del código desde la auditoría del 2026-10-17 (no están en [[CLAUDE]]):
+
+- Sin `<script>` ni handlers inline (`onclick`, `onerror`, `onload`): la CSP no los permite. Usar un archivo `.js` y listeners (`data-fallback` en imágenes, delegación de eventos). Si un script inline es inevitable, correr `node scripts/csp-hashes.js` ([[csp-hashes.js]]) para que su hash entre en la CSP ([[Seguridad]]).
+- `viewport-fit=cover` en el meta viewport de las páginas nuevas, y los márgenes de elementos fijos con `env(safe-area-inset-*)` en el bloque SAFE AREAS de [[style.css]].
+- Páginas privadas con `<meta name="robots" content="noindex">`; las públicas con canonical, `og:*` y `twitter:card` ([[Despliegue]]).
+
 Parte de: [[DSTAR]]

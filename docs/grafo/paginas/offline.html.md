@@ -1,15 +1,15 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/offline.html"
-lineas: 47
+lineas: 51
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # offline.html
 
-`dstar-store/offline.html` · 47 líneas
+`dstar-store/offline.html` · 51 líneas
 
-Página sin conexión de la PWA.
+Página sin conexión de la PWA (noindex).
 
 Parte de: [[Páginas]]
 

@@ -67,7 +67,7 @@ function splitChars(el) {
 
 function splitLines(el) {
   if (!window.SplitText) return [el];
-  return SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line' }).lines;
+  return SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line', aria: 'none' }).lines;
 }
 
 // ============================================

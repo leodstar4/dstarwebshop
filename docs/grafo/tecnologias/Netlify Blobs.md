@@ -15,5 +15,6 @@ Parte de: [[Tecnologías]]
 ## Usado en
 
 - [[orders-store.js]]
+- [[rate-limit.js]]
 - [[stock-store.js]]
 

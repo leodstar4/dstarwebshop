@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Disallow: /.netlify/
+
+Sitemap: https://dstarshop.netlify.app/sitemap.xml

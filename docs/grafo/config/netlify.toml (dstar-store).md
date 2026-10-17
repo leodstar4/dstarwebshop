@@ -1,27 +1,27 @@
 ---
 tags: [codigo, config]
 ruta: "dstar-store/netlify.toml"
-lineas: 178
+lineas: 184
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # netlify.toml (dstar-store)
 
-`dstar-store/netlify.toml` · 178 líneas
+`dstar-store/netlify.toml` · 184 líneas
 
-Configuración de Netlify: functions, redirects (/api/* y rutas internas bloqueadas), headers de seguridad y caché.
+Configuración de Netlify: functions, redirects (/api/* y rutas internas bloqueadas), headers de seguridad (CSP con hashes en script-src que escribe scripts/csp-hashes.js), no-store y X-Robots-Tag en /pedidos.html, y caché.
 
 Parte de: [[Configuración]]
 
 ## Conexiones
 
-- Referencia a: [[producto.html]], [[playwright.config.js]], [[optimize-images.js (dstar-store)]], [[.lighthouserc.js]], [[sw.js]], [[manifest.webmanifest]]
-- Enruta /api/* a: [[cotizar-envio.js]], [[mp-preference.js]], [[mp-webhook.js]], [[stock.js]]
+- Referencia a: [[producto.html]], [[playwright.config.js]], [[optimize-images.js (dstar-store)]], [[.lighthouserc.js]], [[sw.js]], [[manifest.webmanifest]], [[pedidos.html]]
+- Enruta /api/* a: [[cotizar-envio.js]], [[mp-preference.js]], [[mp-webhook.js]], [[pedidos.js (functions)]], [[stock.js]]
 - Usa: [[Netlify]], [[Mercado Pago]], [[Cloudinary]], [[Google Fonts]], [[Lighthouse]], [[http-server]]
 
 ## Resumen
 
-17 redirects y 9 bloques de headers.
+17 redirects y 10 bloques de headers.
 
 ## Últimos cambios
 

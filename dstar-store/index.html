@@ -2,11 +2,24 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
 
-  <title>DSTAR</title>
+  <title>DSTAR — Streetwear exclusivo hecho en México</title>
   <meta name="description" content="DSTAR — Piezas limitadas. Todo con amor. Streetwear exclusivo hecho en México.">
+  <link rel="canonical" href="https://dstarshop.netlify.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DSTAR">
+  <meta property="og:locale" content="es_MX">
+  <meta property="og:title" content="DSTAR — Streetwear exclusivo hecho en México">
+  <meta property="og:description" content="DSTAR — Piezas limitadas. Todo con amor. Streetwear exclusivo hecho en México.">
+  <meta property="og:url" content="https://dstarshop.netlify.app/">
+  <meta property="og:image" content="https://dstarshop.netlify.app/assets/brand/og-dstar.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="DSTAR — Streetwear exclusivo hecho en México">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"DSTAR","url":"https://dstarshop.netlify.app/","logo":"https://dstarshop.netlify.app/assets/brand/icon-512.png","sameAs":["https://www.instagram.com/dstar_.4/"]}</script>
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png?v=2">
   <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png?v=2">
   <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png?v=3">
@@ -20,7 +33,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="stylesheet" id="fontsCss" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" media="print">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet"></noscript>
 
   <script>document.documentElement.classList.add('css-pending', 'no-tr')</script>
@@ -41,8 +54,8 @@
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=37" media="print" onload="this.media='all';var d=document.documentElement;d.classList.remove('css-pending');requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.remove('no-tr')})})">
-  <noscript><link rel="stylesheet" href="css/style.css?v=37"></noscript>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=38" media="print">
+  <noscript><link rel="stylesheet" href="css/style.css?v=38"></noscript>
 </head>
 <body>
   <!-- SCROLL PROGRESS -->
@@ -55,87 +68,7 @@
     </div>
     <div class="loader__bar"><div class="loader__fill"></div></div>
   </div>
-  <script>
-    (function () {
-      var loader = document.getElementById('loader');
-      var box = loader.querySelector('.loader__logo');
-      var logo = box.querySelector('img');
-      var video = null;
-      var hide = function () {
-        if (window.__dstarLoaded) return;
-        window.__dstarLoaded = true;
-        document.documentElement.classList.remove('css-pending');
-        document.documentElement.classList.add('is-loaded');
-        loader.classList.add('hidden');
-        window.dispatchEvent(new Event('dstar:loaded'));
-        setTimeout(function () {
-          loader.classList.add('loader--gone');
-          if (!video) return;
-          video.pause();
-          video.removeAttribute('src');
-          video.load();
-          video.remove();
-        }, 650);
-      };
-      var wait = function (el, ms) {
-        return new Promise(function (resolve) {
-          if (!el) return resolve();
-          el.addEventListener('load', resolve, { once: true });
-          el.addEventListener('error', resolve, { once: true });
-          setTimeout(resolve, ms);
-        });
-      };
-      var css = document.getElementById('mainCss');
-      var visto = false;
-      try { visto = sessionStorage.getItem('dstar-intro') === '1'; sessionStorage.setItem('dstar-intro', '1'); } catch (e) {}
-      var quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!quieto && navigator.userAgentData && 'transferControlToOffscreen' in HTMLCanvasElement.prototype && 'VideoDecoder' in window) {
-        try {
-          var worker = new Worker('/js/logo-3d-worker.js?v=3');
-          worker.onmessage = function (e) { if (e.data.type === 'error') worker.failed = true; };
-          worker.onerror = function () { worker.failed = true; };
-          worker.postMessage({ type: 'start', src: '/assets/brand/logo-3d.mp4?v=2' });
-          window.__logo3dWorker = worker;
-        } catch (e) {}
-      }
-      if (!quieto) {
-        video = document.createElement('video');
-        video.muted = true;
-        video.defaultMuted = true;
-        video.loop = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.preload = 'auto';
-        ['muted', 'autoplay', 'loop', 'playsinline'].forEach(function (a) { video.setAttribute(a, ''); });
-        video.setAttribute('aria-hidden', 'true');
-        video.setAttribute('tabindex', '-1');
-        video.className = 'loader__video';
-        video.poster = logo.getAttribute('src');
-        video.src = '/assets/brand/logo-3d-loader.mp4?v=1';
-        box.replaceChild(video, logo);
-        var play = video.play();
-        if (play && play.catch) play.catch(function () {});
-      }
-      if (visto) {
-        loader.style.transition = 'none';
-        Promise.resolve(css && css.media !== 'all' ? wait(css, 2500) : null).then(hide);
-        return;
-      }
-      Promise.all([
-        new Promise(function (resolve) { setTimeout(resolve, 450); }),
-        css && css.media !== 'all' ? wait(css, 2500) : null,
-        quieto ? null : new Promise(function (resolve) {
-          var cap = setTimeout(resolve, 2600);
-          var girado = false;
-          var listo = false;
-          var check = function () { if (girado && listo) { clearTimeout(cap); resolve(); } };
-          video.addEventListener('playing', function () { setTimeout(function () { girado = true; check(); }, 900); }, { once: true });
-          document.addEventListener('logo3d:live', function () { listo = true; check(); }, { once: true });
-        })
-      ]).then(hide);
-      setTimeout(hide, 3000);
-    })();
-  </script>
+  <script src="js/loader.js?v=1"></script>
 
   <!-- ANNOUNCEMENT BAR -->
   <div class="announcement-bar">
@@ -195,12 +128,12 @@
       <a href="#contact" class="mobile-nav__link" data-close-nav>CONTACTO</a>
       <a href="agradecimientos.html" class="mobile-nav__link">GRACIAS</a>
       <div class="mobile-nav__socials">
-        <a href="#" target="_blank" rel="noopener noreferrer">INSTAGRAM</a>
-        <a href="#" target="_blank" rel="noopener noreferrer">TIKTOK</a>
+        <a href="https://www.instagram.com/dstar_.4/" target="_blank" rel="noopener noreferrer">INSTAGRAM</a>
       </div>
     </div>
   </div>
 
+  <main id="main">
   <!-- HERO -->
   <section class="hero">
     <div class="hero__bg"></div>
@@ -241,7 +174,7 @@
       </div>
     </div>
     <div class="lookbook__footer">
-      <a href="https://instagram.com/dstar_.4" target="_blank" rel="noopener noreferrer" class="lookbook__ig-link">
+      <a href="https://www.instagram.com/dstar_.4/" target="_blank" rel="noopener noreferrer" class="lookbook__ig-link">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
         VER MÁS EN INSTAGRAM
       </a>
@@ -308,7 +241,7 @@
       <p class="contact__text">¿Dudas? ¿Colaboraciones? Escríbenos.</p>
       <div class="contact__links">
         <a href="mailto:dstarstudioss@gmail.com" class="contact__link">dstarstudioss@gmail.com</a>
-        <a href="https://instagram.com/dstar_.4" target="_blank" rel="noopener noreferrer" class="contact__link">@dstar_.4</a>
+        <a href="https://www.instagram.com/dstar_.4/" target="_blank" rel="noopener noreferrer" class="contact__link">@dstar_.4</a>
       </div>
     </div>
 
@@ -322,6 +255,7 @@
       </div>
     </div>
   </section>
+  </main>
 
   <!-- FOOTER -->
   <footer class="footer">
@@ -375,8 +309,8 @@
   <script src="js/vendor/SplitText.min.js?v=3.14.2" defer></script>
   <script src="js/products-data.js?v=1" defer></script>
   <script src="js/cart-store.js?v=2" defer></script>
-  <script src="js/app.js?v=36" defer></script>
-  <script src="js/gsap-animations.js?v=17" defer></script>
+  <script src="js/app.js?v=37" defer></script>
+  <script src="js/gsap-animations.js?v=18" defer></script>
   <script src="js/blog-transitions.js?v=7" defer></script>
 </body>
 </html>

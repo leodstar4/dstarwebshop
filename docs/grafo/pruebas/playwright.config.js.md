@@ -9,7 +9,7 @@ lineas: 50
 
 `dstar-store/playwright.config.js` · 50 líneas
 
-Configuración de Playwright (proyectos desktop, tablet y móvil).
+Configuración de Playwright (proyectos desktop, tablet y móvil; 2 workers en local, 1 en CI).
 
 Parte de: [[Pruebas]]
 

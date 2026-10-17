@@ -39,12 +39,19 @@ const IMG_PLACEHOLDER = {
 };
 
 function imgFallback(img, kind) {
-  img.onerror = null;
   if (img.parentElement && img.parentElement.tagName === 'PICTURE') img.parentElement.querySelectorAll('source').forEach((s) => s.remove());
   img.removeAttribute('srcset');
   if (IMG_PLACEHOLDER[kind]) img.src = IMG_PLACEHOLDER[kind];
   else img.style.visibility = 'hidden';
 }
+
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || img.dataset.fallback === undefined) return;
+  const kind = img.dataset.fallback;
+  delete img.dataset.fallback;
+  imgFallback(img, kind);
+}, true);
 
 // ============================================
 // CONFIG
@@ -198,7 +205,7 @@ function renderProducts() {
     const tag = isSoldOut ? 'div' : 'a';
     const attrs = isSoldOut
       ? 'aria-disabled="true"'
-      : `href="producto.html?id=${encodeURIComponent(p.id)}" aria-label="${name}, ${formatPrice(p.price)}"`;
+      : `href="producto.html?id=${encodeURIComponent(p.id)}"`;
 
     return `
       <${tag} class="product-card fade-in${isSoldOut ? ' sold-out' : ''}"
@@ -210,7 +217,7 @@ function renderProducts() {
             widths: [400, 600, 900],
             sizes: '(max-width: 1024px) 50vw, 380px',
             limit: true,
-            attrs: `alt="${name}" width="600" height="400" loading="lazy" decoding="async" onerror="imgFallback(this,'card')"`
+            attrs: `alt="${isSoldOut ? name : ''}" width="600" height="400" loading="lazy" decoding="async" data-fallback="card"`
           })}
           ${cardBadgeHtml(p, isSoldOut)}
         </div>
@@ -385,7 +392,7 @@ function updateCartUI() {
           w: 150,
           widths: [150, 300],
           sizes: '72px',
-          attrs: `class="cart-item__image" alt="${name}" width="72" height="92" loading="lazy" decoding="async" onerror="imgFallback(this,'cart')"`
+          attrs: `class="cart-item__image" alt="${name}" width="72" height="92" loading="lazy" decoding="async" data-fallback="cart"`
         })}
         <div class="cart-item__info">
           <div class="cart-item__name">${name}</div>
@@ -582,7 +589,7 @@ function renderLookbook() {
           w: 600,
           widths: [400, 600, 900, 1200],
           sizes: '(min-width: 1024px) 540px, (min-width: 769px) 80vw, (min-width: 641px) 33vw, 50vw',
-          attrs: `alt="${item.caption}" loading="lazy" decoding="async" style="object-position: ${item.focus || 'center'}" onerror="imgFallback(this)"`
+          attrs: `alt="${item.caption}" loading="lazy" decoding="async" style="object-position: ${item.focus || 'center'}" data-fallback=""`
         })}
       </div>
       <div class="lookbook-panel__caption">
@@ -608,7 +615,7 @@ function renderBlog() {
           widths: [400, 600, 900, 1200],
           sizes: '(max-width: 600px) 100vw, (max-width: 900px) 50vw, 380px',
           crop: `c_fill,ar_16:9,${post.gravity || 'g_auto'}`,
-          attrs: `alt="${post.title}" width="600" height="338" loading="lazy" decoding="async" onerror="imgFallback(this,'blog')"`
+          attrs: `alt="${post.title}" width="600" height="338" loading="lazy" decoding="async" data-fallback="blog"`
         })}
         <span class="blog-card__cat">${post.category}</span>
       </div>
@@ -633,7 +640,7 @@ function renderFAQ() {
     <div class="faq__item fade-in" id="faq-item-${i}">
       <button
         class="faq__question"
-        onclick="toggleFAQ(${i})"
+        data-faq="${i}"
         aria-expanded="false"
         aria-controls="faq-answer-${i}"
         id="faq-btn-${i}"
@@ -651,6 +658,10 @@ function renderFAQ() {
       </div>
     </div>
   `).join('');
+  list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-faq]');
+    if (btn) toggleFAQ(Number(btn.dataset.faq));
+  });
 }
 
 function toggleFAQ(index) {
@@ -848,9 +859,12 @@ function initProductPage() {
     sizesEl.innerHTML = p.sizes.map(s => {
       const inStock = (p.sizesStock[s] || 0) > 0;
       return `<button class="size-btn" data-size="${s}"
-                      ${!inStock ? 'disabled' : ''}
-                      onclick="pdSelectSize('${s}', this)">${s}</button>`;
+                      ${!inStock ? 'disabled' : ''}>${s}</button>`;
     }).join('');
+    sizesEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.size-btn');
+      if (btn && !btn.disabled) pdSelectSize(btn.dataset.size, btn);
+    });
   }
 
   // Stock

@@ -11,17 +11,19 @@ Parte de: [[DSTAR]]
 
 ## Contenido
 
-- [[agradecimientos.html]] — Página de agradecimientos.
+- [[404.html]] — Página 404 de la marca (noindex): logo 3D girando entre dos 4 con el video logo-3d-loader.mp4 (póster con prefers-reduced-motion) y botones VOLVER AL INICIO y VER DROPS; estilos inline, sin scripts.
+- [[agradecimientos.html]] — Página de agradecimientos, con canonical y og:*.
 - [[born-to-shine-detras-del-drop.html]] — Artículo del blog: detrás del drop Born to Shine.
-- [[checkout.html]] — Checkout: datos del cliente, cotización de envío y pago con Mercado Pago.
+- [[checkout.html]] — Checkout (noindex): datos del cliente, cotización de envío y pago con Mercado Pago; toda la lógica está en js/checkout.js.
 - [[como-cuidar-tu-ropa.html]] — Artículo del blog: cómo cuidar tu ropa.
 - [[dstar-preview.html]] — Vista previa estática grande del sitio, en la raíz del repo.
-- [[error-pago.html]] — Pantalla cuando el pago falla.
-- [[gracias.html]] — Confirmación después de un pago exitoso.
-- [[index.html]] — Página principal: loader cuyo script inline cambia el póster por un `<video>` (logo-3d-loader.mp4, sin alfa, con mix-blend-mode: lighten), crea temprano el worker de logo-3d-worker.js y solo en la primera visita de la sesión (sessionStorage dstar-intro) espera a que gire y a que el logo del hero esté listo; hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
-- [[offline.html]] — Página sin conexión de la PWA.
-- [[pago-pendiente.html]] — Pantalla cuando el pago queda pendiente de confirmar.
-- [[producto.html]] — Detalle de producto: galería, selector de talla y botón de compra, con un solo `<dialog class="pd-lightbox">` (#pdLightbox) para móvil y desktop que llena app.js; precarga desde el `<head>` la primera foto en AVIF con las mismas URLs e imagesizes que usa app.js.
+- [[error-pago.html]] — Pantalla cuando el pago falla (noindex).
+- [[gracias.html]] — Confirmación después de un pago exitoso (noindex); su script es js/gracias.js.
+- [[index.html]] — Página principal ("DSTAR — Streetwear exclusivo hecho en México"): canonical, og:*, twitter:card y JSON-LD Organization con el Instagram; loader que maneja js/loader.js (video del logo, worker de logo-3d-worker.js y activación de mainCss y fontsCss); solo quedan dos scripts inline (speculationrules y css-pending) permitidos por hash en la CSP; dentro de `<main>`: hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
+- [[offline.html]] — Página sin conexión de la PWA (noindex).
+- [[pago-pendiente.html]] — Pantalla cuando el pago queda pendiente de confirmar, por ejemplo un pago en OXXO (noindex).
+- [[pedidos.html]] — Panel de pedidos privado (noindex, no-store): formulario de contraseña, resumen, filtros TODOS / POR REVISAR / CON GUÍA y lista de pedidos que pinta js/pedidos.js.
+- [[producto.html]] — Detalle de producto: galería, selector de talla y botón de compra, con un solo `<dialog class="pd-lightbox">` (#pdLightbox) para móvil y desktop que llena app.js; precarga desde el `<head>` la primera foto en AVIF con un script inline permitido por hash, y sus title, canonical y og:* genéricos los reescribe por prenda la edge function producto-meta.js.
 - [[streetwear-mexico-escena.html]] — Artículo del blog: la escena del streetwear en México.
 - [[terminos.html]] — Términos, envíos y devoluciones: precios, pagos, tiempos de envío, devolución en 5 días hábiles, defectos y quejas ante PROFECO; enlazada en los footers y junto al botón PAGAR.
 

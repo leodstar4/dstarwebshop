@@ -9,6 +9,10 @@ Commits del repo, del más reciente al más antiguo. Cada archivo de código lis
 
 Parte de: [[DSTAR]]
 
+## 2026-10-17
+
+- `836ac92` Galería de producto: lightbox premium en desktop y móvil, placeholders borrosos y fotos que ya no quedan rotas en caché
+
 ## 2026-10-13
 
 - `37812a9` Logo girando en la pantalla de carga y entrada de "TODO CON AMOR" fluida

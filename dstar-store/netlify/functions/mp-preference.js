@@ -10,13 +10,18 @@
 const { validarCliente, construirPedido, origenPermitido, str } = require('../lib/validate');
 const { getRatePrice } = require('../lib/skydropx');
 const { leerStock } = require('../lib/stock-store');
+const { limitar, demasiadas } = require('../lib/rate-limit');
 
 const headers = { 'Content-Type': 'application/json' };
 const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify(body) });
+const PLAZO_EFECTIVO_MS = 3 * 24 * 60 * 60 * 1000;
+const horaMexico = (ms) => new Date(ms - 6 * 60 * 60 * 1000).toISOString().replace('Z', '-06:00');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return reply(405, { error: 'Método no permitido' });
   if (!origenPermitido(event)) return reply(403, { error: 'Origen no permitido' });
+  const retry = await limitar(event, 'pago', 10, 600);
+  if (retry) return demasiadas(retry);
 
   try {
     let body;
@@ -55,6 +60,8 @@ exports.handler = async (event) => {
       metadata: {
         cliente,
         rate_id: rateId,
+        quotation_id: quotationId,
+        envio: { carrier: envio.carrier, service: envio.service, price: envio.price },
         parcel: { weight: Math.max(0.5, Math.round(totalUnidades * 4) / 10), height: 15, width: 20, length: 5 },
         order_items: mpItems.map((i) => ({ title: i.title, quantity: i.quantity, unit_price: i.unit_price })),
         stock_items: pedido.items.map((i) => ({ id: i.id, size: i.size, qty: i.quantity })),
@@ -66,6 +73,7 @@ exports.handler = async (event) => {
         pending: `${URL_SITIO}/pago-pendiente.html`
       },
       auto_return: 'approved',
+      date_of_expiration: horaMexico(Date.now() + PLAZO_EFECTIVO_MS),
       notification_url: `${URL_SITIO}/.netlify/functions/mp-webhook`,
       statement_descriptor: 'DSTAR',
       external_reference: `dstar_${Date.now()}`

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PEDIDOS — DSTAR</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap">
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --dark: #141414;
+      --line: rgba(240, 237, 232, 0.12);
+      --concrete: #8a8a83;
+      --concrete-dark: #5c5c57;
+      --white: #f0ede8;
+      --red: #e63232;
+      --green: #4ade80;
+      --orange: #ff8c1a;
+      --font-heading: 'Bebas Neue', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --radius-md: 14px;
+      --radius-pill: 999px;
+      --gutter: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: var(--black); color-scheme: dark; }
+    body { min-height: 100svh; background: var(--black); color: var(--white); font: 13px/1.6 var(--font-mono); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--white); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+
+    .panel__top {
+      position: sticky; top: 0; z-index: 2;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: max(12px, env(safe-area-inset-top)) var(--gutter) 12px;
+      background: var(--black); border-bottom: 1px solid var(--line);
+    }
+    .panel__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; min-height: 44px; }
+    .panel__brand img { width: 22px; height: 32px; }
+    .panel__brand span { font: 400 26px/1 var(--font-heading); letter-spacing: 2px; }
+    .panel__tools { display: flex; gap: 8px; }
+    .panel__main { max-width: 960px; margin: 0 auto; padding: 24px var(--gutter) max(40px, env(safe-area-inset-bottom)); }
+
+    .panel__btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 0 18px;
+      border: 1px solid var(--line); border-radius: var(--radius-pill);
+      background: transparent; color: var(--white);
+      font: 700 11px/1 var(--font-mono); letter-spacing: 2px; text-decoration: none; cursor: pointer;
+    }
+    .panel__btn:hover { border-color: var(--white); }
+    .panel__btn--solid { background: var(--white); border-color: var(--white); color: var(--black); }
+    .panel__btn[aria-pressed="true"] { background: var(--white); color: var(--black); }
+
+    .panel__login { max-width: 360px; margin: 12svh auto 0; display: grid; gap: 14px; }
+    .panel__login h1 { font: 400 44px/1 var(--font-heading); letter-spacing: 2px; }
+    .panel__login p { color: var(--concrete); }
+    .panel__label { font-size: 11px; letter-spacing: 2px; color: var(--concrete); }
+    .panel__input {
+      width: 100%; min-height: 48px; padding: 0 16px;
+      border: 1px solid var(--line); border-radius: var(--radius-md);
+      background: var(--dark); color: var(--white); font: inherit; font-size: 16px;
+    }
+    .panel__error { color: var(--red); min-height: 1.6em; }
+
+    .panel__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+    .panel__stat { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--dark); }
+    .panel__stat b { display: block; font: 400 30px/1 var(--font-heading); letter-spacing: 1px; }
+    .panel__stat span { font-size: 10px; letter-spacing: 2px; color: var(--concrete); }
+    .panel__filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .panel__list { display: grid; gap: 12px; list-style: none; }
+    .panel__empty { padding: 40px 0; text-align: center; color: var(--concrete); }
+
+    .order { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--dark); display: grid; gap: 12px; }
+    .order__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+    .order__id { font-weight: 700; letter-spacing: 1px; }
+    .order__date { color: var(--concrete); font-size: 11px; }
+    .order__badge { padding: 4px 10px; border-radius: var(--radius-pill); font-size: 10px; font-weight: 700; letter-spacing: 2px; border: 1px solid currentColor; }
+    .order__badge--ok { color: var(--green); }
+    .order__badge--warn { color: var(--orange); }
+    .order__badge--bad { color: var(--red); }
+    .order__badge--muted { color: var(--concrete); }
+    .order__grid { display: grid; gap: 12px; }
+    .order__block h3 { font-size: 10px; letter-spacing: 2px; color: var(--concrete); font-weight: 400; margin-bottom: 4px; }
+    .order__items { list-style: none; }
+    .order__total { font: 400 24px/1 var(--font-heading); letter-spacing: 1px; }
+    .order__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    @media (min-width: 720px) {
+      .order__grid { grid-template-columns: 1.2fr 1fr 0.8fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="panel__top">
+    <a href="/" class="panel__brand" aria-label="DSTAR, ir a la tienda">
+      <img src="/assets/brand/logo-120.webp?v=2" width="22" height="32" alt="" decoding="async">
+      <span>PEDIDOS</span>
+    </a>
+    <div class="panel__tools" id="panelTools" hidden>
+      <button class="panel__btn" type="button" id="panelRefresh" aria-label="Actualizar pedidos">ACTUALIZAR</button>
+      <button class="panel__btn" type="button" id="panelLogout">SALIR</button>
+    </div>
+  </header>
+
+  <main class="panel__main">
+    <form class="panel__login" id="panelLogin" novalidate>
+      <h1>PANEL DE PEDIDOS</h1>
+      <p>Solo para la tienda. Escribe la contraseña del panel.</p>
+      <label class="panel__label" for="panelPassword">CONTRASEÑA</label>
+      <input class="panel__input" id="panelPassword" type="password" autocomplete="current-password" required aria-describedby="panelError">
+      <p class="panel__error" id="panelError" role="alert"></p>
+      <button class="panel__btn panel__btn--solid" type="submit">ENTRAR</button>
+    </form>
+
+    <section id="panelData" hidden aria-labelledby="panelTitle">
+      <h1 class="panel__label" id="panelTitle">RESUMEN</h1>
+      <div class="panel__stats">
+        <div class="panel__stat"><b id="statPedidos">0</b><span>PEDIDOS</span></div>
+        <div class="panel__stat"><b id="statRevisar">0</b><span>POR REVISAR</span></div>
+        <div class="panel__stat"><b id="statVentas">$0</b><span>VENDIDO</span></div>
+      </div>
+      <div class="panel__filters" role="group" aria-label="Filtrar pedidos">
+        <button class="panel__btn" type="button" data-filtro="todos" aria-pressed="true">TODOS</button>
+        <button class="panel__btn" type="button" data-filtro="revisar" aria-pressed="false">POR REVISAR</button>
+        <button class="panel__btn" type="button" data-filtro="enviados" aria-pressed="false">CON GUÍA</button>
+      </div>
+      <p class="panel__label" id="panelStatus" role="status" aria-live="polite"></p>
+      <ul class="panel__list" id="panelList"></ul>
+    </section>
+  </main>
+
+  <script src="js/pedidos.js?v=1"></script>
+</body>
+</html>

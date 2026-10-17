@@ -27,6 +27,7 @@ Parte de: [[DSTAR]]
 - [[ORIGEN_COLONIA]] — Dirección y datos de contacto del almacén de origen del envío.
 - [[ORIGEN_ESTADO]] — Dirección y datos de contacto del almacén de origen del envío.
 - [[ORIGEN_MUNICIPIO]] — Dirección y datos de contacto del almacén de origen del envío.
+- [[PANEL_PASSWORD]] — Contraseña del panel de pedidos (pedidos.html); mínimo 16 caracteres.
 - [[REFERENCIA_ORIGEN]] — Dirección y datos de contacto del almacén de origen del envío.
 - [[SKYDROPX_CLIENT_ID]] — Credenciales y claves de catálogo para guías.
 - [[SKYDROPX_CLIENT_SECRET]] — Credenciales y claves de catálogo para guías.

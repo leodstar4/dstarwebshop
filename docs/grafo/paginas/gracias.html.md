@@ -1,23 +1,24 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/gracias.html"
-lineas: 363
+lineas: 281
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # gracias.html
 
-`dstar-store/gracias.html` · 363 líneas
+`dstar-store/gracias.html` · 281 líneas
 
-Confirmación después de un pago exitoso.
+Confirmación después de un pago exitoso (noindex); su script es js/gracias.js.
 
 Parte de: [[Páginas]]
 
 ## Conexiones
 
+- Carga script: [[gracias.js]]
 - Carga manifest: [[manifest.webmanifest]]
 - Enlaza a: [[index.html]]
-- Usa: [[Mercado Pago]], [[Cloudinary]], [[GSAP]], [[Google Fonts]]
+- Usa: [[Cloudinary]], [[GSAP]], [[Google Fonts]]
 
 ## Últimos cambios
 

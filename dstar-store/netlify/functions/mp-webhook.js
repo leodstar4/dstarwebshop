@@ -14,7 +14,7 @@
 
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const { SKYDROPX_BASE, getSkydropxToken } = require('../lib/skydropx');
+const { SKYDROPX_BASE, getSkydropxToken, cotizar } = require('../lib/skydropx');
 const { openStore } = require('../lib/orders-store');
 const { descontar } = require('../lib/stock-store');
 
@@ -83,12 +83,12 @@ exports.handler = async (event) => {
     const payment = await mpResponse.json();
     if (payment.status !== 'approved') return reply(200, { ok: true });
 
-    const { cliente, rate_id, parcel, order_items, stock_items, expected_total } = payment.metadata || {};
+    const { cliente, rate_id, parcel, envio, order_items, stock_items, expected_total } = payment.metadata || {};
     if (!(await store.claim(paymentId, STALE_MS))) return reply(200, { ok: true });
 
     if (!cliente || !rate_id) {
       console.error('mp-webhook — metadata incompleta en pago', paymentId);
-      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true });
+      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true, pedido: { total: Number(payment.transaction_amount) || 0 } });
       await alertarTienda(`Pago ${paymentId} sin datos de envío`, [
         'Mercado Pago aprobó un pago que no trae los datos del cliente ni la tarifa de envío, así que no se generó guía.',
         `Monto: ${fmtMXN(payment.transaction_amount)}`,
@@ -98,9 +98,10 @@ exports.handler = async (event) => {
     }
 
     const pagado = Number(payment.transaction_amount);
+    const pedido = { cliente, items: order_items || [], total: pagado };
     if (payment.currency_id !== 'MXN' || !Number.isFinite(Number(expected_total)) || pagado + 0.01 < Number(expected_total)) {
       console.error(`mp-webhook — monto no coincide en pago ${paymentId}: pagado=${pagado} esperado=${expected_total} moneda=${payment.currency_id}. Revisar a mano.`);
-      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true });
+      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true, pedido });
       await alertarTienda(`El monto del pago ${paymentId} no coincide`, [
         `Se pagó ${fmtMXN(pagado)} (${payment.currency_id}) pero el pedido costaba ${fmtMXN(expected_total)}.`,
         'No se generó guía ni se descontó stock. Revisa el pago en Mercado Pago antes de enviar.',
@@ -110,7 +111,7 @@ exports.handler = async (event) => {
       return reply(200, { ok: true });
     }
 
-    const registro = { ...previo };
+    const registro = { ...previo, pedido };
     if (!registro.stock) {
       try {
         const sobreventa = await descontar(event, stock_items);
@@ -136,7 +137,7 @@ exports.handler = async (event) => {
 
     let guiaResult;
     try {
-      guiaResult = await crearGuiaSkydropx({ cliente, rate_id, parcel, total: pagado });
+      guiaResult = await crearGuiaConRespaldo({ cliente, rate_id, parcel, envio, total: pagado });
     } catch (err) {
       console.error('mp-webhook — Skydropx falló:', err.message);
       if (!registro.alertaGuia) {
@@ -151,7 +152,19 @@ exports.handler = async (event) => {
       await store.set(paymentId, { ...registro, status: 'failed', at: Date.now() });
       throw err;
     }
-    await store.set(paymentId, { ...registro, status: 'done', at: Date.now(), tracking: guiaResult.tracking_number || '' });
+    await store.set(paymentId, {
+      ...registro,
+      status: 'done',
+      at: Date.now(),
+      tracking: guiaResult.tracking_number || '',
+      guia: { carrier: guiaResult.carrier, label_url: guiaResult.label_url, tracking_url: guiaResult.tracking_url }
+    });
+    if (guiaResult.recotizada) {
+      await alertarTienda(`La tarifa de envío del pago ${paymentId} había vencido`, [
+        `Se generó la guía con una tarifa nueva de ${guiaResult.carrier}: ${fmtMXN(guiaResult.recotizada.ahora)} (el cliente pagó ${fmtMXN(guiaResult.recotizada.antes)} de envío).`,
+        `Guía: ${guiaResult.tracking_number || '-'}`
+      ], paymentId);
+    }
 
     try {
       await enviarCorreoConfirmacion({ cliente, guia: guiaResult, items: order_items || [], total: pagado, paymentId });
@@ -165,6 +178,24 @@ exports.handler = async (event) => {
     return reply(500, { error: 'Error interno del servidor' });
   }
 };
+
+// Un pago en efectivo (OXXO) puede aprobarse días después y para entonces la
+// tarifa ya venció: se vuelve a cotizar con la misma paquetería y servicio.
+async function crearGuiaConRespaldo({ cliente, rate_id, parcel, envio, total }) {
+  try {
+    return await crearGuiaSkydropx({ cliente, rate_id, parcel, total });
+  } catch (err) {
+    if (!envio || !envio.carrier || !parcel || !cliente.cp) throw err;
+    const { rates } = await cotizar(
+      { cp: cliente.cp, estado: cliente.estado, ciudad: cliente.ciudad, colonia: cliente.colonia },
+      { length: parcel.length, width: parcel.width, height: parcel.height, weight: parcel.weight }
+    ).catch(() => ({ rates: [] }));
+    const igual = rates.find((r) => r.carrier === envio.carrier && r.service === envio.service);
+    if (!igual || String(igual.rate_id) === String(rate_id)) throw err;
+    const guia = await crearGuiaSkydropx({ cliente, rate_id: igual.rate_id, parcel, total });
+    return { ...guia, recotizada: { antes: Number(envio.price) || 0, ahora: igual.price } };
+  }
+}
 
 // ============================================
 // GENERAR GUÍA EN SKYDROPX PRO (v2)

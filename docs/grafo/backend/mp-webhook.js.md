@@ -1,15 +1,15 @@
 ---
 tags: [codigo, backend]
 ruta: "dstar-store/netlify/functions/mp-webhook.js"
-lineas: 404
+lineas: 435
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # mp-webhook.js
 
-`dstar-store/netlify/functions/mp-webhook.js` · 404 líneas
+`dstar-store/netlify/functions/mp-webhook.js` · 435 líneas
 
-Webhook de Mercado Pago: valida la firma, descuenta el stock una sola vez por pago, crea una sola guía en Skydropx y manda correos; avisa a la tienda (alertarTienda) si la guía falla, el monto no coincide, hay sobreventa o faltan datos.
+Webhook de Mercado Pago: valida la firma, descuenta el stock una sola vez por pago, crea una sola guía en Skydropx (crearGuiaConRespaldo re-cotiza con la misma paquetería y servicio si la guía falla) y manda correos; guarda pedido y guia en orders-store.js para el panel y avisa a la tienda (alertarTienda) si la guía falla o se re-cotizó, el monto no coincide, hay sobreventa o faltan datos.
 
 Parte de: [[Backend]]
 
@@ -24,15 +24,16 @@ Parte de: [[Backend]]
 - `reply` (línea 22)
 - `firmaValida` (línea 25)
 - `handler` (línea 48)
-- `crearGuiaSkydropx` (línea 172)
-- `fmtMXN` (línea 234)
-- `esc` (línea 238)
-- `transporte` (línea 242)
-- `datosCliente` (línea 249)
-- `lineasPedido` (línea 257)
-- `alertarTienda` (línea 262)
-- `enviarCorreoConfirmacion` (línea 284)
-- `buildEmailHtml` (línea 321)
+- `crearGuiaConRespaldo` (línea 184)
+- `crearGuiaSkydropx` (línea 203)
+- `fmtMXN` (línea 265)
+- `esc` (línea 269)
+- `transporte` (línea 273)
+- `datosCliente` (línea 280)
+- `lineasPedido` (línea 288)
+- `alertarTienda` (línea 293)
+- `enviarCorreoConfirmacion` (línea 315)
+- `buildEmailHtml` (línea 352)
 
 ## Últimos cambios
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PÁGINA NO ENCONTRADA — DSTAR</title>
+  <meta name="description" content="Esta página no existe. Vuelve a DSTAR para ver los drops disponibles.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png?v=2">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png?v=2">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png?v=3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap">
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --dark: #141414;
+      --concrete: #8a8a83;
+      --concrete-dark: #5c5c57;
+      --white: #f0ede8;
+      --font-display: 'Archivo Black', sans-serif;
+      --font-heading: 'Bebas Neue', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --radius-pill: 999px;
+      --gutter: max(20px, env(safe-area-inset-left), env(safe-area-inset-right));
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: var(--black); color-scheme: dark; }
+    body {
+      min-height: 100svh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 42%, rgba(240, 237, 232, 0.09), transparent 70%),
+        var(--black);
+      color: var(--white);
+      font-family: var(--font-mono);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--white); outline-offset: 4px; }
+
+    .nf__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: max(16px, env(safe-area-inset-top)) var(--gutter) 16px;
+    }
+    .nf__brand { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+    .nf__brand img { display: block; width: 28px; height: 40px; }
+    .nf__code { font-size: 11px; letter-spacing: 4px; color: var(--concrete); }
+
+    .nf__main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 24px var(--gutter) 40px;
+      text-align: center;
+    }
+    .nf__stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(4px, 2vw, 20px);
+      margin-bottom: 8px;
+    }
+    .nf__num {
+      font-family: var(--font-display);
+      font-size: clamp(120px, 34vw, 260px);
+      line-height: 0.8;
+      color: transparent;
+      -webkit-text-stroke: 2px var(--concrete-dark);
+      user-select: none;
+    }
+    .nf__logo {
+      position: relative;
+      width: clamp(96px, 26vw, 196px);
+      aspect-ratio: 560 / 820;
+      mix-blend-mode: lighten;
+    }
+    .nf__logo img,
+    .nf__logo video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .nf__title {
+      font-family: var(--font-heading);
+      font-weight: 400;
+      font-size: clamp(40px, 9vw, 72px);
+      line-height: 0.95;
+      letter-spacing: 2px;
+    }
+    .nf__text {
+      max-width: 400px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--concrete);
+    }
+    .nf__actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .nf__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 28px;
+      border: 1px solid rgba(240, 237, 232, 0.28);
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-decoration: none;
+      transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .nf__btn:hover { border-color: var(--white); }
+    .nf__btn--solid { background: var(--white); border-color: var(--white); color: var(--black); }
+    .nf__btn--solid:hover { background: transparent; color: var(--white); }
+    .nf__foot {
+      padding: 16px var(--gutter) max(20px, env(safe-area-inset-bottom));
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--concrete-dark);
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .nf__stage > *, .nf__title, .nf__text, .nf__actions {
+        animation: nfIn 0.9s var(--ease-out) backwards;
+      }
+      .nf__stage > :nth-child(2) { animation-delay: 0.08s; }
+      .nf__stage > :nth-child(3) { animation-delay: 0.16s; }
+      .nf__title { animation-delay: 0.24s; }
+      .nf__text { animation-delay: 0.32s; }
+      .nf__actions { animation-delay: 0.4s; }
+      .nf__logo { animation: nfIn 0.9s var(--ease-out) 0.08s backwards, nfFloat 5s ease-in-out 1s infinite; }
+      @keyframes nfIn { from { opacity: 0; transform: translateY(24px); } }
+      @keyframes nfFloat { 50% { translate: 0 -10px; } }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nf__logo video { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nf__top">
+    <a href="/" class="nf__brand" aria-label="DSTAR, ir al inicio">
+      <img src="/assets/brand/logo-120.webp?v=2" srcset="/assets/brand/logo-120.webp?v=2 120w, /assets/brand/logo-240.webp?v=2 240w" sizes="28px" width="28" height="40" alt="" decoding="async">
+    </a>
+    <span class="nf__code">ERROR 404</span>
+  </header>
+
+  <main class="nf__main">
+    <div class="nf__stage" aria-hidden="true">
+      <span class="nf__num">4</span>
+      <div class="nf__logo">
+        <img src="/assets/brand/logo-3d-poster-640.webp?v=1" srcset="/assets/brand/logo-3d-poster-320.webp?v=1 219w, /assets/brand/logo-3d-poster-640.webp?v=1 437w, /assets/brand/logo-3d-poster-872.webp?v=1 596w" sizes="(min-width: 768px) 196px, 26vw" width="196" height="287" alt="" decoding="async">
+        <video src="/assets/brand/logo-3d-loader.mp4?v=1" poster="/assets/brand/logo-3d-poster-640.webp?v=1" autoplay muted loop playsinline preload="auto" tabindex="-1"></video>
+      </div>
+      <span class="nf__num">4</span>
+    </div>
+    <h1 class="nf__title">ESTA PIEZA NO EXISTE</h1>
+    <p class="nf__text">La página que buscas se movió, se agotó o nunca salió del taller. Lo bueno sigue aquí.</p>
+    <nav class="nf__actions" aria-label="Volver a la tienda">
+      <a class="nf__btn nf__btn--solid" href="/">VOLVER AL INICIO</a>
+      <a class="nf__btn" href="/#drops">VER DROPS</a>
+    </nav>
+  </main>
+
+  <footer class="nf__foot">TODO CON AMOR · DSTAR</footer>
+</body>
+</html>

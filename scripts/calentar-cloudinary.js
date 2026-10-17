@@ -23,6 +23,7 @@ const withTransform = (url, t) => url.replace('/image/upload/', `/image/upload/$
 function urlsFor(p) {
   const urls = [];
   for (const w of CARD_WIDTHS) urls.push(withTransform(p.image, `f_avif,q_auto,dpr_auto,w_${w},c_limit`));
+  urls.push(withTransform(p.image, 'f_jpg,q_auto,c_pad,b_auto,w_1200,h_630'));
   for (const src of p.gallery || []) {
     for (const w of GALLERY_WIDTHS) urls.push(withTransform(src, `f_avif,q_auto,dpr_auto,w_${w}`));
     for (const w of THUMB_WIDTHS) urls.push(withTransform(src, `f_avif,q_auto,dpr_auto,w_${w}`));

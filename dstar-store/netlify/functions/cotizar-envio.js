@@ -10,10 +10,9 @@
 //   CP_ORIGEN, ORIGEN_ESTADO, ORIGEN_MUNICIPIO, ORIGEN_COLONIA = dirección del almacén
 // ============================================
 
-const { SKYDROPX_BASE, getSkydropxToken } = require('../lib/skydropx');
+const { cotizar } = require('../lib/skydropx');
 const { str, origenPermitido } = require('../lib/validate');
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const { limitar, demasiadas } = require('../lib/rate-limit');
 
 exports.handler = async (event) => {
   const headers = { 'Content-Type': 'application/json' };
@@ -24,6 +23,8 @@ exports.handler = async (event) => {
   if (!origenPermitido(event)) {
     return { statusCode: 403, headers, body: JSON.stringify({ error: 'Origen no permitido' }) };
   }
+  const retry = await limitar(event, 'cotizar', 20, 600);
+  if (retry) return demasiadas(retry);
 
   try {
     let body;
@@ -49,92 +50,22 @@ exports.handler = async (event) => {
       };
     }
 
-    const CP_ORIGEN = process.env.CP_ORIGEN;
-    const ORIGEN_ESTADO = process.env.ORIGEN_ESTADO;
-    const ORIGEN_MUNICIPIO = process.env.ORIGEN_MUNICIPIO;
-    const ORIGEN_COLONIA = process.env.ORIGEN_COLONIA;
-
-    if (!CP_ORIGEN || !ORIGEN_ESTADO || !ORIGEN_MUNICIPIO || !ORIGEN_COLONIA) {
-      console.error('cotizar-envio — faltan variables de origen (CP_ORIGEN/ORIGEN_*)');
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Servicio de envíos no configurado' }) };
-    }
-
-    const token = await getSkydropxToken();
-
-    const quotationBody = {
-      quotation: {
-        address_from: {
-          country_code: 'MX',
-          postal_code: String(CP_ORIGEN),
-          area_level1: ORIGEN_ESTADO,
-          area_level2: ORIGEN_MUNICIPIO,
-          area_level3: ORIGEN_COLONIA
-        },
-        address_to: {
-          country_code: 'MX',
-          postal_code: String(cp_destino),
-          area_level1: estado,
-          area_level2: ciudad,
-          area_level3: colonia
-        },
-        parcels: [{
-          length: Math.round(largo),
-          width: Math.round(ancho),
-          height: Math.round(alto),
-          weight: peso
-        }]
+    let cotizacion;
+    try {
+      cotizacion = await cotizar(
+        { cp: cp_destino, estado, ciudad, colonia },
+        { length: Math.round(largo), width: Math.round(ancho), height: Math.round(alto), weight: peso }
+      );
+    } catch (err) {
+      if (err.config) {
+        console.error('cotizar-envio —', err.message);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Servicio de envíos no configurado' }) };
       }
-    };
-
-    const res = await fetch(`${SKYDROPX_BASE}/quotations`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(quotationBody)
-    });
-
-    let data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      console.error('Skydropx quotation error:', res.status, JSON.stringify(data).slice(0, 300));
+      console.error('Skydropx quotation error:', err.message);
       return { statusCode: 502, headers, body: JSON.stringify({ error: 'Error al cotizar el envío' }) };
     }
 
-    // Las tarifas se completan de forma progresiva — si no está completa,
-    // hacemos polling al GET /quotations/:id hasta que termine.
-    const qid = data.id;
-    let rates = data.rates || [];
-    let attempts = 0;
-    while (!data.is_completed && qid && attempts < 6) {
-      await sleep(800);
-      const g = await fetch(`${SKYDROPX_BASE}/quotations/${qid}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (g.ok) {
-        data = await g.json().catch(() => data);
-        rates = data.rates || rates;
-      }
-      attempts++;
-    }
-
-    // Normalizar: solo tarifas exitosas con precio válido, ordenadas por precio
-    const normalized = (rates || [])
-      .filter((r) => r && r.success !== false && r.total != null)
-      .map((r) => ({
-        rate_id: r.id,
-        carrier: r.provider_display_name || r.provider_name || 'Paquetería',
-        service: r.provider_service_name || '',
-        price: parseFloat(r.total),
-        currency: r.currency_code || 'MXN',
-        days: r.days
-      }))
-      .filter((r) => !isNaN(r.price))
-      .sort((a, b) => a.price - b.price);
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ quotation_id: qid, rates: normalized })
-    };
+    return { statusCode: 200, headers, body: JSON.stringify(cotizacion) };
 
   } catch (error) {
     console.error('cotizar-envio — error inesperado:', error.message);

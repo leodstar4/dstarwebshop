@@ -1,40 +1,24 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/checkout.html"
-lineas: 1257
+lineas: 716
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # checkout.html
 
-`dstar-store/checkout.html` · 1257 líneas
+`dstar-store/checkout.html` · 716 líneas
 
-Checkout: datos del cliente, cotización de envío y pago con Mercado Pago.
+Checkout (noindex): datos del cliente, cotización de envío y pago con Mercado Pago; toda la lógica está en js/checkout.js.
 
 Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[products-data.js]], [[cart-store.js]]
+- Carga script: [[products-data.js]], [[cart-store.js]], [[checkout.js]]
 - Carga manifest: [[manifest.webmanifest]]
 - Enlaza a: [[index.html]], [[terminos.html]]
-- Llama a la API: [[cotizar-envio.js]] (`/api/cotizar-envio`), [[mp-preference.js]] (`/api/mp-preference`)
-- Usa la global: [[cart-store.js]] (`DSTAR_CART`)
-- Usa: [[Netlify]], [[Mercado Pago]], [[Skydropx]], [[Cloudinary]], [[GSAP]], [[Google Fonts]]
-
-## Funciones y clases
-
-- `calcularPeso` (línea 733)
-- `escapeHtml` (línea 737)
-- `thumbUrl` (línea 742)
-- `thumbSrcset` (línea 746)
-- `formatPrice` (línea 751)
-- `showToast` (línea 758)
-- `renderOrderSummary` (línea 788)
-- `actualizarTotal` (línea 825)
-- `cotizarEnvio` (línea 848)
-- `renderTarifas` (línea 936)
-- `validarFormulario` (línea 1045)
+- Usa: [[Cloudinary]], [[GSAP]], [[Google Fonts]]
 
 ## Últimos cambios
 

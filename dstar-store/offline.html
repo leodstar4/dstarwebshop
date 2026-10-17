@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSTAR — Sin conexión</title>
+  <meta name="robots" content="noindex">
   <meta name="theme-color" content="#0a0a0a">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png?v=2">
   <style>
@@ -32,6 +33,9 @@
       font: inherit;
       letter-spacing: 3px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -40,7 +44,7 @@
     <img class="offline__logo" src="/assets/brand/logo-240.webp?v=2" width="166" height="240" alt="DSTAR" decoding="async">
     <h1 class="offline__title">SIN CONEXIÓN</h1>
     <p class="offline__text">No hay internet en este momento. Tu carrito sigue guardado; vuelve a intentarlo cuando tengas señal.</p>
-    <button class="offline__btn" type="button" aria-label="Reintentar cargar la página" onclick="location.reload()">REINTENTAR</button>
+    <a class="offline__btn" href="" aria-label="Reintentar cargar la página">REINTENTAR</a>
   </main>
 </body>
 </html>

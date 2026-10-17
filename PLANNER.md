@@ -10,21 +10,37 @@ Actualizado: 2026-10-17.
 
 ## Prioridad media
 
-- [ ] **Enlaces rotos de redes:** INSTAGRAM y TIKTOK con `href="#"` en `index.html`, `producto.html`, `agradecimientos.html` y los 3 artículos del blog.
-- [ ] **Límite de peticiones** en `/api/cotizar-envio`, `/api/mp-preference` y `/api/stock`. Ya se rechazan peticiones de otros sitios, pero un script puede llamarlas directo. Migrar a Netlify Functions v2 y usar `config.rateLimit`.
-- [ ] **Quitar `'unsafe-inline'` de `script-src`.** Mover los scripts inline que quedan (loader de `index.html`, checkout) a archivos `.js`, o usar hashes en la CSP. El script inline del velo de transición ya se quitó de las páginas.
-- [ ] **Panel de pedidos.** Hoy los pedidos solo existen en los correos y en Mercado Pago. Una página protegida (Netlify Identity o contraseña) que liste los pedidos de Blobs con su guía.
-- [ ] **SEO básico:** no hay `robots.txt`, `sitemap.xml` ni `<link rel="canonical">`.
+- [ ] **Configurar `PANEL_PASSWORD`** (mínimo 16 caracteres) en Netlify → Environment variables. Sin ella el panel de pedidos (`/pedidos.html`) responde 503.
 - [ ] **Correo transaccional:** Gmail SMTP tiene límite diario y puede caer en spam. Considerar Resend o Brevo con dominio propio (SPF/DKIM).
+- [x] **Enlaces rotos de redes:** Instagram (`https://www.instagram.com/dstar_.4/`) en todas las páginas; TikTok quitado hasta que haya cuenta.
+- [x] **Límite de peticiones** en `/api/cotizar-envio`, `/api/mp-preference`, `/api/stock` y el panel (`netlify/lib/rate-limit.js`).
+- [x] **Quitar `'unsafe-inline'` de `script-src`.** Scripts a archivos `.js` y los 3 inline que quedan por hash (`scripts/csp-hashes.js`).
+- [x] **Panel de pedidos** con contraseña (`pedidos.html`).
+- [x] **SEO básico:** `robots.txt`, `sitemap.xml`, canonical y metadatos para compartir.
 
 ## Prioridad baja
 
 - [ ] Dominio propio (hoy `dstarshop.netlify.app`).
+- [ ] Enlace de TikTok cuando exista la cuenta.
 - [ ] Agregar productos sin tocar código (Cloudinary + JSON o un CMS ligero).
 - [ ] Analítica respetuosa de privacidad (Plausible o Netlify Analytics).
 - [ ] Prueba E2E del logo con autoplay bloqueado (necesita Chrome con H.264: `channel: 'chrome'`).
 
-## Hecho el 2026-10-17
+## Hecho el 2026-10-17 (auditoría)
+
+- Redes: Instagram real en todas las páginas y JSON-LD `Organization`; TikTok quitado.
+- SEO: canonical, `og:*` y `twitter:card` en las páginas indexables con `assets/brand/og-dstar.jpg` (1200×630); `noindex` en checkout, resultados del pago, offline, pedidos y 404; título nuevo del index. Edge functions `producto-meta.js` (title, description, canonical, `og:*` con la foto de la prenda, precio y JSON-LD `Product`) y `sitemap.js` (`/sitemap.xml` desde el catálogo); `robots.txt`.
+- Página 404 de la marca con el logo 3D entre dos 4.
+- Límite de peticiones por IP en Netlify Blobs: cotizar-envio 20, mp-preference 10, stock 120 y pedidos 30 cada 10 min, con 429 y `Retry-After`.
+- CSP sin `'unsafe-inline'` en `script-src`: `js/loader.js`, `js/checkout.js` y `js/gracias.js` en vez de scripts inline, listeners en vez de handlers inline y hashes para los 3 inline que quedan (`node scripts/csp-hashes.js`, `--check` para verificar).
+- OXXO: la preferencia vence a los 3 días y, si la tarifa venció cuando se aprueba el pago, el webhook vuelve a cotizar con la misma paquetería y servicio y avisa a la tienda.
+- Panel de pedidos (`pedidos.html`): contraseña, filtros, cliente, prendas, etiqueta, rastreo y WhatsApp.
+- Accesibilidad: `<main>` en todas las páginas, tarjetas sin `aria-label` redundante, SplitText de líneas con `aria: 'none'`; Lighthouse a11y del index 100.
+- `viewport-fit=cover` y bloque SAFE AREAS en `style.css`; el indicador SCROLL se desvanece con `filter: opacity()` y ya no choca con su entrada.
+- Service worker `dstar-v11`; `calentar-cloudinary.js` también calienta la imagen para compartir de cada producto.
+- Prueba nueva `seguridad-y-seo.spec.js`; Playwright con 2 workers en local; 234 pruebas pasando y 33 omitidas.
+
+## Hecho el 2026-10-17 (galería, ya en producción)
 
 - Galería de producto con placeholder borroso (LQIP) que reserva el alto, y un solo lightbox en `<dialog>` para móvil y desktop: animación FLIP al abrir y cerrar, zoom con click, teclado, doble tap y pellizco, deslizar hacia abajo para cerrar y fotos de hasta 2400 px solo con zoom.
 - Service worker `dstar-v10`: las imágenes de Cloudinary se piden en modo CORS y solo se guardan si responden bien; una foto que fallaba una vez ya no queda rota en caché.

@@ -1,29 +1,27 @@
 ---
 tags: [codigo, backend]
 ruta: "dstar-store/netlify/functions/cotizar-envio.js"
-lineas: 144
+lineas: 75
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # cotizar-envio.js
 
-`dstar-store/netlify/functions/cotizar-envio.js` · 144 líneas
+`dstar-store/netlify/functions/cotizar-envio.js` · 75 líneas
 
-Función /api/cotizar-envio: cotiza tarifas de envío con Skydropx Pro.
+Función /api/cotizar-envio: cotiza tarifas de envío con cotizar() de lib/skydropx.js; límite de 20 peticiones por IP cada 10 min.
 
 Parte de: [[Backend]]
 
 ## Conexiones
 
-- Importa: [[skydropx.js]], [[validate.js]]
+- Importa: [[skydropx.js]], [[validate.js]], [[rate-limit.js]]
 - Usa: [[Netlify]], [[Skydropx]]
-- Lee la variable: [[CP_ORIGEN]], [[ORIGEN_ESTADO]], [[ORIGEN_MUNICIPIO]], [[ORIGEN_COLONIA]]
 
 ## Funciones y clases
 
-- `sleep` (línea 16)
-- `handler` (línea 18)
-- `clamp` (línea 35)
+- `handler` (línea 17)
+- `clamp` (línea 36)
 
 ## Últimos cambios
 

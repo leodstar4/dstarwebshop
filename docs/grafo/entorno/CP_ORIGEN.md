@@ -12,7 +12,3 @@ Solo el nombre: el valor vive en `.env` (local, fuera de git) y en Netlify → E
 Parte de: [[Variables de entorno]]
 Relacionada con: [[Skydropx]]
 
-## Leída en
-
-- [[cotizar-envio.js]]
-

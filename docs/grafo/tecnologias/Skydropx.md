@@ -12,7 +12,6 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
-- [[checkout.html]]
 - [[cotizar-envio.js]]
 - [[mp-preference.js]]
 - [[mp-webhook.js]]

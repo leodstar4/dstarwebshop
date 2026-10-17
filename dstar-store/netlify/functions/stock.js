@@ -1,9 +1,12 @@
 const { leerStock } = require('../lib/stock-store');
+const { limitar, demasiadas } = require('../lib/rate-limit');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Método no permitido' }) };
   }
+  const retry = await limitar(event, 'stock', 120, 600);
+  if (retry) return demasiadas(retry);
   try {
     return {
       statusCode: 200,
