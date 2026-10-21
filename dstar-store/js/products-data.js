@@ -1,5 +1,5 @@
-// Catálogo DSTAR — única fuente de precios y stock, la usan la web y las Netlify Functions.
-// Edita aquí tus productos. Imágenes en Cloudinary: https://res.cloudinary.com/dflyysqln/image/upload/
+// Catálogo inicial y respaldo visual. El catálogo guardado en el panel tiene prioridad.
+// No restes ventas editando este archivo: ajusta el inventario desde el panel. Imágenes en Cloudinary: https://res.cloudinary.com/dflyysqln/image/upload/
 (function (root) {
   const PRODUCTS = [
     {

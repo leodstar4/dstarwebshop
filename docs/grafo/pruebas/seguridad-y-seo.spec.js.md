@@ -1,13 +1,13 @@
 ---
 tags: [codigo, prueba]
 ruta: "dstar-store/tests/e2e/seguridad-y-seo.spec.js"
-lineas: 190
+lineas: 197
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # seguridad-y-seo.spec.js
 
-`dstar-store/tests/e2e/seguridad-y-seo.spec.js` · 190 líneas
+`dstar-store/tests/e2e/seguridad-y-seo.spec.js` · 197 líneas
 
 Pruebas de la auditoría del 2026-10-17: CSP real sin violaciones por página, metadatos de SEO y noindex, 404, enlaces a Instagram, edge functions producto-meta y sitemap, 429 de cotizar-envio y panel de pedidos.
 
@@ -16,16 +16,16 @@ Parte de: [[Pruebas]]
 ## Conexiones
 
 - Llama a la API: [[pedidos.js (functions)]] (`/api/pedidos`)
-- Usa la global: [[products-data.js]] (`DSTAR_PRODUCTS`)
+- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`), [[products-data.js]] (`DSTAR_PRODUCTS`)
 - Visita: [[index.html]], [[pedidos.html]]
-- Referencia a: [[producto.html]], [[terminos.html]], [[agradecimientos.html]], [[checkout.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[offline.html]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]], [[csp-hashes.js]], [[cotizar-envio.js]]
+- Referencia a: [[producto.html]], [[terminos.html]], [[agradecimientos.html]], [[checkout.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[offline.html]], [[storage.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]], [[csp-hashes.js]], [[cotizar-envio.js]]
 - Usa: [[Playwright]], [[Netlify]], [[Cloudinary]]
-- Lee la variable: [[PANEL_PASSWORD]]
+- Lee la variable: [[DSTAR_MEMORY_STORE]], [[PANEL_PASSWORD]]
 
 ## Funciones y clases
 
-- `cargarEdge` (línea 92)
-- `ev` (línea 178)
+- `cargarEdge` (línea 95)
+- `ev` (línea 185)
 
 ## Casos de prueba
 
@@ -44,4 +44,8 @@ Parte de: [[Pruebas]]
 - Panel de pedidos
 - pide contraseña, muestra los pedidos y escapa los datos del cliente
 - la función exige PANEL_PASSWORD y la contraseña correcta
+
+## Últimos cambios
+
+- 2026-10-17 · `fc178da` · Auditoría: foto al compartir, 404 de marca, SEO, límite de peticiones, CSP sin inline, OXXO, panel de pedidos y accesibi
 

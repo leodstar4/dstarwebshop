@@ -1,31 +1,36 @@
 ---
 tags: [codigo, backend]
 ruta: "dstar-store/netlify/lib/stock-store.js"
-lineas: 92
+lineas: 94
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # stock-store.js
 
-`dstar-store/netlify/lib/stock-store.js` · 92 líneas
+`dstar-store/netlify/lib/stock-store.js` · 94 líneas
 
-Stock = base del catálogo menos piezas vendidas, guardado en Netlify Blobs con reintentos.
+Libro de inventario versión 2 en un solo blob (stock/vendidas): unidades, apartados, ventas y movimientos con escritura condicional; migra el formato anterior conservándolo, reservar/liberar apartados, descontar una vez por pago, ajustar con motivo sin invadir apartados, y prune poda apartados vencidos hace más de un día, ventas de más de 200 días y deja 2000 movimientos más el de migración.
 
 Parte de: [[Backend]]
 
 ## Conexiones
 
-- Importa: [[products-data.js]]
-- Usa: [[Netlify Blobs]], [[Netlify]]
+- Importa: [[products-data.js]], [[storage.js]]
 
 ## Funciones y clases
 
-- `stockBase` (línea 10)
-- `vendidas` (línea 15)
-- `calcular` (línea 20)
-- `abrir` (línea 31)
-- `leerStock` (línea 61)
-- `descontar` (línea 68)
+- `stockBase` (línea 4)
+- `key` (línea 5)
+- `migrate` (línea 6)
+- `held` (línea 16)
+- `prune` (línea 20)
+- `ledger` (línea 30)
+- `leerStock` (línea 33)
+- `reservar` (línea 41)
+- `liberar` (línea 54)
+- `descontar` (línea 57)
+- `ajustar` (línea 77)
+- `historial` (línea 92)
 
 ## Últimos cambios
 

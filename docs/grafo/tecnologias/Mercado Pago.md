@@ -12,10 +12,17 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
+- [[checkout.js]]
+- [[admin-store.js]]
 - [[mp-preference.js]]
 - [[mp-webhook.js]]
+- [[http.js]]
+- [[jobs.js]]
 - [[netlify.toml (dstar-store)]]
+- [[correcciones.test.cjs]]
+- [[operacion.test.cjs]]
 - [[audit-bugs.spec.js]]
+- [[flujo-compra.spec.js]]
 - [[stock-y-animaciones.spec.js]]
 - [[Agente architect]]
 - [[Agente budgeter]]

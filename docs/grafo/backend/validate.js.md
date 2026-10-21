@@ -1,15 +1,15 @@
 ---
 tags: [codigo, backend]
 ruta: "dstar-store/netlify/lib/validate.js"
-lineas: 78
+lineas: 80
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # validate.js
 
-`dstar-store/netlify/lib/validate.js` · 78 líneas
+`dstar-store/netlify/lib/validate.js` · 80 líneas
 
-Validación de datos del cliente y del pedido, y verificación del origen de la petición.
+Validación de datos del cliente (incluida la referencia) y del pedido contra el catálogo y el stock vivo (sin volver al stock base si falta), y verificación del origen de la petición.
 
 Parte de: [[Backend]]
 

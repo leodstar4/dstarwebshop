@@ -17,11 +17,6 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 // ============================================
 // UTILIDADES
 // ============================================
-// Peso estimado del paquete según unidades en el carrito (streetwear ~0.4kg/u)
-function calcularPeso() {
-  const unidades = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
-  return Math.max(0.5, Math.round(unidades * 0.4 * 10) / 10);
-}
 function escapeHtml(value) {
   return String(value == null ? '' : value)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -55,8 +50,11 @@ function showToast(msg, isError = false) {
 // VERIFICAR CARRITO — redirigir si está vacío
 // ============================================
 // Si el usuario llega al checkout sin productos, lo devolvemos a la tienda
-if (!cart || cart.length === 0) {
-  document.addEventListener('DOMContentLoaded', () => {
+{
+  document.addEventListener('DOMContentLoaded', async () => {
+  await window.DSTAR_CATALOG_READY;
+  cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
+    if (cart.length) return;
     // Reemplazamos el contenido con un mensaje amigable en vez de redirigir
     // bruscamente, para que el usuario entienda qué pasó
     const container = document.getElementById('checkoutContainer');
@@ -64,6 +62,7 @@ if (!cart || cart.length === 0) {
       <div class="cart-empty-msg" style="grid-column:1/-1">
         <h2>CARRITO VACÍO</h2>
         <p>Agrega productos antes de continuar al checkout.</p>
+        <p>Si ya iniciaste un pago, <a href="seguimiento.html">consulta tu último intento</a> antes de repetirlo.</p>
         <a href="index.html" class="btn-volver">← EXPLORAR DROPS</a>
       </div>
     `;
@@ -184,11 +183,7 @@ async function cotizarEnvio() {
       body: JSON.stringify({
         cp_destino: cp,
         estado, ciudad, colonia,
-        // Dimensiones default del paquete DSTAR; el peso escala con las unidades
-        peso:  calcularPeso(),
-        alto:  15,
-        ancho: 20,
-        largo: 5
+        items: cart.map(({ id, size, qty }) => ({ id, size, qty }))
       })
     });
 
@@ -319,7 +314,9 @@ function renderTarifas(rates) {
 // ============================================
 // Cuando el usuario sale del campo CP con 5 dígitos,
 // se dispara automáticamente la cotización de envío.
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await window.DSTAR_CATALOG_READY;
+  cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
   // La cotización Pro necesita CP + estado + ciudad + colonia.
   // Reintentamos al salir de cualquiera de esos campos; cotizarEnvio()
   // se auto-cancela si todavía falta alguno.
@@ -391,7 +388,9 @@ function validarFormulario() {
 // ============================================
 // BOTÓN PAGAR — lógica principal
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await window.DSTAR_CATALOG_READY;
+  cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
   const btnPagar = document.getElementById('btnPagar');
   if (!btnPagar) return;
 
@@ -431,7 +430,8 @@ document.addEventListener('DOMContentLoaded', () => {
       colonia:  document.getElementById('colonia').value.trim(),
       cp:       document.getElementById('cp').value.trim(),
       ciudad:   document.getElementById('ciudad').value.trim(),
-      estado:   document.getElementById('estado').value.trim()
+      estado:   document.getElementById('estado').value.trim(),
+      referencia: document.getElementById('referencia')?.value.trim() || ''
     };
 
     // 5. Mostrar estado de carga en el botón
@@ -443,12 +443,20 @@ document.addEventListener('DOMContentLoaded', () => {
       // 6. Mapear los items del carrito al formato esperado por mp-preference
       const items = cart.map(item => ({ id: item.id, size: item.size, qty: item.qty }));
 
+      const attemptKey = JSON.stringify({ items, cliente, quotationId, rate: tarifaSeleccionada.rate_id });
+      let attempt;
+      try { attempt = JSON.parse(sessionStorage.getItem('dstar_checkout_attempt')); } catch {}
+      if (!attempt || attempt.key !== attemptKey) {
+        attempt = { key: attemptKey, id: crypto.randomUUID() };
+        sessionStorage.setItem('dstar_checkout_attempt', JSON.stringify(attempt));
+      }
       // 7. Crear la preferencia de MercadoPago via Netlify Function
       const response = await fetch('/.netlify/functions/mp-preference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items,
+          checkout_id: attempt.id,
           cliente,
           quotation_id: quotationId,
           rate_id: tarifaSeleccionada.rate_id
@@ -457,14 +465,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await response.json();
 
+      if (data.order_id && data.tracking_token) sessionStorage.setItem('dstar_last_order', JSON.stringify({ id: data.order_id, token: data.tracking_token, items }));
       if (!response.ok) {
+        if (data.restart) sessionStorage.removeItem('dstar_checkout_attempt');
         const error = new Error(data.error || 'Error al crear el pago');
-        error.visible = (response.status === 400 || response.status === 429) && data.error;
+        error.visible = ([400, 409, 429].includes(response.status)) && data.error;
         throw error;
       }
 
       // 8. Redirigir al checkout de MercadoPago
-      if (data.init_point) {
+      const paymentUrl = new URL(data.init_point);
+      if (paymentUrl.protocol === 'https:' && ['www.mercadopago.com.mx', 'mercadopago.com.mx'].includes(paymentUrl.hostname)) {
+        sessionStorage.setItem('dstar_last_order', JSON.stringify({ id: data.order_id, token: data.tracking_token, items }));
         window.location.href = data.init_point;
       } else {
         throw new Error('No se recibió el link de pago');
@@ -472,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       showToast(err.visible ? String(err.visible).toUpperCase() : 'ERROR AL PROCESAR EL PAGO — INTENTA DE NUEVO', true);
-      if (err.visible && /tarifa|envío/i.test(err.visible)) {
+      if (err.visible && /tarifa|envío|cotiza/i.test(err.visible)) {
         ultimaClaveCotizada = '';
         cotizarEnvio();
       }
@@ -502,7 +514,9 @@ window.addEventListener('pageshow', (e) => {
 // ============================================
 // INIT — renderizar resumen + animaciones GSAP
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await window.DSTAR_CATALOG_READY;
+  cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
   // Solo continuar si hay carrito
   if (!cart || cart.length === 0) return;
 
@@ -516,8 +530,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (JSON.stringify(cart) === antes) return;
       window.DSTAR_CART.save(cart);
       if (cart.length === 0) { location.reload(); return; }
+      ultimaClaveCotizada = ''; quotationId = null; tarifaSeleccionada = null;
       renderOrderSummary();
       actualizarTotal();
+      cotizarEnvio();
       showToast('Una pieza de tu carrito se agotó; ajustamos tu pedido', true);
     });
     window.DSTAR_CART.syncStock();

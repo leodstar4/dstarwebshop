@@ -6,7 +6,7 @@ tipo: "servicio"
 
 # Netlify Blobs
 
-Almacén clave-valor de Netlify: piezas vendidas (stock) y registro de pedidos.
+Almacén clave-valor de Netlify, con lectura fuerte y escritura condicional desde netlify/lib/storage.js: pedidos, inventario (stock/vendidas), catálogo y datos de la tienda (catalogo), cotizaciones, límites de peticiones (limites) y cursor de la conciliación (operacion).
 
 Paquete npm: `@netlify/blobs`
 
@@ -14,7 +14,5 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
-- [[orders-store.js]]
-- [[rate-limit.js]]
-- [[stock-store.js]]
+- [[storage.js]]
 

@@ -14,7 +14,10 @@ Relacionada con: [[Mercado Pago]]
 
 ## Leída en
 
+- [[admin-store.js]]
 - [[mp-preference.js]]
-- [[mp-webhook.js]]
+- [[http.js]]
+- [[correcciones.test.cjs]]
+- [[operacion.test.cjs]]
 - [[audit-bugs.spec.js]]
 

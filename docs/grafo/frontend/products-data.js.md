@@ -9,7 +9,7 @@ lineas: 100
 
 `dstar-store/js/products-data.js` · 100 líneas
 
-Catálogo estático de productos; lo leen el navegador y el backend (validación de precios y stock).
+Catálogo inicial y respaldo visual (DSTAR_PRODUCTS); el catálogo guardado en catalog-store.js tiene prioridad y stock-store.js lo usa para migrar el inventario; cambiar su stock no borra ventas.
 
 Parte de: [[Frontend]]
 

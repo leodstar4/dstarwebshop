@@ -1,19 +1,24 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/gracias.js"
-lineas: 83
+lineas: 85
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # gracias.js
 
-`dstar-store/js/gracias.js` · 83 líneas
+`dstar-store/js/gracias.js` · 85 líneas
 
-Script de gracias.html (antes inline): vacía dstar_cart si el pago se aprobó, muestra el número de pago y anima la entrada.
+Script de gracias.html: ya no vacía dstar_cart (los parámetros de la URL no prueban el pago); redirige a seguimiento.html si hay dstar_last_order en la sesión y si no pide consultar el pago.
 
 Parte de: [[Frontend]]
 
 ## Conexiones
 
+- Referencia a: [[seguimiento.html]]
 - Usa: [[GSAP]]
+
+## Últimos cambios
+
+- 2026-10-17 · `fc178da` · Auditoría: foto al compartir, 404 de marca, SEO, límite de peticiones, CSP sin inline, OXXO, panel de pedidos y accesibi
 

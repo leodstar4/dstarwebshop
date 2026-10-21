@@ -623,7 +623,8 @@ function initMagneticButtons() {
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await window.DSTAR_CATALOG_READY;
   requestAnimationFrame(() => {
     const run = (fn) => { try { fn(); } catch {} };
     if (document.body.classList.contains('page-product')) {

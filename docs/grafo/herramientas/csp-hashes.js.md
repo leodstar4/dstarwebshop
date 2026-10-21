@@ -20,3 +20,7 @@ Parte de: [[Herramientas]]
 - `hashes` (línea 17)
 - `scriptSrc` (línea 33)
 
+## Últimos cambios
+
+- 2026-10-17 · `fc178da` · Auditoría: foto al compartir, 404 de marca, SEO, límite de peticiones, CSP sin inline, OXXO, panel de pedidos y accesibi
+

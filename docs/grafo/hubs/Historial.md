@@ -11,6 +11,7 @@ Parte de: [[DSTAR]]
 
 ## 2026-10-17
 
+- `fc178da` Auditoría: foto al compartir, 404 de marca, SEO, límite de peticiones, CSP sin inline, OXXO, panel de pedidos y accesibilidad
 - `836ac92` Galería de producto: lightbox premium en desktop y móvil, placeholders borrosos y fotos que ya no quedan rotas en caché
 
 ## 2026-10-13

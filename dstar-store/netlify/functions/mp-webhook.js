@@ -13,14 +13,12 @@
 // ============================================
 
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const { SKYDROPX_BASE, getSkydropxToken, cotizar } = require('../lib/skydropx');
-const { openStore } = require('../lib/orders-store');
-const { descontar } = require('../lib/stock-store');
+const { SKYDROPX_BASE, getSkydropxToken } = require('../lib/skydropx');
+
 
 const headers = { 'Content-Type': 'application/json' };
 const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify(body) });
-const STALE_MS = 5 * 60 * 1000;
+
 
 function firmaValida(event, dataId) {
   const secret = process.env.MP_WEBHOOK_SECRET;
@@ -47,161 +45,29 @@ function firmaValida(event, dataId) {
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'GET') return reply(200, { ok: true });
-  if (event.httpMethod !== 'POST') return reply(405, { error: 'Method Not Allowed' });
-
+  if (event.httpMethod !== 'POST') return reply(405, { error: 'Método no permitido' });
   try {
-    let body;
-    try { body = JSON.parse(event.body || '{}'); } catch { return reply(400, { error: 'JSON inválido' }); }
-
+    const body = JSON.parse(event.body || '{}');
     const qs = event.queryStringParameters || {};
     if ((body.type || qs.type) !== 'payment') return reply(200, { ok: true });
-
-    const paymentId = String(qs['data.id'] || (body.data && body.data.id) || '');
-    if (!/^\d{1,20}$/.test(paymentId)) return reply(400, { error: 'id inválido' });
-    if (!firmaValida(event, paymentId)) return reply(401, { error: 'Firma inválida' });
-
-    const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
-    if (!MP_TOKEN) {
-      console.error('mp-webhook — falta MP_ACCESS_TOKEN');
-      return reply(500, { error: 'MP no configurado' });
-    }
-
-    const store = openStore(event);
-    const previo = await store.get(paymentId);
-    if (previo && (previo.status === 'done' || (previo.status === 'processing' && Date.now() - previo.at < STALE_MS))) {
-      return reply(200, { ok: true });
-    }
-
-    const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      headers: { 'Authorization': `Bearer ${MP_TOKEN}`, 'Content-Type': 'application/json' }
-    });
-    if (!mpResponse.ok) {
-      console.error('mp-webhook — error consultando pago', paymentId, mpResponse.status);
-      return reply(500, { error: 'No se pudo consultar el pago' });
-    }
-
-    const payment = await mpResponse.json();
-    if (payment.status !== 'approved') return reply(200, { ok: true });
-
-    const { cliente, rate_id, parcel, envio, order_items, stock_items, expected_total } = payment.metadata || {};
-    if (!(await store.claim(paymentId, STALE_MS))) return reply(200, { ok: true });
-
-    if (!cliente || !rate_id) {
-      console.error('mp-webhook — metadata incompleta en pago', paymentId);
-      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true, pedido: { total: Number(payment.transaction_amount) || 0 } });
-      await alertarTienda(`Pago ${paymentId} sin datos de envío`, [
-        'Mercado Pago aprobó un pago que no trae los datos del cliente ni la tarifa de envío, así que no se generó guía.',
-        `Monto: ${fmtMXN(payment.transaction_amount)}`,
-        'Búscalo en tu panel de Mercado Pago para contactar al comprador.'
-      ], paymentId);
-      return reply(200, { ok: true });
-    }
-
-    const pagado = Number(payment.transaction_amount);
-    const pedido = { cliente, items: order_items || [], total: pagado };
-    if (payment.currency_id !== 'MXN' || !Number.isFinite(Number(expected_total)) || pagado + 0.01 < Number(expected_total)) {
-      console.error(`mp-webhook — monto no coincide en pago ${paymentId}: pagado=${pagado} esperado=${expected_total} moneda=${payment.currency_id}. Revisar a mano.`);
-      await store.set(paymentId, { status: 'done', at: Date.now(), revisar: true, pedido });
-      await alertarTienda(`El monto del pago ${paymentId} no coincide`, [
-        `Se pagó ${fmtMXN(pagado)} (${payment.currency_id}) pero el pedido costaba ${fmtMXN(expected_total)}.`,
-        'No se generó guía ni se descontó stock. Revisa el pago en Mercado Pago antes de enviar.',
-        ...datosCliente(cliente),
-        ...lineasPedido(order_items)
-      ], paymentId);
-      return reply(200, { ok: true });
-    }
-
-    const registro = { ...previo, pedido };
-    if (!registro.stock) {
-      try {
-        const sobreventa = await descontar(event, stock_items);
-        registro.stock = true;
-        await store.set(paymentId, { ...registro, status: 'processing', at: Date.now() });
-        if (sobreventa.length) {
-          await alertarTienda(`Sobreventa en el pago ${paymentId}`, [
-            'Dos personas pagaron la misma pieza casi al mismo tiempo. Faltan:',
-            ...sobreventa.map((l) => `• ${l.name} talla ${l.size}: ${l.faltan} pieza(s)`),
-            'La guía se genera de todos modos; contacta al cliente para ofrecerle otra talla o reembolsar desde Mercado Pago.',
-            ...datosCliente(cliente)
-          ], paymentId);
-        }
-      } catch (err) {
-        console.error('mp-webhook — no se pudo descontar stock:', err.message);
-        await alertarTienda(`No se descontó el stock del pago ${paymentId}`, [
-          `Error: ${err.message}`,
-          'Ajusta el stock a mano en products-data.js.',
-          ...lineasPedido(order_items)
-        ], paymentId);
-      }
-    }
-
-    let guiaResult;
-    try {
-      guiaResult = await crearGuiaConRespaldo({ cliente, rate_id, parcel, envio, total: pagado });
-    } catch (err) {
-      console.error('mp-webhook — Skydropx falló:', err.message);
-      if (!registro.alertaGuia) {
-        registro.alertaGuia = true;
-        await alertarTienda(`No se pudo crear la guía del pago ${paymentId}`, [
-          `Skydropx respondió: ${err.message}`,
-          'El cliente ya pagó. Mercado Pago reintentará el aviso; si sigue fallando, genera la guía a mano en Skydropx con estos datos:',
-          ...datosCliente(cliente),
-          ...lineasPedido(order_items)
-        ], paymentId);
-      }
-      await store.set(paymentId, { ...registro, status: 'failed', at: Date.now() });
-      throw err;
-    }
-    await store.set(paymentId, {
-      ...registro,
-      status: 'done',
-      at: Date.now(),
-      tracking: guiaResult.tracking_number || '',
-      guia: { carrier: guiaResult.carrier, label_url: guiaResult.label_url, tracking_url: guiaResult.tracking_url }
-    });
-    if (guiaResult.recotizada) {
-      await alertarTienda(`La tarifa de envío del pago ${paymentId} había vencido`, [
-        `Se generó la guía con una tarifa nueva de ${guiaResult.carrier}: ${fmtMXN(guiaResult.recotizada.ahora)} (el cliente pagó ${fmtMXN(guiaResult.recotizada.antes)} de envío).`,
-        `Guía: ${guiaResult.tracking_number || '-'}`
-      ], paymentId);
-    }
-
-    try {
-      await enviarCorreoConfirmacion({ cliente, guia: guiaResult, items: order_items || [], total: pagado, paymentId });
-    } catch (mailErr) {
-      console.error('mp-webhook — fallo al enviar correo (no crítico):', mailErr.message);
-    }
-
+    const id = String(qs['data.id'] || body.data?.id || '');
+    if (!/^\d{1,20}$/.test(id)) return reply(400, { error: 'ID inválido' });
+    if (!firmaValida(event, id)) return reply(401, { error: 'Firma inválida' });
+    if (process.env.CONTEXT === 'production') await require('../lib/jobs').dispatch({ type: 'payment', id });
+    else await require('../lib/payment-service').syncPayment(event, id);
     return reply(200, { ok: true });
-  } catch (error) {
-    console.error('mp-webhook — error inesperado:', error.message);
-    return reply(500, { error: 'Error interno del servidor' });
+  } catch (e) {
+    console.error('mp-webhook:', e.message);
+    return reply(503, { error: 'No se pudo procesar; reintentar' });
   }
 };
-
-// Un pago en efectivo (OXXO) puede aprobarse días después y para entonces la
-// tarifa ya venció: se vuelve a cotizar con la misma paquetería y servicio.
-async function crearGuiaConRespaldo({ cliente, rate_id, parcel, envio, total }) {
-  try {
-    return await crearGuiaSkydropx({ cliente, rate_id, parcel, total });
-  } catch (err) {
-    if (!envio || !envio.carrier || !parcel || !cliente.cp) throw err;
-    const { rates } = await cotizar(
-      { cp: cliente.cp, estado: cliente.estado, ciudad: cliente.ciudad, colonia: cliente.colonia },
-      { length: parcel.length, width: parcel.width, height: parcel.height, weight: parcel.weight }
-    ).catch(() => ({ rates: [] }));
-    const igual = rates.find((r) => r.carrier === envio.carrier && r.service === envio.service);
-    if (!igual || String(igual.rate_id) === String(rate_id)) throw err;
-    const guia = await crearGuiaSkydropx({ cliente, rate_id: igual.rate_id, parcel, total });
-    return { ...guia, recotizada: { antes: Number(envio.price) || 0, ahora: igual.price } };
-  }
-}
 
 // ============================================
 // GENERAR GUÍA EN SKYDROPX PRO (v2)
 // ============================================
 async function crearGuiaSkydropx({ cliente, rate_id, parcel, total }) {
-  const token = await getSkydropxToken();
+  if (!rate_id || !cliente) throw Object.assign(new Error('Pedido sin tarifa o destino'), { notSent: true });
+  const token = await getSkydropxToken().catch(e => { throw Object.assign(e, { notSent: true }); });
 
   const shipmentBody = {
     shipment: {
@@ -235,12 +101,13 @@ async function crearGuiaSkydropx({ cliente, rate_id, parcel, total }) {
   const response = await fetch(`${SKYDROPX_BASE}/shipments/`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(shipmentBody)
+    body: JSON.stringify(shipmentBody),
+    signal: AbortSignal.timeout(20000)
   });
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(`Skydropx shipment error (${response.status}): ${JSON.stringify(data).slice(0, 300)}`);
+    throw Object.assign(new Error(`Skydropx shipment error (${response.status})`), { upstreamStatus: response.status });
   }
 
   // Respuesta JSON:API — el tracking/label vienen en included[].attributes
@@ -250,6 +117,7 @@ async function crearGuiaSkydropx({ cliente, rate_id, parcel, total }) {
   const attrs = pkg ? pkg.attributes : {};
 
   return {
+    shipment_id: data.data?.id || '',
     tracking_number: attrs.tracking_number
       || (data.data && data.data.attributes && data.data.attributes.master_tracking_number)
       || '',
@@ -269,85 +137,6 @@ const fmtMXN = (n) =>
 const esc = (s) =>
   String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-function transporte() {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) return null;
-  return { user, transporter: nodemailer.createTransport({ service: 'gmail', auth: { user, pass } }) };
-}
-
-function datosCliente(c) {
-  return [
-    `Cliente: ${c.nombre || '-'} · ${c.email || '-'} · ${c.telefono || '-'}`,
-    `Dirección: ${[c.calle, c.colonia, c.ciudad, c.estado, c.cp && `C.P. ${c.cp}`].filter(Boolean).join(', ')}`,
-    c.referencia ? `Referencia: ${c.referencia}` : ''
-  ].filter(Boolean);
-}
-
-function lineasPedido(items) {
-  return (items || []).map((i) => `• ${i.title} × ${i.quantity} — ${fmtMXN((Number(i.unit_price) || 0) * (Number(i.quantity) || 1))}`);
-}
-
-// Avisa a la tienda por correo de un pedido que necesita atención manual.
-async function alertarTienda(asunto, lineas, paymentId) {
-  console.error(`mp-webhook — ALERTA: ${asunto}`);
-  const t = transporte();
-  if (!t) {
-    console.error('mp-webhook — falta GMAIL_USER / GMAIL_APP_PASSWORD; la alerta solo queda en el log');
-    return;
-  }
-  const cuerpo = lineas.map((l) => `<p style="margin:0 0 10px;color:#f0ede8;font-size:14px;line-height:1.6;">${esc(l)}</p>`).join('');
-  await t.transporter.sendMail({
-    from: `"DSTAR alertas" <${t.user}>`,
-    to: process.env.EMAIL_ORIGEN || t.user,
-    subject: `⚠️ ${asunto}`,
-    text: `${lineas.join('\n')}\n\nPago Mercado Pago #${paymentId}`,
-    html: `<div style="background:#0a0a0a;padding:24px;font-family:'Courier New',monospace;">
-      <p style="margin:0 0 16px;color:#e63232;font-size:12px;letter-spacing:3px;">ALERTA DE PEDIDO</p>
-      <h1 style="margin:0 0 16px;color:#f0ede8;font-size:20px;">${esc(asunto)}</h1>
-      ${cuerpo}
-      <p style="margin:16px 0 0;color:#8a8a83;font-size:12px;">Pago Mercado Pago #${esc(paymentId)}</p>
-    </div>`
-  }).catch((e) => console.error('mp-webhook — no se pudo enviar la alerta:', e.message));
-}
-
-async function enviarCorreoConfirmacion({ cliente, guia, items, total, paymentId }) {
-  const t = transporte();
-  if (!t) {
-    console.error('mp-webhook — falta GMAIL_USER / GMAIL_APP_PASSWORD; no se envía correo');
-    return;
-  }
-  if (!cliente.email) {
-    console.error('mp-webhook — el cliente no tiene email; no se envía correo');
-    return;
-  }
-  const { user, transporter } = t;
-
-  const fromName = process.env.EMPRESA_ORIGEN || 'DSTAR';
-
-  // El cliente recibe solo el rastreo; la etiqueta para despachar (label_url)
-  // va únicamente en la copia interna de la tienda.
-  const htmlCliente = buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiqueta: false });
-  const htmlTienda  = buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiqueta: true });
-
-  // 1) Al cliente
-  await transporter.sendMail({
-    from: `"${fromName}" <${user}>`,
-    to: cliente.email,
-    subject: 'Tu pedido DSTAR está confirmado 🖤',
-    html: htmlCliente
-  });
-
-  // 2) Copia interna a la tienda (notificación de venta + etiqueta para imprimir)
-  const storeEmail = process.env.EMAIL_ORIGEN || user;
-  await transporter.sendMail({
-    from: `"${fromName}" <${user}>`,
-    to: storeEmail,
-    subject: `Nueva venta — ${cliente.nombre || 'Cliente'} · ${cliente.ciudad || ''} ${cliente.cp || ''}`.trim(),
-    html: htmlTienda
-  }).catch((e) => console.error('mp-webhook — no se pudo enviar copia a la tienda:', e.message));
-}
 
 function buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiqueta }) {
   const rows = (items || []).map((it) => `
@@ -392,7 +181,7 @@ function buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiquet
           <p style="margin:0 0 8px;color:#e63232;font-size:10px;letter-spacing:3px;">PEDIDO CONFIRMADO</p>
           <h1 style="margin:0 0 12px;color:#f0ede8;font-size:26px;letter-spacing:2px;">Gracias, ${esc((cliente.nombre || '').split(' ')[0] || 'crack')} 🖤</h1>
           <p style="margin:0;color:#b0b0a8;font-size:14px;line-height:1.7;">
-            Tu pago fue aprobado y ya estamos preparando tu envío. Aquí están tu guía y rastreo.
+            Tu pago fue aprobado. Si la guía aún no aparece, te enviaremos una actualización cuando esté lista.
           </p>
         </td></tr>
 
@@ -432,3 +221,6 @@ function buildEmailHtml({ cliente, guia, items, total, paymentId, incluirEtiquet
   </table>
 </body></html>`;
 }
+
+exports.crearGuiaSkydropx = crearGuiaSkydropx;
+exports.buildEmailHtml = buildEmailHtml;

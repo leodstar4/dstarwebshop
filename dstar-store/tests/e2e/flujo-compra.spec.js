@@ -228,6 +228,7 @@ test.describe('Checkout', () => {
         })
       })
     );
+    await page.route('https://www.mercadopago.com.mx/checkout/test', route => route.fulfill({ contentType: 'text/html', body: '<p>Mercado Pago simulado</p>' }));
     // Captura el body enviado para verificar que el envío se cobra en el pago
     let prefBody = null;
     await page.route('**/.netlify/functions/mp-preference', (route) => {
@@ -235,7 +236,7 @@ test.describe('Checkout', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ id: 'pref_test', init_point: '/gracias.html?payment_id=demo&collection_status=approved' })
+        body: JSON.stringify({ id: 'pref_test', init_point: 'https://www.mercadopago.com.mx/checkout/test' })
       });
     });
 
@@ -250,13 +251,14 @@ test.describe('Checkout', () => {
     await page.fill('#estado', 'CDMX');
     await page.locator('#estado').blur();
 
-    await page.locator('.tarifa-opcion input[type="radio"]').first().check();
+    // Select the full labelled option, as a customer does on a touch screen.
+    await page.locator('.tarifa-opcion').first().click();
+    await expect(page.locator('.tarifa-opcion input[type="radio"]').first()).toBeChecked();
     await page.locator('#btnPagar').click();
 
-    // Redirige a gracias.html (init_point mockeado) que limpia el carrito
-    await page.waitForURL(/gracias\.html/, { timeout: 8000 });
-    const cart = await page.evaluate(() => localStorage.getItem('dstar_cart'));
-    expect(cart).toBeNull();
+    // Redirige al proveedor; una URL de retorno no prueba que se haya pagado.
+    await page.waitForURL('https://www.mercadopago.com.mx/checkout/test', { timeout: 8000 });
+    expect(prefBody.checkout_id).toMatch(/^[a-f0-9-]{36}$/);
 
     // El costo del envío se envía para cobrarse junto con la prenda
     expect(prefBody).not.toBeNull();

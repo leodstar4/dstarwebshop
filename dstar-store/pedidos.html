@@ -94,6 +94,20 @@
     @media (min-width: 720px) {
       .order__grid { grid-template-columns: 1.2fr 1fr 0.8fr; }
     }
+    .panel__main { max-width: 1200px; }
+    .panel__management { margin: 24px 0; border-top: 1px solid var(--line); padding-top: 20px; }
+    .panel__management summary { cursor:pointer; min-height:44px; font-weight:700; }
+    .panel__form { display:grid; gap:14px; margin:16px 0; }
+    .panel__form label { display:grid; gap:6px; }
+    .panel__form textarea { min-height:100px; padding:12px; }
+    .panel__form input[type=checkbox] { min-height:24px; width:24px; }
+    .panel__dialog { margin:auto; width:min(640px,94vw); max-height:90svh; overflow:auto; padding:24px; border:1px solid var(--line); background:var(--dark); color:var(--white); }
+    .panel__dialog::backdrop { background:#000b; }
+    .panel__dialog h2 { font:36px var(--font-heading); }
+    .order { overflow-wrap:anywhere; }
+    .order details { border-top:1px solid var(--line); padding-top:10px; }
+    .panel__btn:disabled { opacity:.5; cursor:wait; }
+    #panelHealth { margin-bottom:16px; }
   </style>
 </head>
 <body>
@@ -132,9 +146,17 @@
       </div>
       <p class="panel__label" id="panelStatus" role="status" aria-live="polite"></p>
       <ul class="panel__list" id="panelList"></ul>
+      <section class="panel__management" aria-label="Administración de tienda">
+        <h2>OPERACIÓN DE LA TIENDA</h2><p id="panelHealth" role="status"></p>
+        <div id="panelManagement"></div>
+      </section>
     </section>
   </main>
 
-  <script src="js/pedidos.js?v=1"></script>
+  <dialog id="orderDialog" class="panel__dialog" aria-labelledby="dialogTitle">
+    <h2 id="dialogTitle"></h2><form id="actionForm" class="panel__form"></form>
+    <p id="actionError" role="alert"></p><button type="button" class="panel__btn" id="dialogClose">CERRAR</button>
+  </dialog>
+  <script src="js/pedidos.js?v=2"></script>
 </body>
 </html>

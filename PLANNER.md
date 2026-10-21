@@ -1,17 +1,40 @@
 # DSTAR — Lo que falta
 
-Actualizado: 2026-10-17.
+Actualizado: 2026-10-20.
+
+## Cambios locales del 19/10/2026 (pendientes de publicar)
+
+- [x] OXXO desactivado; checkout de 15 minutos y reservas de inventario.
+- [x] Cotizaciones ligadas a dirección y carrito; paquete calculado en servidor.
+- [x] Inventario persistente sin reinicio de ventas al editar stock base, ajustes con motivo y protección de concurrencia.
+- [x] Panel operativo: notas, cancelación de pagos pendientes, preparación/despacho, guías y correo.
+- [x] Catálogo editable y seguimiento privado con confirmación real del servidor.
+- [x] Detección de estados de Mercado Pago y conciliación en segundo plano.
+- [x] Dependencias sin uso retiradas y reglas no-store del panel/seguimiento.
+- [x] Aviso de privacidad y campos de datos del proveedor implementados.
+- [x] Validación local: 23 pruebas backend y 246 de navegador aprobadas, 0 fallos; 33 casos de navegador omitidos según sus condiciones.
+- [x] Correcciones del 20/10/2026: pedidos legacy (clave numérica sin `paymentStatus`) marcados `legacy`, nunca despachados ni re-notificados; tarjeta rechazada no libera el apartado; reintento de la preferencia tras una falla de Mercado Pago; preferencia vencida responde `restart: true`; errores de Skydropx antes del POST quedan como guía fallida reintentable; la conciliación ignora pedidos terminados; poda del libro de inventario; respaldo de `AbortController` en `cart-store.js` para iOS 15. Backend: 34 pruebas aprobadas.
+- [ ] Completar datos legales reales y verificar pesos/medidas físicos.
+- [ ] Respaldar el blob `stock/vendidas` y los pedidos desde Netlify antes de publicar (la migración del inventario no tiene vuelta atrás con el código anterior).
+- [ ] Configurar `PANEL_PASSWORD` y `MP_WEBHOOK_SECRET` en Netlify (ámbito Functions).
+- [ ] Registrar en Mercado Pago el webhook de pagos (`/.netlify/functions/mp-webhook`) con eventos de pagos.
+- [ ] Compra de prueba real autorizada: pago, apartado, stock, guía, correo, seguimiento y conciliación.
+- [ ] Verificar en un iPhone físico la compra completa (catálogo remoto, checkout, regreso a `seguimiento.html` y carrito), incluido iOS 15.
+- [ ] Inventario en un solo blob de Netlify Blobs: en un drop muy grande las escrituras compiten y habrá reintentos o 409. Para volumen alto, mover el libro a una base transaccional y paginar pedidos.
+- [ ] `initApp` (y checkout y animaciones) espera hasta 5 s a `/api/catalogo` antes de renderizar; en iOS 15 sin `AbortController` no hay corte. Valorar pintar primero con `products-data.js` y actualizar después.
+- **Excluido por decisión del usuario:** emitir reembolsos, gestionar devoluciones y facturación. No hay botones ni operaciones API para esas funciones; la detección de pagos revertidos sigue activa por seguridad.
+- Ver [OPERACION.md](OPERACION.md) para configuración, migración, límites y pruebas.
 
 ## Prioridad alta (afecta ventas o es obligatorio)
 
-- [ ] **Aviso de privacidad.** El checkout pide nombre, correo, teléfono y dirección; en México la LFPDPPP exige un aviso de privacidad visible antes de recolectarlos. Crear `aviso-de-privacidad.html` y enlazarlo en el footer y junto al botón PAGAR.
-- [ ] **Datos del proveedor en los términos.** PROFECO pide razón social, domicilio y teléfono; agregarlos en `terminos.html`.
+- [ ] **Completar el aviso de privacidad.** `privacidad.html` ya está implementado y enlazado; faltan los datos reales del responsable, revisión de las prácticas de tratamiento y publicación.
+- [ ] **Completar los datos del proveedor.** Los campos públicos ya están implementados en el panel y `terminos.html`; falta registrar la identidad, domicilio y teléfono reales antes de publicar.
 - [ ] **Probar en un iPhone real** el logo 3D con modo de ahorro de batería activado, el video del loader (`logo-3d-loader.mp4`) y que drops y lookbook aparezcan.
 
 ## Prioridad media
 
-- [ ] **Configurar `PANEL_PASSWORD`** (mínimo 16 caracteres) en Netlify → Environment variables. Sin ella el panel de pedidos (`/pedidos.html`) responde 503.
-- [ ] **Correo transaccional:** Gmail SMTP tiene límite diario y puede caer en spam. Considerar Resend o Brevo con dominio propio (SPF/DKIM).
+- [ ] **Configurar `PANEL_PASSWORD`** (mínimo 16 caracteres) en Netlify → Environment variables. Sin ella el panel de pedidos (`/pedidos.html`) y `admin-store` responden 503. Ya está en `.env.example`.
+- [ ] **Correo transaccional con dominio propio:** el código ya admite Resend (`RESEND_API_KEY`, `MAIL_FROM`) o un SMTP propio (`SMTP_*`) en `netlify/lib/mail.js`; falta el dominio con SPF/DKIM. Mientras tanto se usa Gmail SMTP, con límite diario y riesgo de spam.
 - [x] **Enlaces rotos de redes:** Instagram (`https://www.instagram.com/dstar_.4/`) en todas las páginas; TikTok quitado hasta que haya cuenta.
 - [x] **Límite de peticiones** en `/api/cotizar-envio`, `/api/mp-preference`, `/api/stock` y el panel (`netlify/lib/rate-limit.js`).
 - [x] **Quitar `'unsafe-inline'` de `script-src`.** Scripts a archivos `.js` y los 3 inline que quedan por hash (`scripts/csp-hashes.js`).
@@ -22,7 +45,7 @@ Actualizado: 2026-10-17.
 
 - [ ] Dominio propio (hoy `dstarshop.netlify.app`).
 - [ ] Enlace de TikTok cuando exista la cuenta.
-- [ ] Agregar productos sin tocar código (Cloudinary + JSON o un CMS ligero).
+- [x] Agregar productos sin tocar código (panel y catálogo persistente; pendiente de despliegue).
 - [ ] Analítica respetuosa de privacidad (Plausible o Netlify Analytics).
 - [ ] Prueba E2E del logo con autoplay bloqueado (necesita Chrome con H.264: `channel: 'chrome'`).
 

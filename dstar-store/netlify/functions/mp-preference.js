@@ -1,99 +1,69 @@
-// ============================================
-// DSTAR — CREAR PREFERENCIA DE MERCADO PAGO
-// ============================================
-// Recibe por POST: { items: [{ id, size, qty }], cliente, quotation_id, rate_id }
-// Precios, stock y costo de envío se calculan aquí; nada de eso se acepta del navegador.
-//
-// Variables de entorno: MP_ACCESS_TOKEN, URL_SITIO (o URL que define Netlify)
-// ============================================
-
+const crypto = require('crypto');
 const { validarCliente, construirPedido, origenPermitido, str } = require('../lib/validate');
+const { catalog } = require('../lib/catalog-store');
+const { leerStock, reservar } = require('../lib/stock-store');
+const { openStore } = require('../lib/orders-store');
+const { verifyQuote } = require('../lib/quotes');
 const { getRatePrice } = require('../lib/skydropx');
-const { leerStock } = require('../lib/stock-store');
 const { limitar, demasiadas } = require('../lib/rate-limit');
-
-const headers = { 'Content-Type': 'application/json' };
-const reply = (statusCode, body) => ({ statusCode, headers, body: JSON.stringify(body) });
-const PLAZO_EFECTIVO_MS = 3 * 24 * 60 * 60 * 1000;
-const horaMexico = (ms) => new Date(ms - 6 * 60 * 60 * 1000).toISOString().replace('Z', '-06:00');
-
-exports.handler = async (event) => {
+const { reply, body, failure, mp } = require('../lib/http');
+exports.handler = async event => {
   if (event.httpMethod !== 'POST') return reply(405, { error: 'Método no permitido' });
   if (!origenPermitido(event)) return reply(403, { error: 'Origen no permitido' });
   const retry = await limitar(event, 'pago', 10, 600);
   if (retry) return demasiadas(retry);
-
+  let store, orderId, owner;
   try {
-    let body;
-    try { body = JSON.parse(event.body || '{}'); } catch { return reply(400, { error: 'JSON inválido' }); }
-
-    const pedido = construirPedido(body.items, await leerStock(event).catch((e) => { console.error('mp-preference — no se pudo leer el stock:', e.message); return null; }));
-    if (pedido.error) return reply(400, { error: pedido.error });
-
-    const { cliente, errores } = validarCliente(body.cliente);
+    const b = body(event);
+    const { cliente, errores } = validarCliente(b.cliente);
     if (errores.length) return reply(400, { error: 'Datos del cliente inválidos', campos: errores });
-
-    const quotationId = str(body.quotation_id, 64);
-    const rateId = str(body.rate_id, 64);
-    if (!quotationId || !rateId) return reply(400, { error: 'Selecciona una opción de envío' });
-
-    const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
-    const URL_SITIO = (process.env.URL_SITIO || process.env.URL || '').replace(/\/$/, '');
-    if (!MP_TOKEN || !URL_SITIO) {
-      console.error('mp-preference — falta MP_ACCESS_TOKEN o URL_SITIO');
-      return reply(500, { error: 'Pagos no configurados' });
-    }
-
-    const envio = await getRatePrice(quotationId, rateId);
-    if (!envio) return reply(400, { error: 'La tarifa de envío expiró, vuelve a cotizar' });
-
+    // This browser-generated random identifier makes retrying a checkout safe.
+    if (!/^[a-f0-9-]{36}$/.test(b.checkout_id || '')) return reply(400, { error: 'Actualiza el checkout antes de pagar.' });
+    orderId = 'dstar_' + b.checkout_id;
+    store = openStore(event); owner = crypto.randomUUID();
+    if (!await store.claim(orderId, 120000, owner)) return reply(409, { error: 'Tu pago se está preparando. Espera un momento.' });
+    const fingerprint = crypto.createHash('sha256').update(JSON.stringify({ cliente, items: b.items, q: b.quotation_id, r: b.rate_id })).digest('hex');
+    const previous = await store.get(orderId);
+    if (previous.fingerprint && previous.fingerprint !== fingerprint) return reply(409, { error: 'El pedido cambió. Reinicia el pago.' });
+    if (previous.preference?.init_point && previous.expiresAt > Date.now()) return reply(200, { ...previous.preference, order_id: orderId, tracking_token: previous.trackingToken });
+    if (previous.paymentId || previous.preferenceState === 'ready') return reply(409, { error: 'Tu sesión de pago venció. Da clic en PAGAR otra vez.', restart: true });
+    const products = await catalog(event);
+    const pedido = construirPedido(b.items, await leerStock(event, products, orderId), products);
+    if (pedido.error) return reply(400, { error: pedido.error });
+    const { quote, rate } = await verifyQuote(event, str(b.quotation_id, 100), str(b.rate_id, 100), cliente, pedido.items);
+    const fresh = await getRatePrice(b.quotation_id, b.rate_id);
+    if (!fresh || fresh.currency !== 'MXN' || Math.abs(fresh.price - rate.price) > 0.01) return reply(400, { error: 'La tarifa de envío cambió; vuelve a cotizar.' });
+    const site = (process.env.URL_SITIO || process.env.URL || '').replace(/\/$/, '');
+    if (!/^https:\/\//.test(site) || !process.env.MP_ACCESS_TOKEN || !process.env.MP_WEBHOOK_SECRET) throw new Error('Pagos no configurados');
+    const expiresAt = Date.now() + 15 * 60000;
+    // Extra grace period protects a payment approved at the checkout deadline.
+    const reservedUntil = expiresAt + 10 * 60000;
+    const stockItems = pedido.items.map(i => ({ id: i.id, size: i.size, qty: i.quantity }));
+    const total = Math.round((pedido.subtotal + rate.price) * 100) / 100;
+    const token = previous.trackingToken || crypto.randomBytes(32).toString('hex');
     const mpItems = pedido.items.map(({ id, size, ...i }) => i);
-    if (envio.price > 0) {
-      mpItems.push({ title: envio.name ? `Envío — ${envio.name}` : 'Envío', unit_price: envio.price, quantity: 1, currency_id: 'MXN' });
-    }
-    const total = Math.round((pedido.subtotal + envio.price) * 100) / 100;
-    const totalUnidades = pedido.items.reduce((s, i) => s + i.quantity, 0);
-
+    if (rate.price > 0) mpItems.push({ title: 'Envío — ' + rate.carrier, unit_price: rate.price, quantity: 1, currency_id: 'MXN' });
+    await reservar(event, orderId, stockItems, reservedUntil, products);
+    await store.update(orderId, p => ({ ...p, fingerprint, createdAt: p.createdAt || Date.now(), at: Date.now(), expiresAt, reservedUntil, paymentStatus: 'pending', fulfillment: 'pending', status: 'pending', trackingToken: token, pedido: { cliente, items: mpItems, total, subtotal: pedido.subtotal }, stockItems, shipping: { rate_id: b.rate_id, quotation_id: b.quotation_id, parcel: quote.parcel, envio: rate } }));
+    await store.update(orderId, p => ({ ...p, preferenceState: 'creating' }));
+    const back = site + '/seguimiento.html#' + orderId + '/' + token;
     const preference = {
-      items: mpItems,
-      payer: { name: cliente.nombre, email: cliente.email, phone: { number: cliente.telefono } },
-      metadata: {
-        cliente,
-        rate_id: rateId,
-        quotation_id: quotationId,
-        envio: { carrier: envio.carrier, service: envio.service, price: envio.price },
-        parcel: { weight: Math.max(0.5, Math.round(totalUnidades * 4) / 10), height: 15, width: 20, length: 5 },
-        order_items: mpItems.map((i) => ({ title: i.title, quantity: i.quantity, unit_price: i.unit_price })),
-        stock_items: pedido.items.map((i) => ({ id: i.id, size: i.size, qty: i.quantity })),
-        expected_total: total
-      },
-      back_urls: {
-        success: `${URL_SITIO}/gracias.html`,
-        failure: `${URL_SITIO}/error-pago.html`,
-        pending: `${URL_SITIO}/pago-pendiente.html`
-      },
-      auto_return: 'approved',
-      date_of_expiration: horaMexico(Date.now() + PLAZO_EFECTIVO_MS),
-      notification_url: `${URL_SITIO}/.netlify/functions/mp-webhook`,
-      statement_descriptor: 'DSTAR',
-      external_reference: `dstar_${Date.now()}`
+      items: mpItems, payer: { name: cliente.nombre, email: cliente.email, phone: { number: cliente.telefono } },
+      metadata: { order_id: orderId, cliente, rate_id: b.rate_id, quotation_id: b.quotation_id, parcel: quote.parcel, envio: rate, order_items: mpItems, stock_items: stockItems, expected_total: total },
+      external_reference: orderId, binary_mode: true,
+      payment_methods: { excluded_payment_types: [{ id: 'ticket' }, { id: 'bank_transfer' }, { id: 'atm' }] },
+      expires: true, expiration_date_from: new Date().toISOString(), expiration_date_to: new Date(expiresAt).toISOString(),
+      back_urls: { success: back, failure: back, pending: back }, auto_return: 'approved',
+      notification_url: site + '/.netlify/functions/mp-webhook', statement_descriptor: 'DSTAR'
     };
-
-    const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MP_TOKEN}` },
-      body: JSON.stringify(preference)
-    });
-
-    if (!mpResponse.ok) {
-      console.error('MercadoPago error al crear preferencia:', mpResponse.status, (await mpResponse.text()).slice(0, 200));
-      return reply(500, { error: 'Error al crear la preferencia de pago' });
-    }
-
-    const mpData = await mpResponse.json();
-    return reply(200, { id: mpData.id, init_point: mpData.init_point, total });
-  } catch (error) {
-    console.error('mp-preference — error inesperado:', error.message);
-    return reply(500, { error: 'Error interno del servidor' });
-  }
+    const data = await mp('/checkout/preferences', { method: 'POST', body: JSON.stringify(preference) });
+    if (!data.id || !data.init_point) throw new Error('Respuesta de pago incompleta');
+    const redirect = new URL(data.init_point);
+    if (redirect.protocol !== 'https:' || !['www.mercadopago.com.mx', 'mercadopago.com.mx'].includes(redirect.hostname)) throw new Error('URL de pago no válida');
+    const result = { id: data.id, init_point: data.init_point, total, expiresAt };
+    await store.update(orderId, p => ({ ...p, preferenceState: 'ready', preference: result }));
+    return reply(200, { ...result, order_id: orderId, tracking_token: token });
+  } catch (e) {
+    return failure(e);
+  } finally { if (store && owner) await store.release(orderId, owner).catch(() => {}); }
 };

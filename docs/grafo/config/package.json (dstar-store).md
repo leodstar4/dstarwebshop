@@ -1,21 +1,21 @@
 ---
 tags: [codigo, config]
 ruta: "dstar-store/package.json"
-lineas: 26
+lineas: 25
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # package.json (dstar-store)
 
-`dstar-store/package.json` · 26 líneas
+`dstar-store/package.json` · 25 líneas
 
-Dependencias y scripts (dev, deploy, test) del sitio.
+Dependencias y scripts (dev, deploy, test y test:backend con node --test) del sitio.
 
 Parte de: [[Configuración]]
 
 ## Conexiones
 
-- Usa: [[Netlify Blobs]], [[Cloudinary]], [[GSAP]], [[node-fetch]], [[Gmail SMTP]], [[Playwright]], [[http-server]], [[Netlify CLI]], [[sharp]]
+- Usa: [[Netlify Blobs]], [[GSAP]], [[Gmail SMTP]], [[Playwright]], [[http-server]], [[Netlify CLI]], [[sharp]]
 
 ## Últimos cambios
 

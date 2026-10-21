@@ -14,6 +14,7 @@ Relacionada con: [[Skydropx]]
 
 ## Leída en
 
+- [[admin-store.js]]
 - [[skydropx.js]]
 - [[audit-bugs.spec.js]]
 

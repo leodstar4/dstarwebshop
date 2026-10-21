@@ -15,14 +15,14 @@ async function getSkydropxToken() {
   }
 
   const res = await fetch(`${SKYDROPX_BASE}/oauth/token`, {
+    signal: AbortSignal.timeout(10000),
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ client_id, client_secret, grant_type: 'client_credentials' })
   });
 
   if (!res.ok) {
-    const txt = (await res.text()).slice(0, 300);
-    console.error(`Skydropx auth falló (${res.status}) — client_id_len=${client_id.length} secret_len=${client_secret.length} body=${txt}`);
+    console.error(`Skydropx auth falló (${res.status})`);
     throw new Error(`Skydropx auth falló (${res.status})`);
   }
 
@@ -34,6 +34,7 @@ async function getSkydropxToken() {
 async function getRatePrice(quotationId, rateId) {
   const token = await getSkydropxToken();
   const res = await fetch(`${SKYDROPX_BASE}/quotations/${encodeURIComponent(quotationId)}`, {
+    signal: AbortSignal.timeout(10000),
     headers: { 'Authorization': `Bearer ${token}` }
   });
   if (!res.ok) throw new Error(`Skydropx quotation ${res.status}`);
@@ -44,6 +45,7 @@ async function getRatePrice(quotationId, rateId) {
   if (!Number.isFinite(price) || price < 0) return null;
   return {
     price,
+    currency: rate.currency_code || 'MXN',
     name: [rate.provider_display_name || rate.provider_name, rate.provider_service_name].filter(Boolean).join(' '),
     carrier: rate.provider_display_name || rate.provider_name || '',
     service: rate.provider_service_name || ''
@@ -80,7 +82,7 @@ async function cotizar(destino, parcel) {
   let rates = data.rates || [];
   for (let attempts = 0; !data.is_completed && qid && attempts < 6; attempts++) {
     await sleep(800);
-    const g = await fetch(`${SKYDROPX_BASE}/quotations/${qid}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const g = await fetch(`${SKYDROPX_BASE}/quotations/${qid}`, { signal: AbortSignal.timeout(5000), headers: { 'Authorization': `Bearer ${token}` } });
     if (g.ok) {
       data = await g.json().catch(() => data);
       rates = data.rates || rates;

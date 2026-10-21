@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+process.env.NODE_ENV = 'test';
+process.env.DSTAR_MEMORY_STORE = 'true';
+test.beforeEach(() => { require(process.cwd() + '/netlify/lib/storage.js').resetForTests(); });
 import path from 'path';
 import crypto from 'crypto';
 
@@ -59,7 +62,8 @@ test.describe('AUDIT — storage corrupto', () => {
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await seed(page, raw);
-      await page.goto('/checkout.html');
+      await page.route('https://www.mercadopago.com.mx/checkout/test', route => route.fulfill({ contentType: 'text/html', body: '<p>Mercado Pago simulado</p>' }));
+    await page.goto('/checkout.html');
       await page.waitForTimeout(500);
       expect(errors, errors.join('\n')).toEqual([]);
     });
@@ -93,8 +97,9 @@ test.describe('AUDIT — checkout', () => {
     let prefBody = null;
     await page.route('**/.netlify/functions/mp-preference', (route) => {
       prefBody = JSON.parse(route.request().postData());
-      return route.fulfill({ json: { init_point: '/error-pago.html' } });
+      return route.fulfill({ json: { init_point: 'https://www.mercadopago.com.mx/checkout/test' } });
     });
+    await page.route('https://www.mercadopago.com.mx/checkout/test', route => route.fulfill({ contentType: 'text/html', body: '<p>Mercado Pago simulado</p>' }));
     await page.goto('/checkout.html');
     await fillCheckout(page, '01000');
     await page.fill('#cp', '64000');
@@ -102,7 +107,7 @@ test.describe('AUDIT — checkout', () => {
     await page.waitForTimeout(2000);
     await page.locator('input[name="tarifa"]').first().check();
     await page.locator('#btnPagar').click();
-    await page.waitForURL('**/error-pago.html');
+    await page.waitForURL('https://www.mercadopago.com.mx/checkout/test');
     expect(prefBody.cliente.cp).toBe('64000');
     expect(prefBody.rate_id).toBe('RATE_CP_64000');
   });
@@ -111,6 +116,7 @@ test.describe('AUDIT — checkout', () => {
     await seed(page, JSON.stringify(seedCart));
     await page.route('**/.netlify/functions/cotizar-envio', (route) =>
       route.fulfill({ json: { rates: [{ rate_id: 'R1', carrier: 'DHL', service: 'x', price: 120, days: 1 }] } }));
+    await page.route('https://www.mercadopago.com.mx/checkout/test', route => route.fulfill({ contentType: 'text/html', body: '<p>Mercado Pago simulado</p>' }));
     await page.goto('/checkout.html');
     await fillCheckout(page, '64000');
     await page.locator('input[name="tarifa"]').first().check();
@@ -123,6 +129,7 @@ test.describe('AUDIT — checkout', () => {
     await seed(page, JSON.stringify(seedCart));
     await page.route('**/.netlify/functions/cotizar-envio', (route) =>
       route.fulfill({ json: { rates: [{ rate_id: 'R1', carrier: 'DHL', service: 'x', price: 120, days: 1 }] } }));
+    await page.route('https://www.mercadopago.com.mx/checkout/test', route => route.fulfill({ contentType: 'text/html', body: '<p>Mercado Pago simulado</p>' }));
     await page.goto('/checkout.html');
     await fillCheckout(page);
     await expect(page.locator('.tarifa-detalle').first()).not.toContainText('1 DÍAS');
@@ -133,13 +140,14 @@ test.describe('AUDIT — checkout', () => {
     await page.route('**/.netlify/functions/cotizar-envio', (route) =>
       route.fulfill({ json: { rates: [{ rate_id: 'R1', carrier: 'DHL', service: 'x', price: 120, days: 2 }] } }));
     await page.route('**/.netlify/functions/mp-preference', (route) =>
-      route.fulfill({ json: { init_point: '/error-pago.html' } }));
+      route.fulfill({ json: { init_point: 'https://www.mercadopago.com.mx/checkout/test' } }));
+    await page.route('https://www.mercadopago.com.mx/checkout/test', route => route.fulfill({ contentType: 'text/html', body: '<p>Mercado Pago simulado</p>' }));
     await page.goto('/checkout.html');
     await page.evaluate(() => window.addEventListener('pageshow', (e) => { window.__persisted = e.persisted; }));
     await fillCheckout(page);
     await page.locator('input[name="tarifa"]').first().check();
     await page.locator('#btnPagar').click();
-    await page.waitForURL('**/error-pago.html');
+    await page.waitForURL('https://www.mercadopago.com.mx/checkout/test');
     await page.goBack();
     await page.waitForTimeout(500);
     const persisted = await page.evaluate(() => window.__persisted === true);
@@ -172,7 +180,7 @@ test.describe('AUDIT — Netlify Functions (handler directo, fetch stub, sin red
     let sent = null;
     global.fetch = async (url, opts) => {
       sent = JSON.parse(opts.body);
-      return new Response(JSON.stringify({ id: 'p', init_point: 'x' }), { status: 200 });
+      return new Response(JSON.stringify({ id: 'p', init_point: 'https://www.mercadopago.com.mx/checkout/test' }), { status: 200 });
     };
     process.env.MP_ACCESS_TOKEN = 'TEST';
     try {
@@ -195,7 +203,7 @@ test.describe('AUDIT — Netlify Functions (handler directo, fetch stub, sin red
       const u = String(url);
       if (u.includes('api.mercadopago.com/v1/payments/')) {
         return new Response(JSON.stringify({ status: 'approved', transaction_amount: 570, currency_id: 'MXN',
-          metadata: { cliente: { nombre: 'x', email: 'a@b.co' }, rate_id: 'R1', parcel: {}, expected_total: 570 } }), { status: 200 });
+          metadata: { cliente: { nombre: 'x', email: 'a@b.co' }, stock_items: [{ id: 'dstar-bts-shirt-01', size: u.endsWith('123') ? 'S' : 'L', qty: 1 }], rate_id: 'R1', parcel: {}, expected_total: 570 } }), { status: 200 });
       }
       if (u.includes('/oauth/token')) return new Response(JSON.stringify({ access_token: 't', expires_in: 7200 }), { status: 200 });
       if (u.includes('/shipments')) { shipments++; return new Response(JSON.stringify({ included: [] }), { status: 201 }); }
@@ -228,7 +236,7 @@ test.describe('AUDIT — Netlify Functions (handler directo, fetch stub, sin red
       if (u.includes('/quotations/Q1')) return new Response(JSON.stringify({ rates: [{ id: 'R1', total: '120.5', provider_display_name: 'DHL' }] }), { status: 200 });
       if (u.includes('api.mercadopago.com/checkout/preferences')) {
         sent = JSON.parse(opts.body);
-        return new Response(JSON.stringify({ id: 'p', init_point: 'x' }), { status: 200 });
+        return new Response(JSON.stringify({ id: 'p', init_point: 'https://www.mercadopago.com.mx/checkout/test' }), { status: 200 });
       }
       throw new Error('red no permitida: ' + u);
     };
@@ -240,16 +248,19 @@ test.describe('AUDIT — Netlify Functions (handler directo, fetch stub, sin red
       const { handler } = require(path.join(FN_DIR, 'mp-preference.js'));
       const cliente = { nombre: 'Test User', email: 'test@example.com', telefono: '8112345678', calle: 'Calle 1 #2',
         colonia: 'Centro', cp: '64000', ciudad: 'Monterrey', estado: 'Nuevo Leon' };
+      const { saveQuote } = require(path.join(FN_DIR, '../lib/quotes'));
+      await saveQuote({}, { quotation_id:'Q1', rates:[{rate_id:'R1',price:120.5,currency:'MXN',carrier:'DHL'}] }, cliente, [{id:'dstar-bts-shirt-01',size:'S',qty:1}], {weight:0.5,length:30,width:25,height:5});
+      process.env.MP_WEBHOOK_SECRET = WEBHOOK_SECRET;
       const ok = await handler({ httpMethod: 'POST', body: JSON.stringify({
-        items: [{ id: 'dstar-bts-shirt-01', size: 'S', qty: 1, price: 1 }], cliente, quotation_id: 'Q1', rate_id: 'R1', envio: 0
+        checkout_id: crypto.randomUUID(), items: [{ id: 'dstar-bts-shirt-01', size: 'S', qty: 1, price: 1 }], cliente, quotation_id: 'Q1', rate_id: 'R1', envio: 0
       }) });
       expect(ok.statusCode).toBe(200);
       expect(sent.items.reduce((s, i) => s + i.unit_price * i.quantity, 0)).toBe(570.5);
       expect(sent.metadata.expected_total).toBe(570.5);
-      expect(sent.back_urls.failure).toContain('/error-pago.html');
+      expect(sent.back_urls.failure).toContain('/seguimiento.html#');
 
       const sinStock = await handler({ httpMethod: 'POST', body: JSON.stringify({
-        items: [{ id: 'dstar-bts-shirt-01', size: 'S', qty: 2 }], cliente, quotation_id: 'Q1', rate_id: 'R1'
+        checkout_id: crypto.randomUUID(), items: [{ id: 'dstar-bts-shirt-01', size: 'S', qty: 2 }], cliente, quotation_id: 'Q1', rate_id: 'R1'
       }) });
       expect(sinStock.statusCode).toBe(400);
     } finally {

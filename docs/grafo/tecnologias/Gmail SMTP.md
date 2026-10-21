@@ -6,7 +6,7 @@ tipo: "servicio"
 
 # Gmail SMTP
 
-Correo transaccional con nodemailer: confirmación al cliente y aviso a la tienda.
+Correo transaccional con nodemailer por Gmail o por un SMTP propio (SMTP_*): confirmación y guía al cliente, copia y alertas a la tienda. Se usa si no está configurado Resend.
 
 Paquete npm: `nodemailer`
 
@@ -14,7 +14,11 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
-- [[mp-webhook.js]]
+- [[admin-store.js]]
+- [[mail.js]]
+- [[payment-service.js]]
+- [[correcciones.test.cjs]]
+- [[operacion.test.cjs]]
 - [[audit-bugs.spec.js]]
 - [[stock-y-animaciones.spec.js]]
 - [[Agente budgeter]]

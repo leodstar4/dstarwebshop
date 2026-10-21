@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: 'html',
 
   use: {
-    baseURL: 'http://localhost:8888',
+    baseURL: 'http://127.0.0.1:8888',
     trace: 'on-first-retry',
     serviceWorkers: 'block',
   },
@@ -17,8 +17,8 @@ export default defineConfig({
   // Servidor estático para los tests — las Netlify Functions se mockean
   // por test con page.route(), así que no necesitamos netlify dev aquí.
   webServer: {
-    command: 'npx http-server . -p 8888 -c-1 --silent',
-    url: 'http://localhost:8888',
+    command: 'npx http-server . -a 127.0.0.1 -p 8888 -c-1 --silent',
+    url: 'http://127.0.0.1:8888',
     reuseExistingServer: !process.env.CI,
     timeout: 30000,
   },

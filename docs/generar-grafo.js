@@ -19,50 +19,55 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const DESC = {
   'dstar-store/index.html': 'Página principal ("DSTAR — Streetwear exclusivo hecho en México"): canonical, og:*, twitter:card y JSON-LD Organization con el Instagram; loader que maneja js/loader.js (video del logo, worker de logo-3d-worker.js y activación de mainCss y fontsCss); solo quedan dos scripts inline (speculationrules y css-pending) permitidos por hash en la CSP; dentro de `<main>`: hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.',
   'dstar-store/producto.html': 'Detalle de producto: galería, selector de talla y botón de compra, con un solo `<dialog class="pd-lightbox">` (#pdLightbox) para móvil y desktop que llena app.js; precarga desde el `<head>` la primera foto en AVIF con un script inline permitido por hash, y sus title, canonical y og:* genéricos los reescribe por prenda la edge function producto-meta.js.',
-  'dstar-store/checkout.html': 'Checkout (noindex): datos del cliente, cotización de envío y pago con Mercado Pago; toda la lógica está en js/checkout.js.',
-  'dstar-store/gracias.html': 'Confirmación después de un pago exitoso (noindex); su script es js/gracias.js.',
-  'dstar-store/error-pago.html': 'Pantalla cuando el pago falla (noindex).',
-  'dstar-store/pago-pendiente.html': 'Pantalla cuando el pago queda pendiente de confirmar, por ejemplo un pago en OXXO (noindex).',
+  'dstar-store/checkout.html': 'Checkout (noindex): datos del cliente con referencia de entrega, cotización de envío y pago con Mercado Pago (solo pagos inmediatos, sin OXXO); enlaza terminos.html y privacidad.html junto a PAGAR; toda la lógica está en js/checkout.js.',
+  'dstar-store/gracias.html': 'Página de resultado heredada (noindex): Mercado Pago ya regresa a seguimiento.html; su script js/gracias.js redirige ahí si hay un pedido en la sesión y no vacía el carrito.',
+  'dstar-store/error-pago.html': 'Pantalla heredada de pago fallido (noindex); Mercado Pago ya regresa a seguimiento.html.',
+  'dstar-store/pago-pendiente.html': 'Pantalla heredada de pago pendiente (noindex); Mercado Pago ya regresa a seguimiento.html y su texto todavía menciona OXXO y SPEI.',
+  'dstar-store/seguimiento.html': 'Seguimiento privado del pedido (noindex, no-store, no-referrer): back_url de Mercado Pago con #id/token en el hash; muestra pago, preparación y rastreo con js/seguimiento.js y estilos de css/operacion.css.',
+  'dstar-store/privacidad.html': 'Aviso de privacidad: datos que pide el checkout, servicios que intervienen y cómo ejercer derechos; los datos del responsable los llena js/legal.js desde /api/datos-tienda.',
   'dstar-store/agradecimientos.html': 'Página de agradecimientos, con canonical y og:*.',
-  'dstar-store/terminos.html': 'Términos, envíos y devoluciones: precios, pagos, tiempos de envío, devolución en 5 días hábiles, defectos y quejas ante PROFECO; enlazada en los footers y junto al botón PAGAR.',
+  'dstar-store/terminos.html': 'Términos, envíos y devoluciones: precios, pagos inmediatos sin OXXO, tiempos de envío, devolución en 5 días hábiles, defectos y quejas ante PROFECO; datos del proveedor que llena js/legal.js y enlace a privacidad.html; enlazada en los footers y junto al botón PAGAR.',
   'dstar-store/offline.html': 'Página sin conexión de la PWA (noindex).',
   'dstar-store/404.html': 'Página 404 de la marca (noindex): logo 3D girando entre dos 4 con el video logo-3d-loader.mp4 (póster con prefers-reduced-motion) y botones VOLVER AL INICIO y VER DROPS; estilos inline, sin scripts.',
-  'dstar-store/pedidos.html': 'Panel de pedidos privado (noindex, no-store): formulario de contraseña, resumen, filtros TODOS / POR REVISAR / CON GUÍA y lista de pedidos que pinta js/pedidos.js.',
+  'dstar-store/pedidos.html': 'Panel de pedidos privado (noindex, no-store): formulario de contraseña, resumen, filtros TODOS / POR REVISAR / CON GUÍA, lista de pedidos, sección OPERACIÓN DE LA TIENDA (configuración, inventario, catálogo y datos legales) y el `<dialog>` de acciones; todo lo pinta js/pedidos.js.',
   'dstar-store/blog/born-to-shine-detras-del-drop.html': 'Artículo del blog: detrás del drop Born to Shine.',
   'dstar-store/blog/como-cuidar-tu-ropa.html': 'Artículo del blog: cómo cuidar tu ropa.',
   'dstar-store/blog/streetwear-mexico-escena.html': 'Artículo del blog: la escena del streetwear en México.',
   'dstar-preview.html': 'Vista previa estática grande del sitio, en la raíz del repo.',
   'dstar-store/css/style.css': 'Estilos completos del sitio: BEM, custom properties en :root y mobile-first; incluye el loader (.loader__video, desvanecido solo de opacity y .loader--gone), la View Transition nativa entre páginas (@view-transition), el hero de desktop que reserva el alto del header, el fondo body::before con image-set (AVIF y f_auto), `picture { display: contents }` para los `<picture>` de app.js, el lightbox de producto (.pd-lightbox), el placeholder borroso --pd-lqip de la galería, las clases .split-char, .split-line-mask y .hero--gsap que usa gsap-animations.js y, al final, el bloque SAFE AREAS con env(safe-area-inset-*) para viewport-fit=cover.',
-  'dstar-store/js/app.js': 'Lógica principal: render de productos, detalle de producto (galería y carrusel con placeholder borroso LQIP, y lightbox en `<dialog>` con vuelo FLIP, zoom, gestos táctiles y teclado), carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto; sin handlers inline: un listener de error en captura aplica imgFallback a las imágenes con data-fallback, la FAQ usa data-faq y las tallas delegación en #pdSizes; arma las fotos de Cloudinary como `<picture>` con AVIF y f_auto de respaldo (cdnPicture, que también usa gsap-animations.js), marca is-scrolled en `<html>` y precarga el detalle de producto (primera foto y LQIP de la galería) con intención de hover.',
+  'dstar-store/js/app.js': 'Lógica principal (initApp espera DSTAR_CATALOG_READY de cart-store.js antes de pintar): render de productos, detalle de producto (galería y carrusel con placeholder borroso LQIP, y lightbox en `<dialog>` con vuelo FLIP, zoom, gestos táctiles y teclado), carrito (drawer), stock en vivo, lookbook, blog, FAQ, toasts y efectos de texto; sin handlers inline: un listener de error en captura aplica imgFallback a las imágenes con data-fallback, la FAQ usa data-faq y las tallas delegación en #pdSizes; arma las fotos de Cloudinary como `<picture>` con AVIF y f_auto de respaldo (cdnPicture, que también usa gsap-animations.js), marca is-scrolled en `<html>` y precarga el detalle de producto (primera foto y LQIP de la galería) con intención de hover.',
   'dstar-store/js/loader.js': 'Loader de index.html (antes script inline): activa mainCss y fontsCss (media print → all), cambia el póster por el `<video>` logo-3d-loader.mp4, crea temprano el worker de logo-3d-worker.js y oculta el loader disparando dstar:loaded; en la primera visita de la sesión (sessionStorage dstar-intro) espera a que gire y a que el logo del hero esté listo.',
-  'dstar-store/js/checkout.js': 'Lógica del checkout (antes inline en checkout.html): resumen del carrito con miniaturas AVIF, cotización con /.netlify/functions/cotizar-envio, validación del formulario y pago con /.netlify/functions/mp-preference; fallback de imágenes con data-fallback.',
-  'dstar-store/js/gracias.js': 'Script de gracias.html (antes inline): vacía dstar_cart si el pago se aprobó, muestra el número de pago y anima la entrada.',
-  'dstar-store/js/pedidos.js': 'Panel de pedidos: guarda la contraseña en sessionStorage (dstar_panel), pide la lista a la función pedidos con Bearer, filtra y muestra cliente, prendas, etiqueta y rastreo de la guía y enlace de WhatsApp.',
-  'dstar-store/js/cart-store.js': 'Carrito en localStorage (dstar_cart) y sincronización del stock con /api/stock.',
-  'dstar-store/js/products-data.js': 'Catálogo estático de productos; lo leen el navegador y el backend (validación de precios y stock).',
+  'dstar-store/js/checkout.js': 'Lógica del checkout: espera DSTAR_CATALOG_READY, resumen del carrito con miniaturas AVIF, cotización con /.netlify/functions/cotizar-envio y pago con /.netlify/functions/mp-preference usando un checkout_id estable en sessionStorage (dstar_checkout_attempt, que se borra si el servidor responde restart); guarda dstar_last_order para seguimiento.html; fallback de imágenes con data-fallback.',
+  'dstar-store/js/gracias.js': 'Script de gracias.html: ya no vacía dstar_cart (los parámetros de la URL no prueban el pago); redirige a seguimiento.html si hay dstar_last_order en la sesión y si no pide consultar el pago.',
+  'dstar-store/js/pedidos.js': 'Panel de pedidos: guarda la contraseña en sessionStorage (dstar_panel), pide la lista a /.netlify/functions/pedidos con Bearer y muestra pago, preparación, cliente, prendas y guía; acciones en un `<dialog>` (sincronizar, nota, preparación, reenviar correo, cancelar pendiente, reintentar o registrar guía, corregir dirección) y, con /api/admin-store, configuración, inventario con ajustes, catálogo y datos legales.',
+  'dstar-store/js/cart-store.js': 'Carrito en localStorage (dstar_cart): pide /api/catalogo (DSTAR_CATALOG_READY, corta a los 5 s con AbortController si existe, si no espera sin señal, para iOS 15) y reemplaza DSTAR_PRODUCTS; sincroniza el stock con /api/stock.',
+  'dstar-store/js/products-data.js': 'Catálogo inicial y respaldo visual (DSTAR_PRODUCTS); el catálogo guardado en catalog-store.js tiene prioridad y stock-store.js lo usa para migrar el inventario; cambiar su stock no borra ventas.',
+  'dstar-store/js/seguimiento.js': 'Script de seguimiento.html: toma id y token del hash (o de dstar_last_order en sessionStorage), consulta /api/seguimiento y muestra pago, preparación y rastreo; con pago aprobado resta una sola vez del carrito solo las piezas compradas.',
+  'dstar-store/js/legal.js': 'Llena los [data-legal] de privacidad.html y terminos.html con /api/datos-tienda y oculta el aviso #legalPending cuando están completos.',
+  'dstar-store/css/operacion.css': 'Estilos mínimos (.ops) de seguimiento.html y privacidad.html.',
   'dstar-store/js/logo-3d.js': 'Logo 3D animado del hero: en Chromium adopta el worker que creó el loader de index.html (window.__logo3dWorker) o crea uno, y le pasa cada canvas (runWorker, OffscreenCanvas); si no hay soporte o el worker falla usa runVideo: `<video>` + WebGL en el hilo principal (Safari/iPhone) con respaldo WebCodecs cuando el autoplay está bloqueado (modo de ahorro); mientras el loader está visible solo dibuja el primer cuadro (held), mide el canvas con ResizeObserver (dpr máximo 3, tope de 560 px), conserva hasta 3 cuadros de atraso y pausa si ninguna vista es visible.',
   'dstar-store/js/logo-3d-worker.js': 'Web Worker del logo 3D en Chromium: descarga el MP4 apilado (color arriba, alfa abajo), lo decodifica con WebCodecs y lo dibuja con WebGL a 60 fps sobre los OffscreenCanvas que le pasa logo-3d.js (si se atrasa salta hasta 3 cuadros), calienta un contexto WebGL mientras descarga, solo dibuja el primer cuadro mientras está en hold y se pausa si ninguna vista es visible o la pestaña está oculta; recibe view, size, visible, hold, hidden y start, y responde live o error.',
-  'dstar-store/js/gsap-animations.js': 'Animaciones del index y del detalle: hero letra por letra (SplitText) y CTA con element.animate() al recibir dstar:loaded, revelados de scroll con IntersectionObserver y element.animate() (WAAPI, en el compositor), contador de Nosotros, lookbook en móvil/tablet, cursor y botones magnéticos con GSAP desde js/vendor; el SplitText que parte solo en líneas va con aria: none. El contenido es visible por defecto y respeta prefers-reduced-motion.',
+  'dstar-store/js/gsap-animations.js': 'Animaciones del index y del detalle (arrancan después de DSTAR_CATALOG_READY): hero letra por letra (SplitText) y CTA con element.animate() al recibir dstar:loaded, revelados de scroll con IntersectionObserver y element.animate() (WAAPI, en el compositor), contador de Nosotros, lookbook en móvil/tablet, cursor y botones magnéticos con GSAP desde js/vendor; el SplitText que parte solo en líneas va con aria: none. El contenido es visible por defecto y respeta prefers-reduced-motion.',
   'dstar-store/js/blog-transitions.js': 'Animaciones de los artículos del blog: entrada del encabezado, título palabra por palabra con SplitText, reveal del contenido con IntersectionObserver y barra de progreso de lectura con ScrollTrigger cuando el navegador no soporta animation-timeline.',
-  'dstar-store/sw.js': 'Service worker de la PWA: precache del shell (incluye js/loader.js), network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, /pedidos, los .mp4 ni las peticiones con Range.',
+  'dstar-store/sw.js': 'Service worker de la PWA: precache del shell (incluye js/loader.js), network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, /pedidos, /seguimiento, los .mp4 ni las peticiones con Range.',
   'dstar-store/manifest.webmanifest': 'Manifest de la PWA (nombre, íconos, colores).',
-  'dstar-store/netlify/functions/cotizar-envio.js': 'Función /api/cotizar-envio: cotiza tarifas de envío con cotizar() de lib/skydropx.js; límite de 20 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/mp-preference.js': 'Función /api/mp-preference: valida el pedido, el stock y el precio del envío y crea la preferencia de pago en Mercado Pago con vencimiento a 3 días (OXXO) y quotation_id y envio en metadata; límite de 10 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/mp-webhook.js': 'Webhook de Mercado Pago: valida la firma, descuenta el stock una sola vez por pago, crea una sola guía en Skydropx (crearGuiaConRespaldo re-cotiza con la misma paquetería y servicio si la guía falla) y manda correos; guarda pedido y guia en orders-store.js para el panel y avisa a la tienda (alertarTienda) si la guía falla o se re-cotizó, el monto no coincide, hay sobreventa o faltan datos.',
-  'dstar-store/netlify/functions/stock.js': 'Función /api/stock: devuelve el stock disponible por producto y talla; límite de 120 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/pedidos.js': 'Función del panel de pedidos: solo GET con Authorization Bearer igual a PANEL_PASSWORD (503 si falta o tiene menos de 16 caracteres, 401 si no coincide); devuelve los pedidos de orders-store.js del más reciente al más viejo; límite de 30 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/edge-functions/producto-meta.js': 'Edge function en /producto.html y /producto: con ?id= reescribe title, description, canonical y og:* con los datos de products-data.js y la foto vía Cloudinary (f_jpg,c_pad,b_auto,w_1200,h_630), y agrega product:price y JSON-LD Product.',
-  'dstar-store/netlify/edge-functions/sitemap.js': 'Edge function /sitemap.xml: lista las páginas públicas y cada producto de products-data.js.',
-  'dstar-store/netlify/lib/orders-store.js': 'Registro de pedidos en Netlify Blobs (evita guías duplicadas y guarda pedido y guía de cada pago); list() alimenta el panel; en memoria en local.',
-  'dstar-store/netlify/lib/skydropx.js': 'Cliente de Skydropx: token OAuth con caché, consulta del precio de una tarifa (con carrier y service) y cotizar(destino, parcel), que usan cotizar-envio.js y mp-webhook.js.',
-  'dstar-store/netlify/lib/stock-store.js': 'Stock = base del catálogo menos piezas vendidas, guardado en Netlify Blobs con reintentos.',
-  'dstar-store/netlify/lib/validate.js': 'Validación de datos del cliente y del pedido, y verificación del origen de la petición.',
-  'dstar-store/netlify/lib/rate-limit.js': 'Límite de peticiones por IP (guardada como hash) con ventana fija en Netlify Blobs (store limites) o en memoria; sin IP no limita y si falla deja pasar; demasiadas() arma el 429 con Retry-After.',
+  'dstar-store/netlify/functions/cotizar-envio.js': 'Función /api/cotizar-envio: exige CP, estado, ciudad y colonia, arma el paquete en servidor (parcel de quotes.js con el catálogo de catalog-store.js), cotiza con cotizar() de lib/skydropx.js y guarda la cotización ligada a destino y carrito (saveQuote, vence a los 15 min); límite de 20 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/functions/mp-preference.js': 'Función /api/mp-preference: con el checkout_id del navegador (pedido dstar_<uuid>) valida cliente, catálogo, stock y cotización (verifyQuote y getRatePrice), aparta el stock 25 min (reservar), guarda el pedido con trackingToken en orders-store.js y crea la preferencia en modo binario sin ticket, cajero ni transferencia, que vence a los 15 min y regresa a seguimiento.html; reusa la preferencia vigente, permite reintentar si Mercado Pago falló y responde restart:true si la anterior venció; límite de 10 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/functions/mp-webhook.js': 'Webhook de Mercado Pago: valida la firma (MP_WEBHOOK_SECRET) y en producción solo encola un trabajo firmado a payment-jobs-background.js con dispatch() de lib/jobs.js (fuera de producción llama a syncPayment directo); exporta crearGuiaSkydropx (marca notSent los errores previos al POST) y buildEmailHtml, que usa payment-service.js.',
+  'dstar-store/netlify/functions/stock.js': 'Función /api/stock: devuelve el stock disponible por producto y talla (leerStock sobre el catálogo de catalog-store.js, ya sin piezas apartadas); límite de 120 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/functions/pedidos.js': 'Función del panel de pedidos (admin() de lib/http.js con PANEL_PASSWORD): GET lista los pedidos sin token ni lock; POST con acciones sync, note, fulfillment (pendiente/guía lista → preparado → enviado → entregado), cancel (solo pagos pendientes), address, retry_shipping (solo tras falla definitiva y con precio confirmado), attach_shipping y retry_mail; cualquier otra (refund, return) se rechaza; límite de 120 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/edge-functions/producto-meta.js': 'Edge function en /producto.html y /producto: con ?id= busca la prenda activa en /api/catalogo (3 s; si falla usa products-data.js) y reescribe title, description, canonical y og:* con la foto vía Cloudinary (f_jpg,c_pad,b_auto,w_1200,h_630), y agrega product:price y JSON-LD Product.',
+  'dstar-store/netlify/edge-functions/sitemap.js': 'Edge function /sitemap.xml: lista las páginas públicas (incluida privacidad.html) y cada producto activo de /api/catalogo, con products-data.js de respaldo.',
+  'dstar-store/netlify/lib/orders-store.js': 'Pedidos en Netlify Blobs (store pedidos) sobre storage.js: get, set, update, list y claim/release, el lock con vencimiento que usan mp-preference.js y payment-service.js.',
+  'dstar-store/netlify/lib/skydropx.js': 'Cliente de Skydropx: token OAuth con caché (getSkydropxToken), precio actual de una tarifa (getRatePrice, con carrier y service) y cotizar(destino, parcel); lo usan cotizar-envio.js, mp-preference.js, pedidos.js, payment-service.js y mp-webhook.js.',
+  'dstar-store/netlify/lib/stock-store.js': 'Libro de inventario versión 2 en un solo blob (stock/vendidas): unidades, apartados, ventas y movimientos con escritura condicional; migra el formato anterior conservándolo, reservar/liberar apartados, descontar una vez por pago, ajustar con motivo sin invadir apartados, y prune poda apartados vencidos hace más de un día, ventas de más de 200 días y deja 2000 movimientos más el de migración.',
+  'dstar-store/netlify/lib/validate.js': 'Validación de datos del cliente (incluida la referencia) y del pedido contra el catálogo y el stock vivo (sin volver al stock base si falta), y verificación del origen de la petición.',
+  'dstar-store/netlify/lib/rate-limit.js': 'Límite de peticiones por IP (guardada como hash) con ventana fija y escritura condicional en Netlify Blobs (store limites); sin IP no limita y si el almacén falla rechaza 60 s; demasiadas() arma el 429 con Retry-After.',
   'dstar-store/optimize-images.js': 'Optimiza imágenes con sharp (carpetas y archivos extra del sitio).',
   'scripts/optimize-images.js': 'Genera tamaños optimizados de las fotos de productos con sharp.',
   'scripts/calentar-cloudinary.js': 'Pide una vez a Cloudinary todas las variantes que usa la web a partir de products-data.js (tarjetas, galería y lightbox hasta 2400, miniaturas, LQIP y la imagen para compartir de 1200x630) para que ningún cliente espere a que se generen; se corre tras agregar o cambiar fotos.',
   'scripts/csp-hashes.js': 'Calcula el sha256 de los scripts inline de las páginas y los escribe en script-src de dstar-store/netlify.toml; con --check solo verifica; seguridad-y-seo.spec.js compara la CSP con su scriptSrc().',
-  'dstar-store/tests/e2e/flujo-compra.spec.js': 'Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto, selector de talla y lightbox de la galería (teclado, zoom y cierre con Escape).',
+  'dstar-store/tests/e2e/flujo-compra.spec.js': 'Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto, selector de talla, lightbox de la galería (teclado, zoom y cierre con Escape) y redirección a un Mercado Pago simulado con checkout_id.',
   'dstar-store/tests/e2e/stock-y-animaciones.spec.js': 'Pruebas de stock vivo y alertas (descuento por pago, reintento sin doble descuento, sobreventa, monto distinto) y de que el contenido se vea aunque GSAP no cargue y ningún elemento renderizado (incluidos los .split-char) se quede con opacidad menor a 0.05.',
   'dstar-store/tests/e2e/audit-bugs.spec.js': 'Pruebas de regresión de la auditoría: stock por talla, localStorage corrupto, código postal del checkout, firma del webhook y origen.',
   'dstar-store/tests/e2e/seguridad-y-seo.spec.js': 'Pruebas de la auditoría del 2026-10-17: CSP real sin violaciones por página, metadatos de SEO y noindex, 404, enlaces a Instagram, edge functions producto-meta y sitemap, 429 de cotizar-envio y panel de pedidos.',
@@ -70,19 +75,37 @@ const DESC = {
   'dstar-store/playwright.config.js': 'Configuración de Playwright (proyectos desktop, tablet y móvil; 2 workers en local, 1 en CI).',
   'dstar-store/vite.config.mjs': 'Configuración de Vite heredada; el despliegue es estático y no compila.',
   'dstar-store/.lighthouserc.js': 'Configuración de Lighthouse CI sobre localhost:8888.',
-  'dstar-store/netlify.toml': 'Configuración de Netlify: functions, redirects (/api/* y rutas internas bloqueadas), headers de seguridad (CSP con hashes en script-src que escribe scripts/csp-hashes.js), no-store y X-Robots-Tag en /pedidos.html, y caché.',
+  'dstar-store/netlify.toml': 'Configuración de Netlify: functions, redirects (/api/* y rutas internas bloqueadas), headers de seguridad (CSP con hashes en script-src que escribe scripts/csp-hashes.js), no-store y X-Robots-Tag en /pedidos y /seguimiento (este también con Referrer-Policy no-referrer), reconcile-payments programada cada 10 min y caché.',
   'netlify.toml': 'Netlify raíz: solo fija base = dstar-store.',
-  'dstar-store/package.json': 'Dependencias y scripts (dev, deploy, test) del sitio.',
+  'dstar-store/package.json': 'Dependencias y scripts (dev, deploy, test y test:backend con node --test) del sitio.',
   'package.json': 'Dependencias de la raíz del repo (sharp para optimizar imágenes).',
+  'dstar-store/netlify/functions/admin-store.js': 'Función /api/admin-store del panel (PANEL_PASSWORD): GET devuelve catálogo, stock, libro de inventario, datos legales y qué servicios están configurados con la última conciliación; POST product (saveProduct), stock (ajustar con operationId y motivo) y settings; límite de 100 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/functions/catalogo.js': 'Función /api/catalogo: catálogo activo de catalog-store.js con el stock vivo de stock-store.js; lo leen cart-store.js y las edge functions.',
+  'dstar-store/netlify/functions/datos-tienda.js': 'Función /api/datos-tienda: datos públicos del proveedor (legalName, address, phone, privacyEmail, contactEmail) guardados por admin-store.js; los muestra js/legal.js.',
+  'dstar-store/netlify/functions/seguimiento.js': 'Función /api/seguimiento: POST con id dstar_<uuid> y token de 64 hex comparado con timingSafeEqual; devuelve pago, preparación, total, rastreo y artículos, sin domicilio ni etiqueta; 404 si no coincide; límite de 60 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/functions/reconcile-payments.js': 'Función programada cada 10 min (netlify.toml): solo en producción encola el trabajo reconcile con dispatch() de lib/jobs.js, porque las programadas tienen 30 s.',
+  'dstar-store/netlify/functions/payment-jobs-background.js': 'Background Function que ejecuta los trabajos firmados de lib/jobs.js: reconcile (reconcile.js; lanza error si quedaron pedidos con fallo para que se reintente) y payment (syncPayment de payment-service.js); 401 sin firma válida.',
+  'dstar-store/netlify/lib/payment-service.js': 'Núcleo de pagos: syncPayment consulta el pago en Mercado Pago bajo lock (locked), registra estado, monto y reembolsos, descuenta stock con descontar, detecta monto distinto, sobreventa, reversos y pagos duplicados y llama a fulfill (una sola guía; failed o uncertain y nunca recompra tras respuesta ambigua) y notify (correo de confirmación y de guía por mail.js, hasta 3 intentos por fase); los pedidos legacy (isLegacy) solo registran reversos posteriores.',
+  'dstar-store/netlify/lib/reconcile.js': 'Conciliación: reconcile revisa hasta 20 pedidos activos por lote rotando el cursor (store operacion) con tope de 5 min; reconcileOrder sincroniza el pago conocido, busca otros intentos del mismo checkout por external_reference, vence apartados sin pago y despacha aprobados; ignora legacy, vencidos, entregados, reembolsados, cancelados, contracargos y enviados de más de 30 días salvo sincronización manual.',
+  'dstar-store/netlify/lib/storage.js': 'Acceso a Netlify Blobs con lectura fuerte y escritura condicional por etag (update reintenta hasta 12 veces y si no da 409); stores con sufijo por deploy fuera de producción; memoria solo con DSTAR_MEMORY_STORE y NODE_ENV=test sin NETLIFY.',
+  'dstar-store/netlify/lib/jobs.js': 'Trabajos internos: dispatch firma con HMAC de MP_WEBHOOK_SECRET y manda el trabajo a payment-jobs-background.js en URL_SITIO; authorized exige firma válida y de menos de 5 min.',
+  'dstar-store/netlify/lib/mail.js': 'Envío de correo: Resend si hay RESEND_API_KEY y MAIL_FROM (con Idempotency-Key); si no, nodemailer por SMTP_* o Gmail (GMAIL_USER, GMAIL_APP_PASSWORD) con Message-ID estable.',
+  'dstar-store/netlify/lib/http.js': 'Utilidades de las funciones: reply con no-store, body (JSON de máximo 100 KB), admin (PANEL_PASSWORD con timingSafeEqual y origen permitido), failure, request con timeout de 20 s y mp() para la API de Mercado Pago.',
+  'dstar-store/netlify/lib/quotes.js': 'Cotizaciones: parcel calcula peso y medidas desde el catálogo (+0.1 kg y 2 cm; más de 10 kg o 60 cm pide cotización especial), saveQuote las guarda 15 min ligadas a CP, estado, ciudad, colonia y carrito, y verifyQuote las comprueba antes de pagar.',
+  'dstar-store/netlify/lib/catalog-store.js': 'Catálogo persistente en Netlify Blobs (store catalogo, clave products) con products-data.js de respaldo; saveProduct valida con cleanProduct (fotos HTTPS de Cloudinary, tallas, peso y medidas) y un producto nuevo entra con stock 0.',
+  'dstar-store/tests/e2e/operacion.spec.js': 'Pruebas E2E de la operación: el panel no ofrece reembolsos ni devoluciones y el ajuste conserva su ID al reintentar, seguimiento consultado al servidor que descuenta del carrito una sola vez, catálogo remoto con pieza nueva y datos legales en privacidad.html.',
+  'dstar-store/tests/backend/operacion.test.cjs': 'Pruebas de backend con node --test y almacén en memoria: migración de inventario, reservas concurrentes, ajustes, cotización ligada, paquete, límite de peticiones, estados que no despachan, refund/return rechazados, seguimiento con token, conciliación de otro intento, firma de trabajos y checkout sin OXXO.',
+  'dstar-store/tests/backend/correcciones.test.cjs': 'Pruebas de backend de las correcciones: pedidos legacy sin guía, stock ni correos, conciliación que ignora terminados, tarjeta rechazada que conserva el apartado, Skydropx sin credenciales como failed, reintento tras falla de Mercado Pago, preferencia vencida con restart y poda del inventario.',
 };
 
 const TECH = {
   'Netlify': { tipo: 'servicio', desc: 'Hosting, CDN y Netlify Functions del sitio. Headers y redirects viven en netlify.toml.', test: /exports\.handler|\.netlify\/functions|netlify-cli|process\.env\.(?:NETLIFY|DEPLOY_URL|CONTEXT)/, npm: [], extra: (f) => f.name.startsWith('netlify.toml') },
-  'Netlify Blobs': { tipo: 'servicio', desc: 'Almacén clave-valor de Netlify: piezas vendidas (stock) y registro de pedidos.', test: /@netlify\/blobs/, npm: ['@netlify/blobs'] },
+  'Netlify Blobs': { tipo: 'servicio', desc: 'Almacén clave-valor de Netlify, con lectura fuerte y escritura condicional desde netlify/lib/storage.js: pedidos, inventario (stock/vendidas), catálogo y datos de la tienda (catalogo), cotizaciones, límites de peticiones (limites) y cursor de la conciliación (operacion).', test: /@netlify\/blobs/, npm: ['@netlify/blobs'] },
   'Mercado Pago': { tipo: 'servicio', desc: 'Pasarela de pago: preferencias de checkout, webhooks de pago y firma de notificaciones.', test: /mercadopago|MP_ACCESS_TOKEN|MP_WEBHOOK_SECRET/i, npm: [] },
   'Skydropx': { tipo: 'servicio', desc: 'Paquetería: cotización de envíos y creación de guías (Skydropx Pro, API v1 con OAuth2).', test: /skydropx/i, npm: [] },
   'Cloudinary': { tipo: 'servicio', desc: 'CDN de imágenes: q_auto, dpr_auto y ancho responsive; AVIF (f_avif) en `<picture>` con f_auto de respaldo y recorte c_fill,ar_16:9 en las fotos del blog.', test: /cloudinary/i, npm: ['cloudinary'] },
-  'Gmail SMTP': { tipo: 'servicio', desc: 'Correo transaccional con nodemailer: confirmación al cliente y aviso a la tienda.', test: /nodemailer|GMAIL_USER|GMAIL_APP_PASSWORD/, npm: ['nodemailer'] },
+  'Gmail SMTP': { tipo: 'servicio', desc: 'Correo transaccional con nodemailer por Gmail o por un SMTP propio (SMTP_*): confirmación y guía al cliente, copia y alertas a la tienda. Se usa si no está configurado Resend.', test: /nodemailer|GMAIL_USER|GMAIL_APP_PASSWORD|SMTP_HOST/, npm: ['nodemailer'] },
+  'Resend': { tipo: 'servicio', desc: 'API de correo opcional (RESEND_API_KEY y MAIL_FROM); si está configurada tiene prioridad sobre SMTP y envía con Idempotency-Key.', test: /RESEND_API_KEY|api\.resend\.com/, npm: [] },
   'GSAP': { tipo: 'librería', desc: 'Animación del sitio (hero, contador, cursor, botones magnéticos; SplitText en el index, el blog y términos). Se sirve desde js/vendor del propio sitio.', test: /\bgsap\b|SplitText/i, npm: ['gsap'] },
   'Google Fonts': { tipo: 'servicio', desc: 'Tipografías (fonts.googleapis.com y fonts.gstatic.com) con font-display: swap.', test: /fonts\.googleapis\.com|fonts\.gstatic\.com/, npm: [] },
   'Playwright': { tipo: 'herramienta', desc: 'Pruebas E2E y mediciones de rendimiento en desktop, tablet y móvil.', test: /@playwright\/test|playwright test/, npm: ['@playwright/test'] },
@@ -101,12 +124,17 @@ const ENV_GRUPOS = [
   [/^MP_/, 'Mercado Pago', 'Credencial o secreto de Mercado Pago.'],
   [/^URL_SITIO$/, 'Netlify', 'URL pública del sitio, sin slash final.'],
   [/^PANEL_PASSWORD$/, 'Netlify', 'Contraseña del panel de pedidos (pedidos.html); mínimo 16 caracteres.'],
+  [/^RESEND_/, 'Resend', 'Clave de la API de Resend (opcional).'],
+  [/^MAIL_FROM$/, 'Resend', 'Remitente de los correos (Resend o SMTP); requiere dominio con SPF/DKIM.'],
+  [/^SMTP_/, 'Gmail SMTP', 'Servidor SMTP propio (host, puerto, usuario y contraseña); sustituye a Gmail.'],
+  [/^DSTAR_MEMORY_STORE$/, 'Netlify Blobs', 'Solo pruebas: almacén en memoria con NODE_ENV=test y sin NETLIFY. Nunca en Netlify.'],
 ];
-const ENV_PROVIDED = new Set(['CONTEXT', 'NETLIFY', 'NETLIFY_DEV', 'DEPLOY_URL', 'DEPLOY_PRIME_URL', 'URL']);
+const ENV_PROVIDED = new Set(['CONTEXT', 'NETLIFY', 'NETLIFY_DEV', 'DEPLOY_URL', 'DEPLOY_PRIME_URL', 'DEPLOY_ID', 'URL', 'NODE_ENV']);
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'test-results', 'assets', 'vendor', 'reportes', 'docs', 'images', 'playwright-report']);
 const SKIP_FILES = new Set(['package-lock.json', 'deno.lock', 'skills-lock.json', 'settings.local.json', 'state.json', '.last-run.json']);
-const EXTS = new Set(['.html', '.js', '.mjs', '.css', '.json', '.toml', '.webmanifest']);
+const EXTS = new Set(['.html', '.js', '.mjs', '.cjs', '.css', '.json', '.toml', '.webmanifest']);
+const isJs = (ext) => ext === '.js' || ext === '.mjs' || ext === '.cjs';
 
 const CATS = {
   paginas: { tag: 'pagina', hub: 'Páginas', dir: 'paginas' },
@@ -194,22 +222,22 @@ if (exists(path.join(ROOT, SITE, '.env.example'))) {
 
 const globalDefs = new Map();
 for (const f of files) {
-  if (!/\.(js|html)$/.test(f.rel)) continue;
+  if (!/\.(js|cjs|html)$/.test(f.rel)) continue;
   for (const m of f.content.matchAll(/\b\w+\.(DSTAR_[A-Z0-9_]+)\s*(?:\|\|)?=(?!=)/g)) {
     if (!globalDefs.has(m[1])) globalDefs.set(m[1], f);
   }
 }
 
-const PAGE_RE = /(?:['"`]|\})\/(index|checkout|gracias|error-pago|pago-pendiente|producto|terminos|agradecimientos|offline)(?:\.html)?(?=[?#'"`\s)])|['"`](checkout|gracias|error-pago|pago-pendiente|producto|terminos|agradecimientos|offline)\.html/g;
+const PAGE_RE = /(?:['"`]|\})\/(index|checkout|gracias|error-pago|pago-pendiente|producto|terminos|agradecimientos|offline|seguimiento|privacidad|pedidos)(?:\.html)?(?=[?#'"`\s)])|['"`](checkout|gracias|error-pago|pago-pendiente|producto|terminos|agradecimientos|offline|seguimiento|privacidad|pedidos)\.html/g;
 const PATH_RE = /['"`](\/?[\w./-]+\.(?:html|js|css|webmanifest))(?:[?#][^'"`]*)?['"`]/g;
 const FN_RE = /^\s{0,4}(?:export\s+)?(?:async\s+)?function\s*\*?\s*(\w+)|^\s{0,4}(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>|^\s{0,4}class\s+(\w+)|^\s{0,4}exports\.(\w+)\s*=/;
 
 for (const f of files) {
   const c = f.content;
   const isHtml = f.ext === '.html';
-  const isCode = f.ext === '.js' || f.ext === '.mjs' || isHtml;
+  const isCode = isJs(f.ext) || isHtml;
   const isPkg = f.rel.endsWith('package.json');
-  const scan = (f.ext === '.js' || f.ext === '.mjs') ? c.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\'"`])\/\/.*$/gm, '$1') : c;
+  const scan = isJs(f.ext) ? c.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\'"`])\/\/.*$/gm, '$1') : c;
 
   if (isHtml) {
     for (const m of c.matchAll(/<script[^>]+src=["']([^"']+)["']/g)) {
@@ -226,7 +254,7 @@ for (const f of files) {
     }
   }
 
-  if (f.ext === '.js' || f.ext === '.mjs') {
+  if (isJs(f.ext)) {
     for (const m of c.matchAll(/require\(\s*['"]([^'"]+)['"]\s*\)|from\s+['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)/g)) {
       const spec = m[1] || m[2] || m[3];
       if (spec.startsWith('.')) {
@@ -513,7 +541,7 @@ const COLORES = [
   L.push('# DSTAR', '', 'Mapa del proyecto: notas de contexto, páginas, código del navegador, backend, pruebas, servicios y variables de entorno, todo conectado.', '');
   L.push(`Archivos de código mapeados: ${files.length} · tecnologías: ${Object.keys(TECH).length} · variables de entorno: ${envNames.size} · commits: ${commits.length}`, '');
   L.push('## Contexto', '', '- [[Flujo de compra]]', '- [[Reglas de estilo]]', '- [[Seguridad]]', '- [[Rendimiento y PWA]]', '- [[Pruebas y calidad]]', '- [[Despliegue]]', '- [[Pendientes]]', '- [[Historial]]', '');
-  L.push('## Documentos del repo', '', '- [[CLAUDE]]', '- [[PLANNER]]', '- [[TESTING]]', '- [[README]]', '');
+  L.push('## Documentos del repo', '', '- [[CLAUDE]]', '- [[PLANNER]]', '- [[OPERACION]]', '- [[TESTING]]', '- [[README]]', '');
   L.push('## Mapa por áreas', '', ...Object.keys(HUB_DESC).map((h) => `- [[${h}]] — ${HUB_DESC[h]}`), '');
   L.push('## Colores del grafo', '', 'Se definen por etiqueta en `.obsidian/graph.json`.', '', ...COLORES.map(([t, , n]) => `- #${t}: ${n}`), '');
   writeNote('hubs', 'DSTAR', L);
@@ -656,7 +684,7 @@ try { app = JSON.parse(fs.readFileSync(appPath, 'utf8')); } catch (e) { app = {}
 app.userIgnoreFilters = [...new Set([...(app.userIgnoreFilters || []), ...IGNORE])];
 fs.writeFileSync(appPath, JSON.stringify(app, null, 2));
 
-const known = new Set(['CLAUDE', 'PLANNER', 'TESTING', 'README']);
+const known = new Set(['CLAUDE', 'PLANNER', 'OPERACION', 'TESTING', 'README']);
 const mdFiles = [];
 (function collect(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {

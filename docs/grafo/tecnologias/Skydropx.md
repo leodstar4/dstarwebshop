@@ -12,10 +12,17 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
+- [[pedidos.js (js)]]
+- [[admin-store.js]]
 - [[cotizar-envio.js]]
 - [[mp-preference.js]]
 - [[mp-webhook.js]]
+- [[pedidos.js (functions)]]
+- [[payment-service.js]]
 - [[skydropx.js]]
+- [[privacidad.html]]
+- [[correcciones.test.cjs]]
+- [[operacion.test.cjs]]
 - [[audit-bugs.spec.js]]
 - [[stock-y-animaciones.spec.js]]
 - [[Agente architect]]

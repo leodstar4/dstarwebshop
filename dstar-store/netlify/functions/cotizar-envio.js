@@ -1,74 +1,26 @@
-// ============================================
-// DSTAR — COTIZAR ENVÍO CON SKYDROPX PRO (API v2 / OAuth2)
-// ============================================
-// Recibe por POST: { cp_destino, estado, ciudad, colonia, peso, alto, ancho, largo }
-// Autentica vía OAuth2 (client_credentials), crea una cotización y devuelve
-// las tarifas normalizadas (con rate_id para generar la guía después).
-//
-// Variables de entorno necesarias en Netlify:
-//   SKYDROPX_CLIENT_ID, SKYDROPX_CLIENT_SECRET = credenciales OAuth de Skydropx Pro
-//   CP_ORIGEN, ORIGEN_ESTADO, ORIGEN_MUNICIPIO, ORIGEN_COLONIA = dirección del almacén
-// ============================================
-
 const { cotizar } = require('../lib/skydropx');
-const { str, origenPermitido } = require('../lib/validate');
+const { str, construirPedido, origenPermitido } = require('../lib/validate');
+const { catalog } = require('../lib/catalog-store');
+const { leerStock } = require('../lib/stock-store');
+const { parcel, saveQuote } = require('../lib/quotes');
 const { limitar, demasiadas } = require('../lib/rate-limit');
-
-exports.handler = async (event) => {
-  const headers = { 'Content-Type': 'application/json' };
-
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método no permitido' }) };
-  }
-  if (!origenPermitido(event)) {
-    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Origen no permitido' }) };
-  }
+const { reply, body, failure } = require('../lib/http');
+exports.handler = async event => {
+  if (event.httpMethod !== 'POST') return reply(405, { error: 'Método no permitido' });
+  if (!origenPermitido(event)) return reply(403, { error: 'Origen no permitido' });
   const retry = await limitar(event, 'cotizar', 20, 600);
   if (retry) return demasiadas(retry);
-
   try {
-    let body;
-    try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
-    const cp_destino = str(body.cp_destino, 5);
-    const estado = str(body.estado, 60);
-    const ciudad = str(body.ciudad, 80);
-    const colonia = str(body.colonia, 80);
-    const clamp = (v, min, max, def) => {
-      const n = Number(v);
-      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
-    };
-    const peso = clamp(body.peso, 0.1, 10, 0.5);
-    const alto = clamp(body.alto, 1, 60, 10);
-    const ancho = clamp(body.ancho, 1, 60, 20);
-    const largo = clamp(body.largo, 1, 60, 20);
-
-    if (!/^\d{5}$/.test(cp_destino) || !estado || !ciudad || !colonia) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Faltan datos de destino: CP, estado, ciudad y colonia' })
-      };
-    }
-
-    let cotizacion;
-    try {
-      cotizacion = await cotizar(
-        { cp: cp_destino, estado, ciudad, colonia },
-        { length: Math.round(largo), width: Math.round(ancho), height: Math.round(alto), weight: peso }
-      );
-    } catch (err) {
-      if (err.config) {
-        console.error('cotizar-envio —', err.message);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Servicio de envíos no configurado' }) };
-      }
-      console.error('Skydropx quotation error:', err.message);
-      return { statusCode: 502, headers, body: JSON.stringify({ error: 'Error al cotizar el envío' }) };
-    }
-
-    return { statusCode: 200, headers, body: JSON.stringify(cotizacion) };
-
-  } catch (error) {
-    console.error('cotizar-envio — error inesperado:', error.message);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Error interno del servidor' }) };
-  }
+    const b = body(event);
+    const cliente = { cp: str(b.cp_destino, 5), estado: str(b.estado, 60), ciudad: str(b.ciudad, 80), colonia: str(b.colonia, 80) };
+    if (!/^\d{5}$/.test(String(b.cp_destino || '').trim()) || !cliente.estado || !cliente.ciudad || !cliente.colonia) return reply(400, { error: 'Completa CP, estado, ciudad y colonia' });
+    const products = await catalog(event);
+    const order = construirPedido(b.items, await leerStock(event, products), products);
+    if (order.error) return reply(400, { error: order.error });
+    const pack = parcel(order.items, products);
+    const quote = await cotizar(cliente, pack);
+    quote.rates = quote.rates.filter(r => r.currency === 'MXN' && Number.isFinite(r.price) && r.price >= 0);
+    await saveQuote(event, quote, cliente, order.items, pack);
+    return reply(200, quote);
+  } catch (e) { return failure(e); }
 };

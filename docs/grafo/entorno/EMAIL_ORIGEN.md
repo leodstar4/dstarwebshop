@@ -16,4 +16,6 @@ Relacionada con: [[Gmail SMTP]]
 ## Leída en
 
 - [[mp-webhook.js]]
+- [[payment-service.js]]
+- [[correcciones.test.cjs]]
 

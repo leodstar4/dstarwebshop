@@ -7,13 +7,12 @@
     "dev": "npx netlify-cli dev",
     "deploy": "npx netlify-cli deploy --prod",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "test:backend": "node --test tests/backend/*.test.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.4",
-    "cloudinary": "^2.9.0",
     "gsap": "^3.14.2",
-    "node-fetch": "^2.7.0",
     "nodemailer": "^10.1.0"
   },
   "devDependencies": {

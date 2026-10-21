@@ -9,7 +9,7 @@ lineas: 89
 
 `dstar-store/sw.js` · 89 líneas
 
-Service worker de la PWA: precache del shell (incluye js/loader.js), network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, /pedidos, los .mp4 ni las peticiones con Range.
+Service worker de la PWA: precache del shell (incluye js/loader.js), network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, /pedidos, /seguimiento, los .mp4 ni las peticiones con Range.
 
 Parte de: [[Frontend]]
 
@@ -26,9 +26,9 @@ Parte de: [[Frontend]]
 
 ## Últimos cambios
 
+- 2026-10-17 · `fc178da` · Auditoría: foto al compartir, 404 de marca, SEO, límite de peticiones, CSP sin inline, OXXO, panel de pedidos y accesibi
 - 2026-10-17 · `836ac92` · Galería de producto: lightbox premium en desktop y móvil, placeholders borrosos y fotos que ya no quedan rotas en caché
 - 2026-10-13 · `37812a9` · Logo girando en la pantalla de carga y entrada de "TODO CON AMOR" fluida
 - 2026-10-13 · `3ae33e4` · Logo 3D más fluido y nítido en celulares y botón VER DROPS que aparece antes
 - 2026-10-12 · `cded92a` · Fluidez y proporciones: logo 3D en Web Worker, imágenes AVIF, hero y tarjetas a la medida de cada pantalla
-- 2026-10-12 · `88d021f` · Animaciones ricas de vuelta (en el compositor), logo 3D a 60 fps y más grande en desktop
 

@@ -14,7 +14,8 @@ Relacionada con: [[Gmail SMTP]]
 
 ## Leída en
 
-- [[mp-webhook.js]]
+- [[admin-store.js]]
+- [[mail.js]]
 - [[audit-bugs.spec.js]]
 - [[stock-y-animaciones.spec.js]]
 

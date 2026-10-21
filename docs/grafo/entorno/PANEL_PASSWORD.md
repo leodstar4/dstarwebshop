@@ -14,6 +14,8 @@ Relacionada con: [[Netlify]]
 
 ## Leída en
 
-- [[pedidos.js (functions)]]
+- [[http.js]]
+- [[correcciones.test.cjs]]
+- [[operacion.test.cjs]]
 - [[seguridad-y-seo.spec.js]]
 

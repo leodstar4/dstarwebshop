@@ -6,9 +6,11 @@
 // ============================================
 const urlParams  = new URLSearchParams(window.location.search);
 const estadoPago = urlParams.get('collection_status') || urlParams.get('status');
-if (estadoPago === 'approved') {
-  try { localStorage.removeItem('dstar_cart'); } catch {}
-}
+// URL parameters are not proof of payment. Never clear the cart here.
+try { if (sessionStorage.getItem('dstar_last_order')) location.replace('/seguimiento.html'); } catch {}
+document.getElementById('confirmTitle').textContent = 'CONSULTA TU PAGO';
+document.getElementById('confirmLabel').textContent = 'CONFIRMACIÓN PENDIENTE';
+document.getElementById('confirmText').textContent = 'Verifica el estado en Mercado Pago o en el enlace privado de tu pedido.';
 const paymentId  = urlParams.get('payment_id') || urlParams.get('collection_id');
 const pedidoEl   = document.getElementById('pedidoId');
 if (paymentId && pedidoEl) {

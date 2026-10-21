@@ -1,20 +1,21 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/gsap-animations.js"
-lineas: 640
+lineas: 641
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # gsap-animations.js
 
-`dstar-store/js/gsap-animations.js` · 640 líneas
+`dstar-store/js/gsap-animations.js` · 641 líneas
 
-Animaciones del index y del detalle: hero letra por letra (SplitText) y CTA con element.animate() al recibir dstar:loaded, revelados de scroll con IntersectionObserver y element.animate() (WAAPI, en el compositor), contador de Nosotros, lookbook en móvil/tablet, cursor y botones magnéticos con GSAP desde js/vendor; el SplitText que parte solo en líneas va con aria: none. El contenido es visible por defecto y respeta prefers-reduced-motion.
+Animaciones del index y del detalle (arrancan después de DSTAR_CATALOG_READY): hero letra por letra (SplitText) y CTA con element.animate() al recibir dstar:loaded, revelados de scroll con IntersectionObserver y element.animate() (WAAPI, en el compositor), contador de Nosotros, lookbook en móvil/tablet, cursor y botones magnéticos con GSAP desde js/vendor; el SplitText que parte solo en líneas va con aria: none. El contenido es visible por defecto y respeta prefers-reduced-motion.
 
 Parte de: [[Frontend]]
 
 ## Conexiones
 
+- Usa la global: [[cart-store.js]] (`DSTAR_CATALOG_READY`)
 - Usa: [[GSAP]]
 
 ## Funciones y clases
@@ -46,13 +47,13 @@ Parte de: [[Frontend]]
 - `initCustomCursor` (línea 523)
 - `initMagneticButtons` (línea 580)
 - `invalidate` (línea 591)
-- `run` (línea 628)
+- `run` (línea 629)
 
 ## Últimos cambios
 
+- 2026-10-17 · `fc178da` · Auditoría: foto al compartir, 404 de marca, SEO, límite de peticiones, CSP sin inline, OXXO, panel de pedidos y accesibi
 - 2026-10-13 · `37812a9` · Logo girando en la pantalla de carga y entrada de "TODO CON AMOR" fluida
 - 2026-10-13 · `3ae33e4` · Logo 3D más fluido y nítido en celulares y botón VER DROPS que aparece antes
 - 2026-10-12 · `cded92a` · Fluidez y proporciones: logo 3D en Web Worker, imágenes AVIF, hero y tarjetas a la medida de cada pantalla
 - 2026-10-12 · `88d021f` · Animaciones ricas de vuelta (en el compositor), logo 3D a 60 fps y más grande en desktop
-- 2026-10-12 · `eef15b5` · Fluidez en desktop: revelados en el compositor, logo 3D en pausa fuera de pantalla y menos trabajo por cuadro
 

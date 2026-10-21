@@ -36,13 +36,13 @@ function validarCliente(raw) {
   if (!/^\d{10}$/.test(cliente.telefono)) errores.push('telefono');
   if (cliente.calle.length < 3) errores.push('calle');
   if (!cliente.colonia) errores.push('colonia');
-  if (!/^\d{5}$/.test(cliente.cp)) errores.push('cp');
+  if (!/^\d{5}$/.test(String(c.cp || '').trim())) errores.push('cp');
   if (!cliente.ciudad) errores.push('ciudad');
   if (!cliente.estado) errores.push('estado');
   return { cliente, errores };
 }
 
-function construirPedido(rawItems, stock) {
+function construirPedido(rawItems, stock, products = PRODUCTS) {
   if (!Array.isArray(rawItems) || rawItems.length === 0 || rawItems.length > 20) {
     return { error: 'El carrito está vacío o es inválido' };
   }
@@ -51,8 +51,8 @@ function construirPedido(rawItems, stock) {
     const id = it && typeof it.id === 'string' ? it.id : '';
     const size = it && typeof it.size === 'string' ? it.size : '';
     const qty = it ? it.qty : undefined;
-    const product = PRODUCTS.find((p) => p.id === id);
-    if (!product) return { error: 'Producto no disponible' };
+    const product = products.find((p) => p.id === id);
+    if (!product || product.active === false) return { error: 'Producto no disponible' };
     if (!product.sizes.includes(size)) return { error: `Talla no disponible para ${product.name}` };
     if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY) return { error: 'Cantidad inválida' };
     const key = `${id}|${size}`;
@@ -63,8 +63,10 @@ function construirPedido(rawItems, stock) {
   const items = [];
   let subtotal = 0;
   for (const { product, size, qty } of lineas.values()) {
+    if (qty > MAX_QTY) return { error: 'Cantidad inválida' };
     const vivo = stock && stock[product.id] && stock[product.id][size];
-    const disponible = Number.isInteger(vivo) ? vivo : (product.sizesStock ? (product.sizesStock[size] || 0) : product.stock);
+    if (!Number.isInteger(vivo)) return { error: 'No se pudo verificar el inventario. Intenta de nuevo.' };
+    const disponible = vivo;
     if (product.badge === 'SOLDOUT' || qty > disponible) {
       return { error: `Sin stock suficiente de ${product.name} talla ${size}` };
     }

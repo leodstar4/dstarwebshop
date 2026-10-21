@@ -1,5 +1,12 @@
 (function (root) {
   const KEY = 'dstar_cart';
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  if (controller) setTimeout(() => controller.abort(), 5000);
+  root.DSTAR_CATALOG_READY = Promise.resolve()
+    .then(() => fetch('/api/catalogo', { cache: 'no-store', signal: controller ? controller.signal : undefined }))
+    .then(r => r.ok ? r.json() : null).then(data => {
+      if (Array.isArray(data?.products)) root.DSTAR_PRODUCTS.splice(0, root.DSTAR_PRODUCTS.length, ...data.products);
+    }).catch(() => {});
 
   function catalog() {
     return root.DSTAR_PRODUCTS || [];
@@ -24,7 +31,7 @@
     for (const item of raw) {
       if (!item || typeof item.id !== 'string' || typeof item.size !== 'string') continue;
       const product = products.find((p) => p.id === item.id);
-      if (!product || !product.sizes.includes(item.size)) continue;
+      if (!product || product.active === false || !product.sizes.includes(item.size)) continue;
       const key = `${item.id}|${item.size}`;
       const qty = (merged.get(key)?.qty || 0) + (Number.isInteger(item.qty) && item.qty > 0 ? item.qty : 1);
       merged.set(key, {

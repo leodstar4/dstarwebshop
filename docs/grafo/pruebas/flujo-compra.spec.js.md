@@ -1,15 +1,15 @@
 ---
 tags: [codigo, prueba]
 ruta: "dstar-store/tests/e2e/flujo-compra.spec.js"
-lineas: 285
+lineas: 287
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # flujo-compra.spec.js
 
-`dstar-store/tests/e2e/flujo-compra.spec.js` · 285 líneas
+`dstar-store/tests/e2e/flujo-compra.spec.js` · 287 líneas
 
-Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto, selector de talla y lightbox de la galería (teclado, zoom y cierre con Escape).
+Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto, selector de talla, lightbox de la galería (teclado, zoom y cierre con Escape) y redirección a un Mercado Pago simulado con checkout_id.
 
 Parte de: [[Pruebas]]
 
@@ -17,8 +17,8 @@ Parte de: [[Pruebas]]
 
 - Llama a la API: [[cotizar-envio.js]] (`/api/cotizar-envio`), [[mp-preference.js]] (`/api/mp-preference`)
 - Visita: [[index.html]], [[checkout.html]], [[born-to-shine-detras-del-drop.html]]
-- Referencia a: [[producto.html]], [[gracias.html]]
-- Usa: [[Playwright]], [[Netlify]], [[Cloudinary]]
+- Referencia a: [[producto.html]]
+- Usa: [[Playwright]], [[Netlify]], [[Mercado Pago]], [[Cloudinary]]
 
 ## Funciones y clases
 

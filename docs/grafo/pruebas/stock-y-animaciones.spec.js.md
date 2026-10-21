@@ -1,13 +1,13 @@
 ---
 tags: [codigo, prueba]
 ruta: "dstar-store/tests/e2e/stock-y-animaciones.spec.js"
-lineas: 158
+lineas: 161
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # stock-y-animaciones.spec.js
 
-`dstar-store/tests/e2e/stock-y-animaciones.spec.js` · 158 líneas
+`dstar-store/tests/e2e/stock-y-animaciones.spec.js` · 161 líneas
 
 Pruebas de stock vivo y alertas (descuento por pago, reintento sin doble descuento, sobreventa, monto distinto) y de que el contenido se vea aunque GSAP no cargue y ningún elemento renderizado (incluidos los .split-char) se quede con opacidad menor a 0.05.
 
@@ -15,24 +15,26 @@ Parte de: [[Pruebas]]
 
 ## Conexiones
 
+- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`)
 - Visita: [[index.html]], [[checkout.html]], [[terminos.html]]
+- Referencia a: [[storage.js]]
 - Usa: [[Playwright]], [[Mercado Pago]], [[Skydropx]], [[Gmail SMTP]], [[GSAP]]
-- Lee la variable: [[GMAIL_USER]], [[GMAIL_APP_PASSWORD]]
+- Lee la variable: [[DSTAR_MEMORY_STORE]], [[GMAIL_USER]], [[GMAIL_APP_PASSWORD]]
 
 ## Funciones y clases
 
-- `webhookEvent` (línea 8)
-- `pagoAprobado` (línea 21)
-- `stubRed` (línea 24)
-- `conRed` (línea 41)
-- `leerStock` (línea 59)
-- `webhook` (línea 61)
+- `webhookEvent` (línea 11)
+- `pagoAprobado` (línea 24)
+- `stubRed` (línea 27)
+- `conRed` (línea 44)
+- `leerStock` (línea 62)
+- `webhook` (línea 64)
 
 ## Casos de prueba
 
 - Stock vivo y alertas (handler directo, sin red)
 - un pago aprobado descuenta la talla y ya no se puede volver a comprar
-- si Skydropx falla se avisa una vez y el reintento no descuenta dos veces
+- si Skydropx responde 500 no se repite una compra de guía incierta
 - dos pagos por la última pieza generan alerta de sobreventa
 - un monto distinto avisa a la tienda y no descuenta stock
 - Contenido visible y animaciones

@@ -74,7 +74,9 @@ const $$ = (sel) => document.querySelectorAll(sel);
 // ============================================
 // INIT
 // ============================================
-function initApp() {
+async function initApp() {
+  await window.DSTAR_CATALOG_READY;
+  cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
   if (document.body.classList.contains('page-product')) {
     // ── Página de detalle de producto ──
     updateCartUI();
@@ -552,7 +554,7 @@ const FAQ_ITEMS = [
   },
   {
     q: '¿PUEDO PAGAR EN EFECTIVO EN OXXO?',
-    a: 'Sí. Mercado Pago acepta pagos en efectivo en OXXO. Al elegir esa opción en el checkout, recibirás un código de barras para pagar en cualquier sucursal OXXO. Tu pedido se procesa una vez confirmado el pago (puede tardar unas horas).'
+    a: 'No. Para proteger las piezas limitadas solo aceptamos medios de pago inmediatos disponibles en Mercado Pago. OXXO y pagos diferidos están desactivados.'
   },
   {
     q: '¿ACEPTAN DEVOLUCIONES O CAMBIOS?',
@@ -851,7 +853,7 @@ function initProductPage() {
   set('pdDrop',  'DROP: ' + p.drop);
   set('pdName',  p.name);
   set('pdPrice', isSoldOut ? 'AGOTADO' : formatPrice(p.price));
-  set('pdDesc',  p.description);
+  set('pdDesc',  [p.description, p.material && 'Material: ' + p.material, p.fit && 'Corte: ' + p.fit, p.care && 'Cuidados: ' + p.care, p.measurements && 'Medidas: ' + p.measurements].filter(Boolean).join('\n\n'));
 
   // Sizes
   const sizesEl = document.getElementById('pdSizes');

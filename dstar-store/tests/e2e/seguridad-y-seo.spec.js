@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+process.env.NODE_ENV = 'test';
+process.env.DSTAR_MEMORY_STORE = 'true';
+test.beforeEach(() => { require(process.cwd() + '/netlify/lib/storage.js').resetForTests(); });
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
@@ -99,6 +102,9 @@ test.describe('Edge functions y límites (sin red)', () => {
     const edge = await cargarEdge('producto-meta.js');
     const html = fs.readFileSync(path.join(ROOT, 'producto.html'), 'utf8');
     const context = { next: async () => new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } }) };
+    const originalFetch = global.fetch;
+    global.fetch = async () => Response.json({ products: globalThis.DSTAR_PRODUCTS });
+    try {
     const res = await edge(new Request(`https://dstarshop.netlify.app${PRODUCT_URL}`), context);
     const out = await res.text();
     expect(out).toContain('<title>BORN TO SHINE — DSTAR</title>');
@@ -109,11 +115,12 @@ test.describe('Edge functions y límites (sin red)', () => {
 
     const otro = await edge(new Request('https://dstarshop.netlify.app/producto.html?id=no-existe'), context);
     expect(await otro.text()).toBe(html);
+    } finally { global.fetch = originalFetch; }
   });
 
   test('sitemap incluye cada producto y las páginas públicas', async () => {
     const edge = await cargarEdge('sitemap.js');
-    const xml = await edge().text();
+    const xml = await (await edge()).text();
     for (const p of globalThis.DSTAR_PRODUCTS) expect(xml).toContain(`producto.html?id=${p.id}</loc>`);
     expect(xml).toContain('<loc>https://dstarshop.netlify.app/</loc>');
     expect(xml).not.toContain('checkout');

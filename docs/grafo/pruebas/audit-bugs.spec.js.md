@@ -1,13 +1,13 @@
 ---
 tags: [codigo, prueba]
 ruta: "dstar-store/tests/e2e/audit-bugs.spec.js"
-lineas: 325
+lineas: 336
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # audit-bugs.spec.js
 
-`dstar-store/tests/e2e/audit-bugs.spec.js` · 325 líneas
+`dstar-store/tests/e2e/audit-bugs.spec.js` · 336 líneas
 
 Pruebas de regresión de la auditoría: stock por talla, localStorage corrupto, código postal del checkout, firma del webhook y origen.
 
@@ -16,16 +16,17 @@ Parte de: [[Pruebas]]
 ## Conexiones
 
 - Llama a la API: [[cotizar-envio.js]] (`/api/cotizar-envio`), [[mp-preference.js]] (`/api/mp-preference`)
+- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`)
 - Visita: [[index.html]], [[checkout.html]]
-- Referencia a: [[producto.html]], [[error-pago.html]], [[gracias.html]], [[pago-pendiente.html]], [[agradecimientos.html]], [[terminos.html]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]]
+- Referencia a: [[producto.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[agradecimientos.html]], [[terminos.html]], [[seguimiento.html]], [[storage.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]]
 - Usa: [[Playwright]], [[Netlify]], [[Mercado Pago]], [[Skydropx]], [[Cloudinary]], [[Gmail SMTP]]
-- Lee la variable: [[MP_ACCESS_TOKEN]], [[SKYDROPX_CLIENT_ID]], [[SKYDROPX_CLIENT_SECRET]], [[GMAIL_USER]], [[GMAIL_APP_PASSWORD]], [[MP_WEBHOOK_SECRET]], [[URL_SITIO]]
+- Lee la variable: [[DSTAR_MEMORY_STORE]], [[MP_ACCESS_TOKEN]], [[SKYDROPX_CLIENT_ID]], [[SKYDROPX_CLIENT_SECRET]], [[GMAIL_USER]], [[GMAIL_APP_PASSWORD]], [[MP_WEBHOOK_SECRET]], [[URL_SITIO]]
 
 ## Funciones y clases
 
-- `webhookEvent` (línea 8)
-- `seed` (línea 26)
-- `fillCheckout` (línea 35)
+- `webhookEvent` (línea 11)
+- `seed` (línea 29)
+- `fillCheckout` (línea 38)
 
 ## Casos de prueba
 

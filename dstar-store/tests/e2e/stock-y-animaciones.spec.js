@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+process.env.NODE_ENV = 'test';
+process.env.DSTAR_MEMORY_STORE = 'true';
+test.beforeEach(() => { require(process.cwd() + '/netlify/lib/storage.js').resetForTests(); });
 import path from 'path';
 import crypto from 'crypto';
 
@@ -73,14 +76,14 @@ test.describe('Stock vivo y alertas (handler directo, sin red)', () => {
 
       const preference = require(path.join(FN_DIR, 'mp-preference.js')).handler;
       const res = await preference({ httpMethod: 'POST', body: JSON.stringify({
-        items: [{ id: 'dstar-apnm-ls-01', size: 'M', qty: 1 }], cliente, quotation_id: 'Q1', rate_id: 'R1'
+        checkout_id: crypto.randomUUID(), items: [{ id: 'dstar-apnm-ls-01', size: 'M', qty: 1 }], cliente, quotation_id: 'Q1', rate_id: 'R1'
       }) });
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.body).error).toContain('Sin stock');
     });
   });
 
-  test('si Skydropx falla se avisa una vez y el reintento no descuenta dos veces', async () => {
+  test('si Skydropx responde 500 no se repite una compra de guía incierta', async () => {
     let falla = true;
     let guias = 0;
     const stub = stubRed({
@@ -89,11 +92,11 @@ test.describe('Stock vivo y alertas (handler directo, sin red)', () => {
       onShipment: () => { guias++; }
     });
     await conRed(stub, async (alertas) => {
-      expect((await webhook('7002')).statusCode).toBe(500);
-      expect((await webhook('7002')).statusCode).toBe(500);
+      expect((await webhook('7002')).statusCode).toBe(200);
+      expect((await webhook('7002')).statusCode).toBe(200);
       falla = false;
       expect((await webhook('7002')).statusCode).toBe(200);
-      expect(guias).toBe(1);
+      expect(guias).toBe(0);
       expect(alertas.filter((a) => a.includes('No se pudo crear la guía'))).toHaveLength(1);
       expect(alertas.filter((a) => a.includes('Sobreventa'))).toHaveLength(0);
       expect((await leerStock())['dstar-bts-jort-01'].L).toBe(0);

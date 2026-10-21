@@ -30,7 +30,12 @@ function jsonLd(p, url, image) {
 
 export default async (request, context) => {
   const id = new URL(request.url).searchParams.get('id');
-  const p = id && (globalThis.DSTAR_PRODUCTS || []).find((x) => x.id === id);
+  let products = globalThis.DSTAR_PRODUCTS || [];
+  try {
+    const r = await fetch(new URL('/api/catalogo', request.url), { signal: AbortSignal.timeout(3000) });
+    if (r.ok) { const data = await r.json(); if (Array.isArray(data.products)) products = data.products; }
+  } catch {}
+  const p = id && products.find(x => x.id === id && x.active !== false);
   const response = await context.next();
   if (!p || response.status !== 200 || !(response.headers.get('content-type') || '').includes('text/html')) return response;
 

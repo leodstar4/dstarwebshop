@@ -170,14 +170,37 @@
     Content-Type = "image/avif"
     Cache-Control = "public, max-age=2592000"
 
+# HTML siempre fresco
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
 [[headers]]
   for = "/pedidos.html"
   [headers.values]
     Cache-Control = "no-store"
     X-Robots-Tag = "noindex, nofollow"
 
-# HTML siempre fresco
 [[headers]]
-  for = "/*.html"
+  for = "/seguimiento.html"
   [headers.values]
-    Cache-Control = "no-cache"
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"
+
+[functions."reconcile-payments"]
+  schedule = "*/10 * * * *"
+
+[[headers]]
+  for = "/pedidos"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/seguimiento"
+  [headers.values]
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"

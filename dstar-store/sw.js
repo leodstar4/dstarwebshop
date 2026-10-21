@@ -1,4 +1,4 @@
-const VERSION = 'dstar-v11';
+const VERSION = 'dstar-v13';
 const SHELL = `${VERSION}-shell`;
 const IMAGES = `${VERSION}-img`;
 const MAX_IMAGES = 80;
@@ -20,7 +20,7 @@ const PRECACHE = [
   '/assets/brand/favicon-32.png?v=2'
 ];
 
-const NEVER_CACHE = [/^\/\.netlify\//, /^\/api\//, /^\/checkout/, /^\/gracias/, /^\/error-pago/, /^\/pago-pendiente/, /^\/pedidos/, /^\/sw\.js$/, /\.mp4$/];
+const NEVER_CACHE = [/^\/\.netlify\//, /^\/api\//, /^\/checkout/, /^\/gracias/, /^\/error-pago/, /^\/pago-pendiente/, /^\/pedidos/, /^\/seguimiento/, /^\/sw\.js$/, /\.mp4$/];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(SHELL).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
