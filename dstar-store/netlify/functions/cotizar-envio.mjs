@@ -1,3 +1,5 @@
+import '@netlify/blobs';
+import 'nodemailer';
 import mod from '../handlers/cotizar-envio.js';
 import adapt from '../lib/v2.js';
 

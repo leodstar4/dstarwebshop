@@ -25,3 +25,7 @@ Parte de: [[Backend]]
 
 - `handler` (línea 10)
 
+## Últimos cambios
+
+- 2026-10-20 · `cb71c3f` · Funciones en formato v2 de Netlify para que las lecturas strong de Blobs funcionen en producción
+

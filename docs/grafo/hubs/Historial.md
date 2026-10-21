@@ -11,6 +11,7 @@ Parte de: [[DSTAR]]
 
 ## 2026-10-20
 
+- `cb71c3f` Funciones en formato v2 de Netlify para que las lecturas strong de Blobs funcionen en producción
 - `6169aeb` Dominio dstar4.party en canonical, Open Graph, JSON-LD, sitemap y robots
 - `b116e0b` Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 
