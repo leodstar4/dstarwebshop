@@ -15,7 +15,7 @@ Parte de: [[Pruebas]]
 
 ## Conexiones
 
-- Importa: [[storage.js]], [[stock-store.js]], [[orders-store.js]], [[payment-service.js]], [[quotes.js]], [[products-data.js]], [[rate-limit.js]], [[pedidos.js (functions)]], [[seguimiento.js (functions)]], [[validate.js]], [[reconcile.js]], [[jobs.js]], [[mp-webhook.js]], [[mp-preference.js]]
+- Importa: [[storage.js]], [[stock-store.js]], [[orders-store.js]], [[payment-service.js]], [[quotes.js]], [[products-data.js]], [[rate-limit.js]], [[pedidos.js (handlers)]], [[seguimiento.js (handlers)]], [[validate.js]], [[reconcile.js]], [[jobs.js]], [[mp-webhook.js]], [[mp-preference.js]]
 - Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`)
 - Usa: [[Netlify]], [[Mercado Pago]], [[Skydropx]], [[Gmail SMTP]], [[Resend]]
 - Lee la variable: [[DSTAR_MEMORY_STORE]], [[MP_ACCESS_TOKEN]], [[MP_WEBHOOK_SECRET]], [[PANEL_PASSWORD]], [[URL_SITIO]]
@@ -47,4 +47,8 @@ Parte de: [[Pruebas]]
 - webhook de producción encola trabajo firmado sin ejecutar envíos en la petición
 - checkout excluye OXXO, reserva stock y reutiliza una sola preferencia
 - checkout rechaza CP cambiado sin contactar Mercado Pago
+
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 

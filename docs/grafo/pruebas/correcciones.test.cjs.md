@@ -40,3 +40,7 @@ Parte de: [[Pruebas]]
 - quien pierde la última pieza no deja un pedido para revisar
 - el inventario poda apartados vencidos y movimientos antiguos
 
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
+

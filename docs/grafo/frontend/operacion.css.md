@@ -13,3 +13,7 @@ Estilos mínimos (.ops) de seguimiento.html y privacidad.html.
 
 Parte de: [[Frontend]]
 
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
+

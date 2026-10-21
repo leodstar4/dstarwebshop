@@ -24,3 +24,7 @@ Parte de: [[Backend]]
 - `unpaid` (línea 34)
 - `reconcile` (línea 46)
 
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
+

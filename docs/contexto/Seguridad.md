@@ -16,18 +16,18 @@ Headers, CSP y redirects están en [[netlify.toml (dstar-store)]].
   | [[cotizar-envio.js]] | 20 |
   | [[mp-preference.js]] | 10 |
   | [[stock.js]] | 120 |
-  | [[pedidos.js (functions)]] | 120 |
+  | [[pedidos.js (handlers)]] | 120 |
   | [[admin-store.js]] | 100 |
-  | [[seguimiento.js (functions)]] | 60 |
+  | [[seguimiento.js (handlers)]] | 60 |
 
   Al pasarse responde 429 con `Retry-After`. La IP se guarda como hash sha256 en [[Netlify Blobs]] (store `limites`) con escritura condicional. Sin IP (llamadas internas o pruebas) no limita. Si el almacén falla, rechaza la petición 60 s; ya no hay respaldo en memoria. No se usó el rate limit nativo de [[Netlify]] porque el plan gratis permite 2 reglas y exige Functions v2.
 - **Almacén en memoria solo en pruebas.** [[storage.js]] usa memoria únicamente con [[DSTAR_MEMORY_STORE]], `NODE_ENV=test` y sin `NETLIFY`; nunca configurarlo en Netlify. Fuera de producción (deploy previews) los stores llevan un sufijo por deploy y no tocan los datos reales.
-- **Panel** ([[pedidos.html]], [[pedidos.js (js)]], [[pedidos.js (functions)]], [[admin-store.js]]):
+- **Panel** ([[pedidos.html]], [[pedidos.js (js)]], [[pedidos.js (handlers)]], [[admin-store.js]]):
   - `admin()` de [[http.js]] exige `Authorization: Bearer` igual a [[PANEL_PASSWORD]], comparado con `timingSafeEqual` sobre hashes. Responde 503 si la variable falta o tiene menos de 16 caracteres, 401 si no coincide y 403 si el origen no es el sitio.
   - Las acciones `refund` y `return` no existen: el servidor responde "Acción no permitida".
   - El listado no devuelve `trackingToken`, `fingerprint` ni el lock.
   - El navegador guarda la contraseña en sessionStorage (`dstar_panel`) y solo muestra enlaces de etiqueta y rastreo que empiezan con `https://`. El registro manual de una guía también exige URLs HTTPS.
-- **Seguimiento.** [[seguimiento.js (functions)]] solo acepta POST con un pedido `dstar_<uuid>` y un token de 64 hex (32 bytes aleatorios de [[mp-preference.js]]), comparado con `timingSafeEqual`; si no coincide responde 404. No devuelve domicilio ni etiqueta. El token va en el hash de la URL, que no llega al servidor ni a los logs.
+- **Seguimiento.** [[seguimiento.js (handlers)]] solo acepta POST con un pedido `dstar_<uuid>` y un token de 64 hex (32 bytes aleatorios de [[mp-preference.js]]), comparado con `timingSafeEqual`; si no coincide responde 404. No devuelve domicilio ni etiqueta. El token va en el hash de la URL, que no llega al servidor ni a los logs.
 - **Headers sin caché.** `/pedidos.html`, `/pedidos`, `/seguimiento.html` y `/seguimiento` llevan `Cache-Control: no-store` y `X-Robots-Tag: noindex, nofollow`; los dos de seguimiento, además, `Referrer-Policy: no-referrer`. Las respuestas de las funciones que usan `reply` de [[http.js]] van con `no-store`, y [[sw.js]] no intercepta `/pedidos` ni `/seguimiento`.
 - **Carrito.** Ya no se vacía por los parámetros de la URL de regreso, que no prueban el pago: [[gracias.js]] no toca `dstar_cart` y [[seguimiento.js (js)]] solo resta las piezas compradas después de que el servidor confirma el pago.
 - **Catálogo editable.** `cleanProduct` de [[catalog-store.js]] valida id, precio, tallas, peso y medidas y solo acepta fotos HTTPS de `res.cloudinary.com`.

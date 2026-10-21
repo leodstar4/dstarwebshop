@@ -1,13 +1,13 @@
 ---
 tags: [codigo, backend]
-ruta: "dstar-store/netlify/functions/seguimiento.js"
+ruta: "dstar-store/netlify/handlers/seguimiento.js"
 lineas: 17
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
-# seguimiento.js (functions)
+# seguimiento.js (handlers)
 
-`dstar-store/netlify/functions/seguimiento.js` · 17 líneas
+`dstar-store/netlify/handlers/seguimiento.js` · 17 líneas
 
 Función /api/seguimiento: POST con id dstar_<uuid> y token de 64 hex comparado con timingSafeEqual; devuelve pago, preparación, total, rastreo y artículos, sin domicilio ni etiqueta; 404 si no coincide; límite de 60 peticiones por IP cada 10 min.
 

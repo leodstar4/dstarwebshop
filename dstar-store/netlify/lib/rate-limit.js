@@ -13,7 +13,7 @@ async function limitar(event, nombre, max, ventanaSeg) {
       limited = n >= max;
       return { ventana, n: limited ? n : n + 1 };
     });
-  } catch { return 60; }
+  } catch (e) { console.error('rate-limit:', e.message); return 60; }
   return limited ? Math.max(1, Math.ceil((ventana + 1) * ventanaSeg - Date.now() / 1000)) : 0;
 }
 const demasiadas = retry => ({ statusCode: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': String(retry), 'Cache-Control': 'no-store' }, body: JSON.stringify({ error: 'Demasiados intentos o servicio temporalmente ocupado. Intenta más tarde.' }) });

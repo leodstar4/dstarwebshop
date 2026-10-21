@@ -5,7 +5,7 @@ test.beforeEach(() => { require(process.cwd() + '/netlify/lib/storage.js').reset
 import path from 'path';
 import crypto from 'crypto';
 
-const FN_DIR = path.resolve(process.cwd(), 'netlify/functions');
+const FN_DIR = path.resolve(process.cwd(), 'netlify/handlers');
 const WEBHOOK_SECRET = 'test-secret';
 
 const webhookEvent = (id, secret = WEBHOOK_SECRET) => {

@@ -28,6 +28,7 @@ Parte de: [[Backend]]
 
 ## Últimos cambios
 
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 - 2026-10-12 · `17c7774` · Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 - 2026-10-11 · `8d6aea5` · Seguridad: firma obligatoria y guía única en webhook MP, origen permitido en checkout, SRI en GSAP, CSP más estricta; lo
 - 2026-10-10 · `8b73af2` · Rediseño premium, seguridad de pagos, fluidez y PWA

@@ -1,13 +1,13 @@
 ---
 tags: [codigo, backend]
-ruta: "dstar-store/netlify/functions/admin-store.js"
+ruta: "dstar-store/netlify/handlers/admin-store.js"
 lineas: 32
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # admin-store.js
 
-`dstar-store/netlify/functions/admin-store.js` · 32 líneas
+`dstar-store/netlify/handlers/admin-store.js` · 32 líneas
 
 Función /api/admin-store del panel (PANEL_PASSWORD): GET devuelve catálogo, stock, libro de inventario, datos legales y qué servicios están configurados con la última conciliación; POST product (saveProduct), stock (ajustar con operationId y motivo) y settings; límite de 100 peticiones por IP cada 10 min.
 

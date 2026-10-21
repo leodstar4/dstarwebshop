@@ -19,3 +19,7 @@ Parte de: [[Páginas]]
 - Carga estilos: [[operacion.css]]
 - Enlaza a: [[index.html]]
 
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
+

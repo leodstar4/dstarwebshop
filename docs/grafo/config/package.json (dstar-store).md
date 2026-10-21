@@ -19,6 +19,7 @@ Parte de: [[Configuración]]
 
 ## Últimos cambios
 
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 - 2026-10-10 · `8b73af2` · Rediseño premium, seguridad de pagos, fluidez y PWA
 - 2026-06-16 · `c1431e1` · Checkout: a11y, validación, peso dinámico, tests E2E y micro-animaciones
 - 2026-06-07 · `89b8f32` · Checkout completo: envíos Skydropx Pro v2 + correo de confirmación

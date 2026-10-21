@@ -17,3 +17,7 @@ Parte de: [[Frontend]]
 
 - Llama a la API: [[datos-tienda.js]] (`/api/datos-tienda`)
 
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
+

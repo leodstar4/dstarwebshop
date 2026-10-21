@@ -75,14 +75,14 @@ for(const status of ['refunded','charged_back','cancelled','in_mediation']){
 }
 test('servidor rechaza refund y return: funciones excluidas',async()=>{
   await openStore({}).set('11',{pedido:{cliente:client,total:450},paymentStatus:'approved',stock:true});
-  const handler=require('../../netlify/functions/pedidos').handler;
+  const handler=require('../../netlify/handlers/pedidos').handler;
   for(const action of ['refund','return'])assert.equal((await handler(post({id:'11',action,confirmed:true,confirm:true,amount:1,items:[item],note:'test',operationId:crypto.randomUUID()}))).statusCode,400);
   assert.equal(stock.reponer,undefined);
 });
 test('seguimiento exige token y no expone domicilio ni etiqueta',async()=>{
   const id='dstar_'+crypto.randomUUID(),token=crypto.randomBytes(32).toString('hex');
   await openStore({}).set(id,{trackingToken:token,pedido:{cliente:client,total:450,items:[]},paymentStatus:'approved',guia:{label_url:'https://private.test/label'}});
-  const handler=require('../../netlify/functions/seguimiento').handler;
+  const handler=require('../../netlify/handlers/seguimiento').handler;
   assert.equal((await handler(post({id,token:'0'.repeat(64)}))).statusCode,404);
   const result=await handler(post({id,token}));assert.equal(result.statusCode,200);
   assert.ok(!result.body.includes(client.calle));assert.ok(!result.body.includes('label'));
@@ -139,7 +139,7 @@ test('webhook de producción encola trabajo firmado sin ejecutar envíos en la p
   global.fetch=async(url,options)=>{assert.match(String(url),/payment-jobs-background$/);assert.equal(JSON.parse(options.body).id,'12');count++;return new Response('',{status:202});};
   const ts=String(Date.now()),v1=crypto.createHmac('sha256',process.env.MP_WEBHOOK_SECRET).update('id:12;request-id:req;ts:'+ts+';').digest('hex');
   try {
-    const r=await require('../../netlify/functions/mp-webhook').handler({httpMethod:'POST',headers:{'x-request-id':'req','x-signature':'ts='+ts+',v1='+v1},body:JSON.stringify({type:'payment',data:{id:'12'}})});
+    const r=await require('../../netlify/handlers/mp-webhook').handler({httpMethod:'POST',headers:{'x-request-id':'req','x-signature':'ts='+ts+',v1='+v1},body:JSON.stringify({type:'payment',data:{id:'12'}})});
     assert.equal(r.statusCode,200);assert.equal(count,1);
   } finally {if(prev===undefined)delete process.env.CONTEXT;else process.env.CONTEXT=prev;}
 });
@@ -154,7 +154,7 @@ test('checkout excluye OXXO, reserva stock y reutiliza una sola preferencia',asy
     if(String(url).includes('/checkout/preferences')){sent=JSON.parse(options.body);count++;return Response.json({id:'pref',init_point:'https://www.mercadopago.com.mx/checkout/test'});}
     throw new Error('Unexpected URL');
   };
-  const handler=require('../../netlify/functions/mp-preference').handler;
+  const handler=require('../../netlify/handlers/mp-preference').handler;
   const data={checkout_id:crypto.randomUUID(),cliente:client,items:[item],quotation_id:'Q',rate_id:'R'};
   const first=await handler(post(data)),second=await handler(post(data));
   assert.equal(first.statusCode,200,first.body);assert.equal(second.statusCode,200,second.body);
@@ -165,7 +165,7 @@ test('checkout excluye OXXO, reserva stock y reutiliza una sola preferencia',asy
 });
 test('checkout rechaza CP cambiado sin contactar Mercado Pago',async()=>{
   await quotes.saveQuote({},{quotation_id:'Q',rates:[{rate_id:'R',price:100,currency:'MXN'}]},client,[item],{weight:0.5});
-  const result=await require('../../netlify/functions/mp-preference').handler(post({checkout_id:crypto.randomUUID(),cliente:{...client,cp:'99999'},items:[item],quotation_id:'Q',rate_id:'R'}));
+  const result=await require('../../netlify/handlers/mp-preference').handler(post({checkout_id:crypto.randomUUID(),cliente:{...client,cp:'99999'},items:[item],quotation_id:'Q',rate_id:'R'}));
   assert.equal(result.statusCode,400,result.body);
   assert.equal((await stock.leerStock({}))[item.id][item.size],1);
 });

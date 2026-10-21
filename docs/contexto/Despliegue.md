@@ -12,6 +12,8 @@ tags: [contexto]
   - Configurar [[PANEL_PASSWORD]] y [[MP_WEBHOOK_SECRET]].
   - Registrar el webhook en Mercado Pago.
   - Después del deploy, verificar los headers `no-store` y hacer una compra de prueba ([[Pendientes]]).
+- **Formato de funciones (v2):** cada función es un `netlify/functions/*.mjs` de tres líneas que envuelve el handler de `netlify/handlers/` con [[v2.js]]. Es obligatorio: con `exports.handler` (modo Lambda) `@netlify/blobs` no configura `uncachedEdgeURL` y toda lectura strong truena con `BlobsConsistencyError` (pasó en producción el 2026-10-20: `/api/catalogo` 503 y `/api/stock` 429). La lógica y los tests siguen usando `handler(event)`.
+- **Local:** `netlify dev` desde la raíz necesita `NODE_PATH=dstar-store/node_modules` para que las funciones v2 encuentren sus dependencias. El sandbox local de Blobs no devuelve `etag` al leer, así que las escrituras condicionales fallan solo en local; en producción sí funcionan.
 - **Funciones fuera de petición:**
   - [[reconcile-payments.js]] está programada cada 10 minutos (`[functions."reconcile-payments"] schedule`). Solo actúa con `CONTEXT=production` y, como las programadas tienen 30 s, encola el trabajo.
   - [[payment-jobs-background.js]] es una Background Function (sufijo `-background`): la llaman [[jobs.js]] desde el webhook y la conciliación, con [[URL_SITIO]] HTTPS.
@@ -31,7 +33,7 @@ tags: [contexto]
 - Si el cambio edita un script inline de cualquier HTML, correr [[csp-hashes.js]] (`node scripts/csp-hashes.js`) para actualizar `script-src`; si no, la CSP bloquea el script en producción ([[Seguridad]]).
 - Si el cambio agrega o cambia fotos de productos, correr [[calentar-cloudinary.js]] (`node scripts/calentar-cloudinary.js`) después de subirlas, para que los clientes no esperen a que [[Cloudinary]] genere cada tamaño (incluida la imagen para compartir).
 - **Variables de entorno:** [[Variables de entorno]].
-  - El panel necesita [[PANEL_PASSWORD]] (mínimo 16 caracteres); sin ella [[pedidos.js (functions)]] y [[admin-store.js]] responden 503.
+  - El panel necesita [[PANEL_PASSWORD]] (mínimo 16 caracteres); sin ella [[pedidos.js (handlers)]] y [[admin-store.js]] responden 503.
   - El correo usa [[Resend]] si están [[RESEND_API_KEY]] y [[MAIL_FROM]]; si no, SMTP propio (`SMTP_*`) o [[Gmail SMTP]].
   - Nunca configurar [[DSTAR_MEMORY_STORE]] en Netlify.
 

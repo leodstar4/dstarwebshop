@@ -25,3 +25,7 @@ Parte de: [[Backend]]
 - `photo` (línea 12)
 - `saveProduct` (línea 29)
 
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
+

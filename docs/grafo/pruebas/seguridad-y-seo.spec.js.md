@@ -15,7 +15,7 @@ Parte de: [[Pruebas]]
 
 ## Conexiones
 
-- Llama a la API: [[pedidos.js (functions)]] (`/api/pedidos`)
+- Llama a la API: [[pedidos.js (handlers)]] (`/api/pedidos`)
 - Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`), [[products-data.js]] (`DSTAR_PRODUCTS`)
 - Visita: [[index.html]], [[pedidos.html]]
 - Referencia a: [[producto.html]], [[terminos.html]], [[agradecimientos.html]], [[checkout.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[offline.html]], [[storage.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]], [[csp-hashes.js]], [[cotizar-envio.js]]
@@ -47,5 +47,7 @@ Parte de: [[Pruebas]]
 
 ## Últimos cambios
 
+- 2026-10-20 · `6169aeb` · Dominio dstar4.party en canonical, Open Graph, JSON-LD, sitemap y robots
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 - 2026-10-17 · `fc178da` · Auditoría: foto al compartir, 404 de marca, SEO, límite de peticiones, CSP sin inline, OXXO, panel de pedidos y accesibi
 

@@ -26,3 +26,7 @@ Parte de: [[Backend]]
 - `saveQuote` (línea 17)
 - `verifyQuote` (línea 23)
 
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
+

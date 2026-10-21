@@ -51,11 +51,11 @@ const DESC = {
   'dstar-store/js/blog-transitions.js': 'Animaciones de los artículos del blog: entrada del encabezado, título palabra por palabra con SplitText, reveal del contenido con IntersectionObserver y barra de progreso de lectura con ScrollTrigger cuando el navegador no soporta animation-timeline.',
   'dstar-store/sw.js': 'Service worker de la PWA: precache del shell (incluye js/loader.js), network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, /pedidos, /seguimiento, los .mp4 ni las peticiones con Range.',
   'dstar-store/manifest.webmanifest': 'Manifest de la PWA (nombre, íconos, colores).',
-  'dstar-store/netlify/functions/cotizar-envio.js': 'Función /api/cotizar-envio: exige CP, estado, ciudad y colonia, arma el paquete en servidor (parcel de quotes.js con el catálogo de catalog-store.js), cotiza con cotizar() de lib/skydropx.js y guarda la cotización ligada a destino y carrito (saveQuote, vence a los 15 min); límite de 20 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/mp-preference.js': 'Función /api/mp-preference: con el checkout_id del navegador (pedido dstar_<uuid>) valida cliente, catálogo, stock y cotización (verifyQuote y getRatePrice), aparta el stock 25 min (reservar), guarda el pedido con trackingToken en orders-store.js y crea la preferencia en modo binario sin ticket, cajero ni transferencia, que vence a los 15 min y regresa a seguimiento.html; reusa la preferencia vigente, permite reintentar si Mercado Pago falló y responde restart:true si la anterior venció; límite de 10 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/mp-webhook.js': 'Webhook de Mercado Pago: valida la firma (MP_WEBHOOK_SECRET) y en producción solo encola un trabajo firmado a payment-jobs-background.js con dispatch() de lib/jobs.js (fuera de producción llama a syncPayment directo); exporta crearGuiaSkydropx (marca notSent los errores previos al POST) y buildEmailHtml, que usa payment-service.js.',
-  'dstar-store/netlify/functions/stock.js': 'Función /api/stock: devuelve el stock disponible por producto y talla (leerStock sobre el catálogo de catalog-store.js, ya sin piezas apartadas); límite de 120 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/pedidos.js': 'Función del panel de pedidos (admin() de lib/http.js con PANEL_PASSWORD): GET lista los pedidos sin token ni lock; POST con acciones sync, note, fulfillment (pendiente/guía lista → preparado → enviado → entregado), cancel (solo pagos pendientes), address, retry_shipping (solo tras falla definitiva y con precio confirmado), attach_shipping y retry_mail; cualquier otra (refund, return) se rechaza; límite de 120 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/handlers/cotizar-envio.js': 'Función /api/cotizar-envio: exige CP, estado, ciudad y colonia, arma el paquete en servidor (parcel de quotes.js con el catálogo de catalog-store.js), cotiza con cotizar() de lib/skydropx.js y guarda la cotización ligada a destino y carrito (saveQuote, vence a los 15 min); límite de 20 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/handlers/mp-preference.js': 'Función /api/mp-preference: con el checkout_id del navegador (pedido dstar_<uuid>) valida cliente, catálogo, stock y cotización (verifyQuote y getRatePrice), aparta el stock 25 min (reservar), guarda el pedido con trackingToken en orders-store.js y crea la preferencia en modo binario sin ticket, cajero ni transferencia, que vence a los 15 min y regresa a seguimiento.html; reusa la preferencia vigente, permite reintentar si Mercado Pago falló y responde restart:true si la anterior venció; límite de 10 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/handlers/mp-webhook.js': 'Webhook de Mercado Pago: valida la firma (MP_WEBHOOK_SECRET) y en producción solo encola un trabajo firmado a payment-jobs-background.js con dispatch() de lib/jobs.js (fuera de producción llama a syncPayment directo); exporta crearGuiaSkydropx (marca notSent los errores previos al POST) y buildEmailHtml, que usa payment-service.js.',
+  'dstar-store/netlify/handlers/stock.js': 'Función /api/stock: devuelve el stock disponible por producto y talla (leerStock sobre el catálogo de catalog-store.js, ya sin piezas apartadas); límite de 120 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/handlers/pedidos.js': 'Función del panel de pedidos (admin() de lib/http.js con PANEL_PASSWORD): GET lista los pedidos sin token ni lock; POST con acciones sync, note, fulfillment (pendiente/guía lista → preparado → enviado → entregado), cancel (solo pagos pendientes), address, retry_shipping (solo tras falla definitiva y con precio confirmado), attach_shipping y retry_mail; cualquier otra (refund, return) se rechaza; límite de 120 peticiones por IP cada 10 min.',
   'dstar-store/netlify/edge-functions/producto-meta.js': 'Edge function en /producto.html y /producto: con ?id= busca la prenda activa en /api/catalogo (3 s; si falla usa products-data.js) y reescribe title, description, canonical y og:* con la foto vía Cloudinary (f_jpg,c_pad,b_auto,w_1200,h_630), y agrega product:price y JSON-LD Product.',
   'dstar-store/netlify/edge-functions/sitemap.js': 'Edge function /sitemap.xml: lista las páginas públicas (incluida privacidad.html) y cada producto activo de /api/catalogo, con products-data.js de respaldo.',
   'dstar-store/netlify/lib/orders-store.js': 'Pedidos en Netlify Blobs (store pedidos) sobre storage.js: get, set, update, list y claim/release, el lock con vencimiento que usan mp-preference.js y payment-service.js.',
@@ -79,14 +79,15 @@ const DESC = {
   'netlify.toml': 'Netlify raíz: solo fija base = dstar-store.',
   'dstar-store/package.json': 'Dependencias y scripts (dev, deploy, test y test:backend con node --test) del sitio.',
   'package.json': 'Dependencias de la raíz del repo (sharp para optimizar imágenes).',
-  'dstar-store/netlify/functions/admin-store.js': 'Función /api/admin-store del panel (PANEL_PASSWORD): GET devuelve catálogo, stock, libro de inventario, datos legales y qué servicios están configurados con la última conciliación; POST product (saveProduct), stock (ajustar con operationId y motivo) y settings; límite de 100 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/catalogo.js': 'Función /api/catalogo: catálogo activo de catalog-store.js con el stock vivo de stock-store.js; lo leen cart-store.js y las edge functions.',
-  'dstar-store/netlify/functions/datos-tienda.js': 'Función /api/datos-tienda: datos públicos del proveedor (legalName, address, phone, privacyEmail, contactEmail) guardados por admin-store.js; los muestra js/legal.js.',
-  'dstar-store/netlify/functions/seguimiento.js': 'Función /api/seguimiento: POST con id dstar_<uuid> y token de 64 hex comparado con timingSafeEqual; devuelve pago, preparación, total, rastreo y artículos, sin domicilio ni etiqueta; 404 si no coincide; límite de 60 peticiones por IP cada 10 min.',
-  'dstar-store/netlify/functions/reconcile-payments.js': 'Función programada cada 10 min (netlify.toml): solo en producción encola el trabajo reconcile con dispatch() de lib/jobs.js, porque las programadas tienen 30 s.',
-  'dstar-store/netlify/functions/payment-jobs-background.js': 'Background Function que ejecuta los trabajos firmados de lib/jobs.js: reconcile (reconcile.js; lanza error si quedaron pedidos con fallo para que se reintente) y payment (syncPayment de payment-service.js); 401 sin firma válida.',
+  'dstar-store/netlify/handlers/admin-store.js': 'Función /api/admin-store del panel (PANEL_PASSWORD): GET devuelve catálogo, stock, libro de inventario, datos legales y qué servicios están configurados con la última conciliación; POST product (saveProduct), stock (ajustar con operationId y motivo) y settings; límite de 100 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/handlers/catalogo.js': 'Función /api/catalogo: catálogo activo de catalog-store.js con el stock vivo de stock-store.js; lo leen cart-store.js y las edge functions.',
+  'dstar-store/netlify/handlers/datos-tienda.js': 'Función /api/datos-tienda: datos públicos del proveedor (legalName, address, phone, privacyEmail, contactEmail) guardados por admin-store.js; los muestra js/legal.js.',
+  'dstar-store/netlify/handlers/seguimiento.js': 'Función /api/seguimiento: POST con id dstar_<uuid> y token de 64 hex comparado con timingSafeEqual; devuelve pago, preparación, total, rastreo y artículos, sin domicilio ni etiqueta; 404 si no coincide; límite de 60 peticiones por IP cada 10 min.',
+  'dstar-store/netlify/handlers/reconcile-payments.js': 'Función programada cada 10 min (netlify.toml): solo en producción encola el trabajo reconcile con dispatch() de lib/jobs.js, porque las programadas tienen 30 s.',
+  'dstar-store/netlify/handlers/payment-jobs-background.js': 'Background Function que ejecuta los trabajos firmados de lib/jobs.js: reconcile (reconcile.js; lanza error si quedaron pedidos con fallo para que se reintente) y payment (syncPayment de payment-service.js); 401 sin firma válida.',
   'dstar-store/netlify/lib/payment-service.js': 'Núcleo de pagos: syncPayment consulta el pago en Mercado Pago bajo lock (locked), registra estado, monto y reembolsos, descuenta stock con descontar, detecta monto distinto, sobreventa, reversos y pagos duplicados y llama a fulfill (una sola guía; failed o uncertain y nunca recompra tras respuesta ambigua) y notify (correo de confirmación y de guía por mail.js, hasta 3 intentos por fase); los pedidos legacy (isLegacy) solo registran reversos posteriores.',
   'dstar-store/netlify/lib/reconcile.js': 'Conciliación: reconcile revisa hasta 20 pedidos activos por lote rotando el cursor (store operacion) con tope de 5 min; reconcileOrder sincroniza el pago conocido, busca otros intentos del mismo checkout por external_reference, vence apartados sin pago y despacha aprobados; ignora legacy, vencidos, entregados, reembolsados, cancelados, contracargos y enviados de más de 30 días salvo sincronización manual.',
+  'dstar-store/netlify/lib/v2.js': 'Adaptador de Netlify Functions v2: convierte Request en el event de los handlers y su respuesta en Response. Las funciones son netlify/functions/*.mjs y la lógica vive en netlify/handlers/; v2 es necesario porque las lecturas strong de Blobs no funcionan con exports.handler.',
   'dstar-store/netlify/lib/storage.js': 'Acceso a Netlify Blobs con lectura fuerte y escritura condicional por etag (update reintenta hasta 12 veces y si no da 409); stores con sufijo por deploy fuera de producción; memoria solo con DSTAR_MEMORY_STORE y NODE_ENV=test sin NETLIFY.',
   'dstar-store/netlify/lib/jobs.js': 'Trabajos internos: dispatch firma con HMAC de MP_WEBHOOK_SECRET y manda el trabajo a payment-jobs-background.js en URL_SITIO; authorized exige firma válida y de menos de 5 min.',
   'dstar-store/netlify/lib/mail.js': 'Envío de correo: Resend si hay RESEND_API_KEY y MAIL_FROM (con Idempotency-Key); si no, nodemailer por SMTP_* o Gmail (GMAIL_USER, GMAIL_APP_PASSWORD) con Message-ID estable.',
@@ -146,7 +147,7 @@ const CATS = {
 };
 
 function categoria(rel) {
-  if (/^dstar-store\/netlify\/(functions|lib|edge-functions)\//.test(rel)) return 'backend';
+  if (/^dstar-store\/netlify\/(handlers|lib|edge-functions)\//.test(rel)) return 'backend';
   if (/^dstar-store\/tests\//.test(rel) || /playwright\.config/.test(rel)) return 'pruebas';
   if (rel.endsWith('.html')) return 'paginas';
   if (/^dstar-store\/js\//.test(rel) || rel.endsWith('.css') || rel === 'dstar-store/sw.js') return 'frontend';
@@ -162,7 +163,7 @@ function walk(dir) {
       walk(posix(path.join(dir, e.name)));
     } else {
       const rel = posix(path.join(dir, e.name));
-      if (SKIP_FILES.has(e.name) || e.name.includes('.min.')) continue;
+      if (SKIP_FILES.has(e.name) || e.name.includes('.min.') || /^dstar-store\/netlify\/functions\/.*\.mjs$/.test(rel)) continue;
       if (!EXTS.has(path.extname(e.name))) continue;
       const content = read(rel);
       files.push({ rel, ext: path.extname(e.name), content, lines: content.split('\n').length, cat: categoria(rel) });
@@ -269,7 +270,7 @@ for (const f of files) {
 
   if (isCode) {
     for (const m of c.matchAll(/\/(?:api|\.netlify\/functions)\/([a-z0-9-]+)/g)) {
-      const t = byRel.get(`${SITE}/netlify/functions/${m[1]}.js`);
+      const t = byRel.get(`${SITE}/netlify/handlers/${m[1]}.js`);
       if (t) edge(f.name, t.name, 'api', `/api/${m[1]}`);
     }
     for (const m of c.matchAll(/\.(DSTAR_[A-Z0-9_]+)/g)) {

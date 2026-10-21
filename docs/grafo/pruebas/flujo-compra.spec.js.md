@@ -53,9 +53,9 @@ Parte de: [[Pruebas]]
 
 ## Últimos cambios
 
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 - 2026-10-17 · `836ac92` · Galería de producto: lightbox premium en desktop y móvil, placeholders borrosos y fotos que ya no quedan rotas en caché
 - 2026-10-10 · `4a93fdf` · Página de producto rápida y sin saltos, transición ligera con precarga, logo 3D gira en loader y sin pausas
 - 2026-10-10 · `8b73af2` · Rediseño premium, seguridad de pagos, fluidez y PWA
 - 2026-06-19 · `fd99f34` · Checkout: cobrar el envío junto con la prenda en el mismo pago
-- 2026-06-16 · `c1431e1` · Checkout: a11y, validación, peso dinámico, tests E2E y micro-animaciones
 

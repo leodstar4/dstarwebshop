@@ -1,4 +1,5 @@
 // Strong reads + conditional writes. Memory is explicit and test-only.
+const { connectLambda, getStore } = require('@netlify/blobs');
 const stores = new Map();
 const clone = v => v == null ? null : JSON.parse(JSON.stringify(v));
 function open(name, event) {
@@ -16,7 +17,6 @@ function open(name, event) {
       list: async () => [...m].map(([id, v]) => ({ ...clone(v.data), id }))
     };
   }
-  const { connectLambda, getStore } = require('@netlify/blobs');
   if (event?.blobs) connectLambda(event);
   const suffix = process.env.CONTEXT && process.env.CONTEXT !== 'production' && process.env.NETLIFY_DEV !== 'true'
     ? '-' + (process.env.DEPLOY_ID || process.env.CONTEXT) : '';
@@ -39,6 +39,7 @@ function open(name, event) {
 async function update(store, key, fn) {
   for (let i = 0; i < 12; i++) {
     const old = await store.read(key);
+    if (old && !old.etag) throw new Error('El almacén no devolvió etag; no se puede escribir con seguridad');
     const result = fn(clone(old?.data));
     if (result === undefined) return old?.data || null;
     if (await store.write(key, result, old?.etag)) return result;

@@ -102,7 +102,7 @@ async function fulfill(event, id, store = openStore(event), retry = false) {
   if (!p.guia && !p.tracking && (!p.shippingState || retry && p.shippingState === 'failed')) {
     await store.update(id, v => ({ ...v, shippingState: 'creating', status: 'processing' }));
     try {
-      const { crearGuiaSkydropx } = require('../functions/mp-webhook');
+      const { crearGuiaSkydropx } = require('../handlers/mp-webhook');
       const g = await crearGuiaSkydropx({ cliente: p.pedido.cliente, rate_id: p.shipping.rate_id, parcel: p.shipping.parcel, total: p.pedido.total });
       const ready = Boolean(g.label_url && g.tracking_number);
       await store.update(id, v => ({ ...v, guia: g, tracking: g.tracking_number, shippingState: ready ? 'ready' : 'incomplete', revisar: !ready, issue: ready ? '' : 'shipping_incomplete', status: ready ? 'done' : 'review', fulfillment: ready ? 'ready' : 'pending' }));
@@ -122,7 +122,7 @@ async function fulfill(event, id, store = openStore(event), retry = false) {
 async function notify(event, id, store = openStore(event), force = false) {
   const p = await store.get(id);
   if (isLegacy(p)) return;
-  const { buildEmailHtml } = require('../functions/mp-webhook');
+  const { buildEmailHtml } = require('../handlers/mp-webhook');
   for (const recipient of ['customer', 'store']) {
     const last = p.mail?.[recipient], phase = p.shippingState === 'ready' ? 'guide' : 'confirmation';
     if (!force && last?.phase === phase && (last.status === 'sent' || last.tries >= 3)) continue;

@@ -15,7 +15,7 @@ Parte de: [[Pruebas]]
 
 ## Conexiones
 
-- Llama a la API: [[pedidos.js (functions)]] (`/api/pedidos`), [[admin-store.js]] (`/api/admin-store`), [[seguimiento.js (functions)]] (`/api/seguimiento`), [[catalogo.js]] (`/api/catalogo`), [[datos-tienda.js]] (`/api/datos-tienda`)
+- Llama a la API: [[pedidos.js (handlers)]] (`/api/pedidos`), [[admin-store.js]] (`/api/admin-store`), [[seguimiento.js (handlers)]] (`/api/seguimiento`), [[catalogo.js]] (`/api/catalogo`), [[datos-tienda.js]] (`/api/datos-tienda`)
 - Visita: [[pedidos.html]], [[seguimiento.html]], [[producto.html]], [[checkout.html]], [[privacidad.html]]
 - Usa: [[Playwright]], [[Netlify]], [[Cloudinary]]
 
@@ -25,4 +25,8 @@ Parte de: [[Pruebas]]
 - seguimiento usa servidor y descuenta solo piezas compradas una vez
 - catálogo remoto puede mostrar una nueva pieza sin perder su carrito
 - privacidad muestra datos públicos desde configuración
+
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 

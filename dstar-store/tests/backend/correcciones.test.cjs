@@ -96,7 +96,7 @@ test('reintento tras falla de Mercado Pago crea la preferencia sin quedar bloque
     if(String(url).includes('/checkout/preferences')){calls++;return calls===1?new Response('{}',{status:502}):Response.json({id:'pref',init_point:'https://www.mercadopago.com.mx/checkout/test'});}
     throw new Error('Unexpected URL');
   };
-  const handler=require('../../netlify/functions/mp-preference').handler;
+  const handler=require('../../netlify/handlers/mp-preference').handler;
   const data={checkout_id:crypto.randomUUID(),cliente:client,items:[item],quotation_id:'Q',rate_id:'R'};
   assert.equal((await handler(post(data))).statusCode,503);
   const first=await openStore({}).get('dstar_'+data.checkout_id);
@@ -109,7 +109,7 @@ test('reintento tras falla de Mercado Pago crea la preferencia sin quedar bloque
 test('preferencia vencida pide reiniciar el pago',async()=>{
   const id=crypto.randomUUID();
   await openStore({}).set('dstar_'+id,{preferenceState:'ready',preference:{init_point:'https://www.mercadopago.com.mx/x'},expiresAt:Date.now()-1,pedido:{total:450}});
-  const result=await require('../../netlify/functions/mp-preference').handler(post({checkout_id:id,cliente:client,items:[item],quotation_id:'Q',rate_id:'R'}));
+  const result=await require('../../netlify/handlers/mp-preference').handler(post({checkout_id:id,cliente:client,items:[item],quotation_id:'Q',rate_id:'R'}));
   assert.equal(result.statusCode,409);assert.equal(JSON.parse(result.body).restart,true);
 });
 test('quien pierde la última pieza no deja un pedido para revisar',async()=>{
@@ -121,7 +121,7 @@ test('quien pierde la última pieza no deja un pedido para revisar',async()=>{
     throw new Error('Unexpected URL');
   };
   const id=crypto.randomUUID();
-  const result=await require('../../netlify/functions/mp-preference').handler(post({checkout_id:id,cliente:client,items:[item],quotation_id:'Q',rate_id:'R'}));
+  const result=await require('../../netlify/handlers/mp-preference').handler(post({checkout_id:id,cliente:client,items:[item],quotation_id:'Q',rate_id:'R'}));
   assert.equal(result.statusCode,409,result.body);
   const p=await openStore({}).get('dstar_'+id);
   assert.ok(!p?.pedido);assert.ok(!p?.revisar);

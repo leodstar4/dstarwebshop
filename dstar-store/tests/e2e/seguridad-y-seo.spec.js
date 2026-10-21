@@ -128,7 +128,7 @@ test.describe('Edge functions y límites (sin red)', () => {
 
   test('cotizar-envio responde 429 cuando una misma IP abusa', async () => {
     process.env.URL = 'https://dstar4.party';
-    const { handler } = require('./netlify/functions/cotizar-envio.js');
+    const { handler } = require('./netlify/handlers/cotizar-envio.js');
     const event = { httpMethod: 'POST', headers: { 'x-nf-client-connection-ip': '203.0.113.9' }, body: '{}' };
     const codigos = [];
     for (let i = 0; i < 21; i++) codigos.push((await handler(event)).statusCode);
@@ -181,7 +181,7 @@ test.describe('Panel de pedidos', () => {
 
   test('la función exige PANEL_PASSWORD y la contraseña correcta', async () => {
     test.skip(test.info().project.name !== 'Desktop', 'solo una vez');
-    const { handler } = require('./netlify/functions/pedidos.js');
+    const { handler } = require('./netlify/handlers/pedidos.js');
     const ev = (auth) => ({ httpMethod: 'GET', headers: auth ? { authorization: `Bearer ${auth}` } : {} });
     delete process.env.PANEL_PASSWORD;
     expect((await handler(ev('x'))).statusCode).toBe(503);

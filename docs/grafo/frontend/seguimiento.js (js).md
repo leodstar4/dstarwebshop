@@ -15,11 +15,15 @@ Parte de: [[Frontend]]
 
 ## Conexiones
 
-- Llama a la API: [[seguimiento.js (functions)]] (`/api/seguimiento`)
+- Llama a la API: [[seguimiento.js (handlers)]] (`/api/seguimiento`)
 
 ## Funciones y clases
 
 - `money` (línea 7)
 - `row` (línea 8)
 - `refresh` (línea 9)
+
+## Últimos cambios
+
+- 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 
