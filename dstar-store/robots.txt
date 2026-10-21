@@ -2,4 +2,4 @@ User-agent: *
 Disallow: /api/
 Disallow: /.netlify/
 
-Sitemap: https://dstarshop.netlify.app/sitemap.xml
+Sitemap: https://dstar4.party/sitemap.xml

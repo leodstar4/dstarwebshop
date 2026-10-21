@@ -105,15 +105,15 @@ test.describe('Edge functions y límites (sin red)', () => {
     const originalFetch = global.fetch;
     global.fetch = async () => Response.json({ products: globalThis.DSTAR_PRODUCTS });
     try {
-    const res = await edge(new Request(`https://dstarshop.netlify.app${PRODUCT_URL}`), context);
+    const res = await edge(new Request(`https://dstar4.party${PRODUCT_URL}`), context);
     const out = await res.text();
     expect(out).toContain('<title>BORN TO SHINE — DSTAR</title>');
-    expect(out).toContain(`<link rel="canonical" href="https://dstarshop.netlify.app${PRODUCT_URL}">`);
+    expect(out).toContain(`<link rel="canonical" href="https://dstar4.party${PRODUCT_URL}">`);
     expect(out).toMatch(/<meta property="og:image" content="https:\/\/res\.cloudinary\.com\/[^"]*f_jpg[^"]*borntoshinedosvistas/);
     expect(out).toContain('<meta property="product:price:amount" content="450">');
     expect(out).toContain('"@type":"Product"');
 
-    const otro = await edge(new Request('https://dstarshop.netlify.app/producto.html?id=no-existe'), context);
+    const otro = await edge(new Request('https://dstar4.party/producto.html?id=no-existe'), context);
     expect(await otro.text()).toBe(html);
     } finally { global.fetch = originalFetch; }
   });
@@ -122,12 +122,12 @@ test.describe('Edge functions y límites (sin red)', () => {
     const edge = await cargarEdge('sitemap.js');
     const xml = await (await edge()).text();
     for (const p of globalThis.DSTAR_PRODUCTS) expect(xml).toContain(`producto.html?id=${p.id}</loc>`);
-    expect(xml).toContain('<loc>https://dstarshop.netlify.app/</loc>');
+    expect(xml).toContain('<loc>https://dstar4.party/</loc>');
     expect(xml).not.toContain('checkout');
   });
 
   test('cotizar-envio responde 429 cuando una misma IP abusa', async () => {
-    process.env.URL = 'https://dstarshop.netlify.app';
+    process.env.URL = 'https://dstar4.party';
     const { handler } = require('./netlify/functions/cotizar-envio.js');
     const event = { httpMethod: 'POST', headers: { 'x-nf-client-connection-ip': '203.0.113.9' }, body: '{}' };
     const codigos = [];

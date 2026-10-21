@@ -1,6 +1,6 @@
 import '../../js/products-data.js';
 
-const SITE = 'https://dstarshop.netlify.app';
+const SITE = 'https://dstar4.party';
 const PAGES = [
   '/',
   '/terminos.html',

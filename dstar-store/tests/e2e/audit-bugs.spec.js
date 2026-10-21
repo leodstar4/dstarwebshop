@@ -317,14 +317,14 @@ test.describe('AUDIT — Netlify Functions (handler directo, fetch stub, sin red
   test('cotizar-envio y mp-preference rechazan peticiones de otros sitios', async () => {
     const realFetch = global.fetch;
     global.fetch = async () => { throw new Error('red no permitida'); };
-    process.env.URL = 'https://dstarshop.netlify.app';
+    process.env.URL = 'https://dstar4.party';
     try {
       const preference = require(path.join(FN_DIR, 'mp-preference.js')).handler;
       const cotizar = require(path.join(FN_DIR, 'cotizar-envio.js')).handler;
-      const ajeno = { httpMethod: 'POST', headers: { origin: 'https://evil.example', host: 'dstarshop.netlify.app' }, body: '{}' };
+      const ajeno = { httpMethod: 'POST', headers: { origin: 'https://evil.example', host: 'dstar4.party' }, body: '{}' };
       expect((await preference(ajeno)).statusCode).toBe(403);
       expect((await cotizar(ajeno)).statusCode).toBe(403);
-      const propio = { ...ajeno, headers: { origin: 'https://dstarshop.netlify.app', host: 'dstarshop.netlify.app' } };
+      const propio = { ...ajeno, headers: { origin: 'https://dstar4.party', host: 'dstar4.party' } };
       expect((await preference(propio)).statusCode).toBe(400);
       expect((await cotizar(propio)).statusCode).toBe(400);
     } finally {

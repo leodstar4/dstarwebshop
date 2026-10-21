@@ -1,6 +1,6 @@
 import '../../js/products-data.js';
 
-const SITE = 'https://dstarshop.netlify.app';
+const SITE = 'https://dstar4.party';
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const ogImage = (src) => src.replace('/image/upload/', '/image/upload/f_jpg,q_auto,c_pad,b_auto,w_1200,h_630/');
