@@ -1,24 +1,24 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/index.html"
-lineas: 319
+lineas: 333
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # index.html
 
-`dstar-store/index.html` · 319 líneas
+`dstar-store/index.html` · 333 líneas
 
-Página principal ("DSTAR — Streetwear exclusivo hecho en México"): canonical, og:*, twitter:card y JSON-LD Organization con el Instagram; loader que maneja js/loader.js (video del logo, worker de logo-3d-worker.js y activación de mainCss y fontsCss); solo quedan dos scripts inline (speculationrules y css-pending) permitidos por hash en la CSP; dentro de `<main>`: hero con logo 3D, drops (grid de productos), lookbook, about, blog, FAQ y contacto.
+Página principal ("DSTAR — Streetwear exclusivo hecho en México"): canonical, og:*, twitter:card y JSON-LD Organization con el Instagram; loader que maneja js/loader.js (video del logo, worker de logo-3d-worker.js y activación de mainCss y fontsCss); solo quedan dos scripts inline (speculationrules y css-pending) permitidos por hash en la CSP; dentro de `<main>`: hero con logo 3D, drops (grid de productos y, al final, el formulario #dropAlert de la lista del próximo drop), lookbook, about, blog, FAQ y contacto; carga js/metricas.js.
 
 Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[loader.js]], [[logo-3d.js]], [[products-data.js]], [[cart-store.js]], [[app.js]], [[gsap-animations.js]], [[blog-transitions.js]]
+- Carga script: [[loader.js]], [[logo-3d.js]], [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[app.js]], [[gsap-animations.js]], [[blog-transitions.js]]
 - Carga estilos: [[style.css]]
 - Carga manifest: [[manifest.webmanifest]]
-- Enlaza a: [[agradecimientos.html]], [[terminos.html]], [[privacidad.html]]
+- Enlaza a: [[agradecimientos.html]], [[privacidad.html]], [[terminos.html]]
 - Referencia a: [[producto.html]]
 - Usa: [[Cloudinary]], [[GSAP]], [[Google Fonts]]
 

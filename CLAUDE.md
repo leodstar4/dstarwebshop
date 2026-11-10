@@ -2,9 +2,9 @@
 
 ## Stack
 - Vanilla HTML/CSS/JS (sin frameworks)
-- Netlify Functions (Node.js 18) para backend serverless
+- Netlify Functions v2 (Node.js 22) para backend serverless
 - Cloudinary para imágenes optimizadas
-- GSAP 3 (ScrollTrigger, SplitText) para animaciones
+- GSAP 3 (SplitText) servido desde `js/vendor/`, más WAAPI e IntersectionObserver para revelados
 - Mercado Pago + Skydropx para pagos y envíos
 
 ## Reglas de estilo y calidad
@@ -25,11 +25,12 @@
 - font-display: swap en todas las fuentes
 
 ## Comandos
+Se corren dentro de `dstar-store/`. El sitio es estático: no hay paso de build.
 - `npm run dev` — Inicia servidor local con Netlify CLI
-- `npm run build` — Build con Vite
 - `npm run deploy` — Deploy a producción
 - `npm test` — Ejecuta Playwright tests
-- `npm run lh` — Ejecuta Lighthouse
+- `npm run test:backend` — Ejecuta las pruebas de backend con `node --test`
+- `node tests/perf/diagnostico.js` — Mide fluidez y escribe reportes en `tests/perf/reportes`
 
 ## Testing
 - Playwright para E2E

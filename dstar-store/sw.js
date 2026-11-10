@@ -1,4 +1,4 @@
-const VERSION = 'dstar-v13';
+const VERSION = 'dstar-v15';
 const SHELL = `${VERSION}-shell`;
 const IMAGES = `${VERSION}-img`;
 const MAX_IMAGES = 80;
@@ -9,6 +9,7 @@ const PRECACHE = [
   '/offline.html',
   '/css/style.css',
   '/js/products-data.js',
+  '/js/metricas.js',
   '/js/cart-store.js',
   '/js/app.js',
   '/js/loader.js',

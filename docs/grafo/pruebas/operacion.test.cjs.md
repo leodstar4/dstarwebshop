@@ -16,7 +16,7 @@ Parte de: [[Pruebas]]
 ## Conexiones
 
 - Importa: [[storage.js]], [[stock-store.js]], [[orders-store.js]], [[payment-service.js]], [[quotes.js]], [[products-data.js]], [[rate-limit.js]], [[pedidos.js (handlers)]], [[seguimiento.js (handlers)]], [[validate.js]], [[reconcile.js]], [[jobs.js]], [[mp-webhook.js]], [[mp-preference.js]]
-- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`)
+- Usa la global: [[avisos-analitica.test.cjs]] (`DSTAR_MEMORY_STORE`)
 - Usa: [[Netlify]], [[Mercado Pago]], [[Skydropx]], [[Gmail SMTP]], [[Resend]]
 - Lee la variable: [[DSTAR_MEMORY_STORE]], [[MP_ACCESS_TOKEN]], [[MP_WEBHOOK_SECRET]], [[PANEL_PASSWORD]], [[URL_SITIO]]
 

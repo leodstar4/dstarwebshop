@@ -15,6 +15,7 @@ Relacionada con: [[Netlify Blobs]]
 ## Leída en
 
 - [[storage.js]]
+- [[avisos-analitica.test.cjs]]
 - [[correcciones.test.cjs]]
 - [[operacion.test.cjs]]
 - [[audit-bugs.spec.js]]

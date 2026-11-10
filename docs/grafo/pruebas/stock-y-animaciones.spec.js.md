@@ -15,7 +15,7 @@ Parte de: [[Pruebas]]
 
 ## Conexiones
 
-- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`)
+- Usa la global: [[avisos-analitica.test.cjs]] (`DSTAR_MEMORY_STORE`)
 - Visita: [[index.html]], [[checkout.html]], [[terminos.html]]
 - Referencia a: [[storage.js]]
 - Usa: [[Playwright]], [[Mercado Pago]], [[Skydropx]], [[Gmail SMTP]], [[GSAP]]

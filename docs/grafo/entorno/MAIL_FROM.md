@@ -16,5 +16,6 @@ Relacionada con: [[Resend]]
 
 - [[admin-store.js]]
 - [[mail.js]]
+- [[avisos-analitica.test.cjs]]
 - [[correcciones.test.cjs]]
 

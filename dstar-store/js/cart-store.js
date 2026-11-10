@@ -1,12 +1,32 @@
 (function (root) {
   const KEY = 'dstar_cart';
+  const CATALOG_KEY = 'dstar_catalog';
+  if (!root.DSTAR_PRODUCTS) root.DSTAR_PRODUCTS = [];
+  const validCatalog = (list) => Array.isArray(list) && list.every((p) => p && typeof p.id === 'string' && Array.isArray(p.sizes));
+  const replaceCatalog = (list) => root.DSTAR_PRODUCTS.splice(0, root.DSTAR_PRODUCTS.length, ...list);
+  try {
+    const cached = JSON.parse(localStorage.getItem(CATALOG_KEY));
+    if (validCatalog(cached?.products) && cached.products.length) replaceCatalog(cached.products);
+  } catch {}
+
+  let confirmed = false;
   const controller = typeof AbortController === 'function' ? new AbortController() : null;
   if (controller) setTimeout(() => controller.abort(), 5000);
-  root.DSTAR_CATALOG_READY = Promise.resolve()
+  const remote = Promise.resolve()
     .then(() => fetch('/api/catalogo', { cache: 'no-store', signal: controller ? controller.signal : undefined }))
-    .then(r => r.ok ? r.json() : null).then(data => {
-      if (Array.isArray(data?.products)) root.DSTAR_PRODUCTS.splice(0, root.DSTAR_PRODUCTS.length, ...data.products);
-    }).catch(() => {});
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!validCatalog(data?.products)) return;
+      confirmed = true;
+      try {
+        localStorage.setItem(CATALOG_KEY, JSON.stringify({ at: Date.now(), products: data.products }));
+      } catch {}
+      if (JSON.stringify(data.products) === JSON.stringify(root.DSTAR_PRODUCTS)) return;
+      replaceCatalog(data.products);
+      root.dispatchEvent(new CustomEvent('dstar:catalog'));
+    })
+    .catch(() => {});
+  root.DSTAR_CATALOG_READY = Promise.race([remote, new Promise((resolve) => setTimeout(resolve, 5000))]);
 
   function catalog() {
     return root.DSTAR_PRODUCTS || [];
@@ -47,8 +67,16 @@
   }
 
   function save(cart) {
+    let next = cart;
+    if (!confirmed) {
+      try {
+        const raw = JSON.parse(localStorage.getItem(KEY));
+        const known = new Set(catalog().map((p) => p.id));
+        if (Array.isArray(raw)) next = cart.concat(raw.filter((i) => i && typeof i.id === 'string' && !known.has(i.id)));
+      } catch {}
+    }
     try {
-      localStorage.setItem(KEY, JSON.stringify(cart));
+      localStorage.setItem(KEY, JSON.stringify(next));
     } catch {}
   }
 

@@ -19,7 +19,7 @@ Parte de: [[DSTAR]]
 - [[Lighthouse]] — herramienta. Auditoría de rendimiento, accesibilidad y SEO (Lighthouse CI).
 - [[Mercado Pago]] — servicio. Pasarela de pago: preferencias de checkout, webhooks de pago y firma de notificaciones.
 - [[Netlify]] — servicio. Hosting, CDN y Netlify Functions del sitio. Headers y redirects viven en netlify.toml.
-- [[Netlify Blobs]] — servicio. Almacén clave-valor de Netlify, con lectura fuerte y escritura condicional desde netlify/lib/storage.js: pedidos, inventario (stock/vendidas), catálogo y datos de la tienda (catalogo), cotizaciones, límites de peticiones (limites) y cursor de la conciliación (operacion).
+- [[Netlify Blobs]] — servicio. Almacén clave-valor de Netlify, con lectura fuerte y escritura condicional desde netlify/lib/storage.js: pedidos, inventario (stock/vendidas), catálogo y datos de la tienda (catalogo), cotizaciones, límites de peticiones (limites), cursor de la conciliación (operacion), analítica agregada (analitica) y avisos por correo (avisos).
 - [[Netlify CLI]] — herramienta. netlify dev (puerto 8888) y deploy a producción.
 - [[node-fetch]] — librería. fetch para Node (las funciones usan el fetch global de Node 22).
 - [[Playwright]] — herramienta. Pruebas E2E y mediciones de rendimiento en desktop, tablet y móvil.

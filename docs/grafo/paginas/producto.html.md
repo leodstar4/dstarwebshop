@@ -1,25 +1,25 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/producto.html"
-lineas: 240
+lineas: 256
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # producto.html
 
-`dstar-store/producto.html` · 240 líneas
+`dstar-store/producto.html` · 256 líneas
 
-Detalle de producto: galería, selector de talla y botón de compra, con un solo `<dialog class="pd-lightbox">` (#pdLightbox) para móvil y desktop que llena app.js; precarga desde el `<head>` la primera foto en AVIF con un script inline permitido por hash, y sus title, canonical y og:* genéricos los reescribe por prenda la edge function producto-meta.js.
+Detalle de producto: galería, selector de talla y botón de compra, con el formulario #pdAlert (avísame si vuelve una talla agotada, oculto si no hay tallas agotadas) bajo el botón y un solo `<dialog class="pd-lightbox">` (#pdLightbox) para móvil y desktop, que llena app.js; precarga desde el `<head>` la primera foto en AVIF con un script inline permitido por hash, carga js/metricas.js, y sus title, canonical y og:* genéricos los reescribe por prenda la edge function producto-meta.js.
 
 Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[products-data.js]], [[cart-store.js]], [[app.js]], [[gsap-animations.js]], [[blog-transitions.js]]
+- Carga script: [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[app.js]], [[gsap-animations.js]], [[blog-transitions.js]]
 - Carga estilos: [[style.css]]
 - Carga manifest: [[manifest.webmanifest]]
-- Enlaza a: [[index.html]], [[terminos.html]], [[privacidad.html]]
-- Usa la global: [[products-data.js]] (`DSTAR_PRODUCTS`)
+- Enlaza a: [[index.html]], [[privacidad.html]], [[terminos.html]]
+- Usa la global: [[cart-store.js]] (`DSTAR_PRODUCTS`)
 - Usa: [[Cloudinary]], [[GSAP]], [[Google Fonts]]
 
 ## Últimos cambios

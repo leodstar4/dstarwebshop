@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/agradecimientos.html"
-lineas: 271
+lineas: 272
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # agradecimientos.html
 
-`dstar-store/agradecimientos.html` · 271 líneas
+`dstar-store/agradecimientos.html` · 272 líneas
 
 Página de agradecimientos, con canonical y og:*.
 
@@ -15,7 +15,7 @@ Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[products-data.js]], [[cart-store.js]], [[app.js]]
+- Carga script: [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[app.js]]
 - Carga estilos: [[style.css]]
 - Carga manifest: [[manifest.webmanifest]]
 - Enlaza a: [[index.html]], [[terminos.html]], [[privacidad.html]]

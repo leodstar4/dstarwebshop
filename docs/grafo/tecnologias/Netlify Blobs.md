@@ -6,7 +6,7 @@ tipo: "servicio"
 
 # Netlify Blobs
 
-Almacén clave-valor de Netlify, con lectura fuerte y escritura condicional desde netlify/lib/storage.js: pedidos, inventario (stock/vendidas), catálogo y datos de la tienda (catalogo), cotizaciones, límites de peticiones (limites) y cursor de la conciliación (operacion).
+Almacén clave-valor de Netlify, con lectura fuerte y escritura condicional desde netlify/lib/storage.js: pedidos, inventario (stock/vendidas), catálogo y datos de la tienda (catalogo), cotizaciones, límites de peticiones (limites), cursor de la conciliación (operacion), analítica agregada (analitica) y avisos por correo (avisos).
 
 Paquete npm: `@netlify/blobs`
 

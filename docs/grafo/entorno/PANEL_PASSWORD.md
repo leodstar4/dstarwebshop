@@ -15,6 +15,7 @@ Relacionada con: [[Netlify]]
 ## Leída en
 
 - [[http.js]]
+- [[avisos-analitica.test.cjs]]
 - [[correcciones.test.cjs]]
 - [[operacion.test.cjs]]
 - [[seguridad-y-seo.spec.js]]

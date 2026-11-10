@@ -16,13 +16,15 @@ Headers, CSP y redirects están en [[netlify.toml (dstar-store)]].
   | [[cotizar-envio.js]] | 20 |
   | [[mp-preference.js]] | 10 |
   | [[stock.js]] | 120 |
-  | [[pedidos.js (handlers)]] | 120 |
+  | [[pedidos.js (handlers)]], [[analitica.js]] y [[avisos.js (handlers)]] (límite `panel` compartido) | 120 |
   | [[admin-store.js]] | 100 |
   | [[seguimiento.js (handlers)]] | 60 |
+  | [[avisame.js]] | 10 |
+  | [[evento.js]] | 300 |
 
-  Al pasarse responde 429 con `Retry-After`. La IP se guarda como hash sha256 en [[Netlify Blobs]] (store `limites`) con escritura condicional. Sin IP (llamadas internas o pruebas) no limita. Si el almacén falla, rechaza la petición 60 s; ya no hay respaldo en memoria. No se usó el rate limit nativo de [[Netlify]] porque el plan gratis permite 2 reglas y exige Functions v2.
+  Al pasarse responde 429 con `Retry-After`, salvo [[evento.js]], que siempre responde 204 y solo deja de registrar. La IP se guarda como hash sha256 en [[Netlify Blobs]] (store `limites`) con escritura condicional. Sin IP (llamadas internas o pruebas) no limita. Si el almacén falla, rechaza la petición 60 s; ya no hay respaldo en memoria. No se usó el rate limit nativo de [[Netlify]] porque el plan gratis permite 2 reglas y exige Functions v2.
 - **Almacén en memoria solo en pruebas.** [[storage.js]] usa memoria únicamente con [[DSTAR_MEMORY_STORE]], `NODE_ENV=test` y sin `NETLIFY`; nunca configurarlo en Netlify. Fuera de producción (deploy previews) los stores llevan un sufijo por deploy y no tocan los datos reales.
-- **Panel** ([[pedidos.html]], [[pedidos.js (js)]], [[pedidos.js (handlers)]], [[admin-store.js]]):
+- **Panel** ([[pedidos.html]], [[pedidos.js (js)]], [[pedidos.js (handlers)]], [[admin-store.js]], [[analitica.js]], [[avisos.js (handlers)]]):
   - `admin()` de [[http.js]] exige `Authorization: Bearer` igual a [[PANEL_PASSWORD]], comparado con `timingSafeEqual` sobre hashes. Responde 503 si la variable falta o tiene menos de 16 caracteres, 401 si no coincide y 403 si el origen no es el sitio.
   - Las acciones `refund` y `return` no existen: el servidor responde "Acción no permitida".
   - El listado no devuelve `trackingToken`, `fingerprint` ni el lock.
@@ -30,11 +32,13 @@ Headers, CSP y redirects están en [[netlify.toml (dstar-store)]].
 - **Seguimiento.** [[seguimiento.js (handlers)]] solo acepta POST con un pedido `dstar_<uuid>` y un token de 64 hex (32 bytes aleatorios de [[mp-preference.js]]), comparado con `timingSafeEqual`; si no coincide responde 404. No devuelve domicilio ni etiqueta. El token va en el hash de la URL, que no llega al servidor ni a los logs.
 - **Headers sin caché.** `/pedidos.html`, `/pedidos`, `/seguimiento.html` y `/seguimiento` llevan `Cache-Control: no-store` y `X-Robots-Tag: noindex, nofollow`; los dos de seguimiento, además, `Referrer-Policy: no-referrer`. Las respuestas de las funciones que usan `reply` de [[http.js]] van con `no-store`, y [[sw.js]] no intercepta `/pedidos` ni `/seguimiento`.
 - **Carrito.** Ya no se vacía por los parámetros de la URL de regreso, que no prueban el pago: [[gracias.js]] no toca `dstar_cart` y [[seguimiento.js (js)]] solo resta las piezas compradas después de que el servidor confirma el pago.
+- **Analítica sin datos personales.** [[metricas.js]] no manda nada si el navegador envía Global Privacy Control o Do Not Track, ni con `navigator.webdriver`. [[evento.js]] descarta robots por user-agent, orígenes ajenos y cuerpos de más de 1000 caracteres; `limpiar` de [[analytics.js]] solo acepta eventos y valores conocidos (productos del catálogo, rutas y fuentes con formato fijo). Se guardan totales por día en el store `analitica`, sin cookies, IP ni identificador; la IP solo pasa por [[rate-limit.js]] como hash.
+- **Avisos por correo.** [[avisame.js]] exige consentimiento y un correo válido ([[avisos.js (lib)]]), descarta envíos con el honeypot `website` lleno y rechaza otros orígenes. Cada aviso guarda un token aleatorio; la baja (`/api/avisame?baja=…&t=…`) pide confirmar con un POST y compara el token con `timingSafeEqual`; esas páginas van con `no-store`, `noindex` y `Referrer-Policy: no-referrer`. El listado del panel no devuelve el token, y AVISAR exige stock en esa talla ([[avisos.js (handlers)]]).
 - **Catálogo editable.** `cleanProduct` de [[catalog-store.js]] valida id, precio, tallas, peso y medidas y solo acepta fotos HTTPS de `res.cloudinary.com`.
 - **CSP sin `'unsafe-inline'` en `script-src`.**
   - Los scripts inline se movieron a [[loader.js]], [[checkout.js]] y [[gracias.js]]. Los handlers inline (`onerror`, `onclick`, `onload`) se cambiaron por listeners: imágenes con `data-fallback` y un listener de `error` en captura en [[app.js]] y [[checkout.js]], FAQ con `data-faq` y tallas por delegación en `#pdSizes`.
   - Quedan 3 scripts inline permitidos por hash: `speculationrules` y `css-pending` en [[index.html]] y la precarga de la primera foto en [[producto.html]]. [[seguimiento.html]] y [[privacidad.html]] no tienen scripts inline.
-  - [[csp-hashes.js]] recalcula los hashes y escribe `script-src` en [[netlify.toml (dstar-store)]]: **correr `node scripts/csp-hashes.js` después de editar cualquier script inline**. Con `--check` solo verifica (el 2026-10-20 respondió "CSP al día"), y [[seguridad-y-seo.spec.js]] falla si la CSP no coincide con `scriptSrc()`.
+  - [[csp-hashes.js]] recalcula los hashes y escribe `script-src` en [[netlify.toml (dstar-store)]]: **correr `node scripts/csp-hashes.js` después de editar cualquier script inline**. Con `--check` solo verifica (el 2026-10-29 respondió "CSP al día"), y [[seguridad-y-seo.spec.js]] falla si la CSP no coincide con `scriptSrc()`.
   - Los `application/ld+json` no cuentan. `style-src` todavía permite `'unsafe-inline'`.
 - **GSAP y enlaces.** [[GSAP]] se sirve desde el propio sitio (`js/vendor/`), así que la CSP no permite cdn.jsdelivr.net. Los enlaces externos llevan `rel="noopener noreferrer"`.
 - **Otros headers.** Permissions-Policy y Cross-Origin-Opener-Policy. /dist/, /test-results/, /tests/, /netlify/ y archivos internos responden 404.

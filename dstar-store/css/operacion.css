@@ -1,1 +1,27 @@
-:root{color-scheme:dark;font-family:'Space Mono',monospace;background:#0a0a0a;color:#f0ede8}*{box-sizing:border-box}body{margin:0}a{color:inherit}.ops{max-width:860px;margin:auto;padding:64px 24px}.ops h1{font:900 clamp(40px,10vw,90px)/1 sans-serif;letter-spacing:-3px;margin:24px 0}.eyebrow{color:#e63232;letter-spacing:3px;margin-top:72px}.ops p{line-height:1.8}.ops section,.ops article{padding:24px;border:1px solid #333;margin:24px 0}.ops button,button.panel__btn{cursor:pointer}button,input,select,textarea{font:inherit}button{padding:14px 20px;background:#f0ede8;color:#0a0a0a;border:0;min-height:44px}button:disabled{opacity:.5}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #e63232;outline-offset:4px}.ops dl{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ops dd{margin:0;overflow-wrap:anywhere}[hidden]{display:none!important}
+:root {
+  --black: #0a0a0a;
+  --white: #f0ede8;
+  --concrete-dark: #5c5c57;
+  --line: #333;
+  --red: #e63232;
+  --font-heading: 'Bebas Neue', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--black); color: var(--white); font-family: var(--font-mono); }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--red); outline-offset: 4px; }
+[hidden] { display: none !important; }
+
+.ops { max-width: 860px; margin: auto; padding: 64px 24px max(64px, env(safe-area-inset-bottom)); line-height: 1.8; }
+.ops__back { display: inline-flex; align-items: center; min-height: 44px; }
+.ops__eyebrow { color: var(--red); letter-spacing: 3px; margin-top: 72px; }
+.ops__title { font: 900 clamp(40px, 10vw, 90px)/1 var(--font-heading); letter-spacing: -1px; margin: 24px 0; }
+.ops__section { padding: 24px; border: 1px solid var(--line); margin: 24px 0; }
+.ops__btn { cursor: pointer; padding: 14px 20px; min-height: 44px; background: var(--white); color: var(--black); border: 0; }
+.ops__btn:disabled { opacity: 0.5; }
+.ops__list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ops__list dd { margin: 0; overflow-wrap: anywhere; }

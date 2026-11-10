@@ -15,7 +15,7 @@ Parte de: [[Backend]]
 
 ## Conexiones
 
-- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`)
+- Usa la global: [[avisos-analitica.test.cjs]] (`DSTAR_MEMORY_STORE`)
 - Usa: [[Netlify Blobs]], [[Netlify]]
 - Lee la variable: [[DSTAR_MEMORY_STORE]]
 

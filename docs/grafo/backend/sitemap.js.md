@@ -16,8 +16,8 @@ Parte de: [[Backend]]
 ## Conexiones
 
 - Llama a la API: [[catalogo.js]] (`/api/catalogo`)
-- Usa la global: [[products-data.js]] (`DSTAR_PRODUCTS`)
-- Referencia a: [[terminos.html]], [[privacidad.html]], [[agradecimientos.html]], [[producto.html]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]]
+- Usa la global: [[cart-store.js]] (`DSTAR_PRODUCTS`)
+- Referencia a: [[terminos.html]], [[privacidad.html]], [[agradecimientos.html]], [[producto.html]], [[products-data.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]]
 
 ## Funciones y clases
 

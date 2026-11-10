@@ -8,6 +8,8 @@
   const status = $('panelStatus');
   let pedidos = [];
   let filtro = 'todos';
+  let dias = 14;
+  let tienda = null;
 
   const mxn = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(Number(n) || 0);
   const fecha = (ms) => (ms ? new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Mexico_City' }).format(ms) : '');
@@ -124,6 +126,7 @@
     status.textContent = `Actualizado ${fecha(Date.now())}`;
     pintar();
     await loadManagement(clave);
+    await Promise.all([loadAnalytics(clave), loadAvisos(clave)]);
     return {};
   }
 
@@ -152,6 +155,9 @@
     pedidos = [];
     list.replaceChildren();
     $('panelManagement').replaceChildren();
+    $('panelAnalytics').replaceChildren();
+    $('panelAvisos').replaceChildren();
+    tienda = null;
     $('actionForm').replaceChildren();
     $('orderDialog').close();
     mostrar(false);
@@ -220,6 +226,7 @@
     const target=$('panelManagement');
     try {
       const state=await api('admin-store',null,clave);
+      tienda=state;
       $('panelHealth').textContent=Object.entries(state.health).filter(([k])=>k!=='reconciliation').map(([k,v])=>({payment:'Pagos',webhook:'Firma del webhook',shipping:'Envíos',mail:'Correo'}[k]||k)+': '+(v?'CONFIGURADO':'FALTA CONFIGURAR')).join(' · ')+' · Última conciliación: '+fecha(state.health.reconciliation?.at);
       target.replaceChildren();
       const inventory=el('details',null,el('summary',null,'INVENTARIO Y MOVIMIENTOS'));
@@ -240,6 +247,100 @@
         field('legalName','Nombre completo / razón social','text',state.settings.legalName||''),field('address','Domicilio del responsable y proveedor','textarea',state.settings.address||''),field('phone','Teléfono de contacto','tel',state.settings.phone||''),field('privacyEmail','Correo para privacidad / derechos ARCO','email',state.settings.privacyEmail||''),field('contactEmail','Correo de atención','email',state.settings.contactEmail||'')
       ],settings=>api('admin-store',{action:'settings',settings}))));target.append(legal);
     }catch(e){$('panelHealth').textContent='Administración: '+e.message;}
+  }
+
+  const pct = (n, d) => (d ? Math.round((n / d) * 1000) / 10 + '%' : '—');
+  const nombre = id => (tienda?.products || []).find(p => p.id === id)?.name || id;
+  function tabla(headers, rows) {
+    return el('div', { class: 'panel__table-wrap' }, el('table', { class: 'panel__table' },
+      el('thead', null, el('tr', null, ...headers.map(h => el('th', { scope: 'col' }, h)))),
+      el('tbody', null, ...rows.map(r => el('tr', null, ...r.map(c => el('td', null, c)))))));
+  }
+  function barra(n, max) {
+    const b = el('span', { class: 'panel__bar', 'aria-hidden': 'true' });
+    b.style.setProperty('--w', (max ? Math.round((n / max) * 100) : 0) + '%');
+    return b;
+  }
+
+  async function loadAnalytics(clave) {
+    const box = $('panelAnalytics');
+    try {
+      const a = await api('analitica?dias=' + dias, null, clave);
+      const t = a.totales || {};
+      const desde = Date.now() - dias * 86400000;
+      const compras = pedidos.filter(p => p.paymentStatus === 'approved' && (p.createdAt || p.at || 0) >= desde).length;
+      const pasos = [['Visitas', t.visit || 0], ['Vieron un producto', t.product || 0], ['Agregaron al carrito', t.add || 0], ['Abrieron el checkout', t.checkout || 0], ['Fueron a pagar', t.pay || 0], ['Compras aprobadas', compras]];
+      const max = Math.max(...pasos.map(p => p[1]));
+      box.replaceChildren(
+        el('h3', { class: 'panel__subtitle' }, 'EMBUDO'),
+        tabla(['PASO', 'TOTAL', 'VS. PASO ANTERIOR'], pasos.map(([k, n], i) => [k, el('span', null, String(n), barra(n, max)), i ? pct(n, pasos[i - 1][1]) : '—'])),
+        el('p', { class: 'panel__note' }, 'Páginas vistas: ' + (t.view || 0) + ' · Avisos pedidos: ' + (t.alert || 0) + ' · Conversión total: ' + pct(compras, t.visit || 0)),
+        el('h3', { class: 'panel__subtitle' }, 'PRODUCTOS'),
+        a.productos.length ? tabla(['PIEZA', 'VISTAS', 'AL CARRITO', 'CONVERSIÓN'], a.productos.map(p => [nombre(p.id), String(p.product), String(p.add), pct(p.add, p.product)])) : el('p', { class: 'panel__note' }, 'Sin datos todavía.'),
+        el('h3', { class: 'panel__subtitle' }, 'DE DÓNDE LLEGAN'),
+        a.fuentes.length ? tabla(['FUENTE', 'VISITAS'], a.fuentes.map(([k, n]) => [k, String(n)])) : el('p', { class: 'panel__note' }, 'Sin datos todavía.'),
+        a.dispositivos.length ? tabla(['DISPOSITIVO', 'VISITAS'], a.dispositivos.map(([k, n]) => [k, String(n)])) : '',
+        el('details', null, el('summary', null, 'POR DÍA'),
+          tabla(['DÍA', 'VISITAS', 'PÁGINAS', 'PRODUCTO', 'CARRITO', 'CHECKOUT', 'PAGO'], a.dias.slice().reverse().map(d => [d.dia, ...['visit', 'view', 'product', 'add', 'checkout', 'pay'].map(k => String(d[k] || 0))]))),
+        el('details', null, el('summary', null, 'PÁGINAS MÁS VISTAS'),
+          tabla(['PÁGINA', 'VISTAS'], a.paginas.map(([k, n]) => [k, String(n)]))));
+    } catch (e) { box.replaceChildren(el('p', { class: 'panel__error' }, 'Analítica: ' + e.message)); }
+  }
+
+  $('analyticsRange').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-dias]');
+    if (!btn) return;
+    dias = Number(btn.dataset.dias);
+    document.querySelectorAll('[data-dias]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    loadAnalytics(leerClave());
+  });
+
+  function csv(rows) {
+    const cell = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    const blob = new Blob(['﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = el('a', { href: URL.createObjectURL(blob), download: 'dstar-lista-drops-' + new Date().toISOString().slice(0, 10) + '.csv' });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  async function loadAvisos(clave) {
+    const box = $('panelAvisos');
+    try {
+      const { avisos } = await api('avisos', null, clave);
+      const drop = avisos.filter(a => a.tipo === 'drop');
+      const grupos = new Map();
+      for (const a of avisos.filter(x => x.tipo === 'talla')) {
+        const k = a.productId + '|' + a.size;
+        const g = grupos.get(k) || { productId: a.productId, size: a.size, pendientes: 0, avisados: 0 };
+        if (a.notifiedAt) g.avisados++; else g.pendientes++;
+        grupos.set(k, g);
+      }
+      const avisar = g => button('AVISAR (' + Math.min(10, g.pendientes) + ')', async (e) => {
+        e.target.disabled = true;
+        try {
+          const r = await api('avisos', { action: 'notify', productId: g.productId, size: g.size });
+          $('avisosStatus').textContent = 'Enviados ' + r.enviados + '; quedan ' + r.quedan + '.';
+          await loadAvisos(leerClave());
+        } catch (err) { $('avisosStatus').textContent = err.message; e.target.disabled = false; }
+      });
+      const filas = [...grupos.values()].sort((a, b) => b.pendientes - a.pendientes).map(g => {
+        const stock = tienda?.stock?.[g.productId]?.[g.size] || 0;
+        const accion = g.pendientes && stock > 0 ? avisar(g) : (g.pendientes ? 'Sin stock' : '—');
+        return [nombre(g.productId) + ' / ' + g.size, String(g.pendientes), String(g.avisados), String(stock), accion];
+      });
+      const quitar = a => button('QUITAR', () => dialog('QUITAR AVISO', [], () => api('avisos', { action: 'remove', id: a.id }), a.email + ' dejará de recibir este aviso. Úsalo si la persona pide su baja.'));
+      const detalle = a => fecha(a.at) + ' · ' + a.email + ' · ' + (a.tipo === 'drop' ? 'Próximo drop' : nombre(a.productId) + ' / ' + a.size + (a.notifiedAt ? ' · avisado' : '')) + ' ';
+      box.replaceChildren(
+        el('h3', { class: 'panel__subtitle' }, 'LISTA DEL PRÓXIMO DROP · ' + drop.length),
+        el('p', { class: 'panel__note' }, 'Exporta la lista para anunciar el drop desde tu herramienta de correo. Incluye en cada envío una forma de darse de baja.'),
+        drop.length ? button('EXPORTAR CSV', () => csv([['correo', 'fecha'], ...drop.map(a => [a.email, fecha(a.at)])])) : '',
+        el('h3', { class: 'panel__subtitle' }, 'TALLAS AGOTADAS QUE PIDEN'),
+        filas.length ? tabla(['PIEZA / TALLA', 'ESPERANDO', 'YA AVISADOS', 'STOCK', ''], filas) : el('p', { class: 'panel__note' }, 'Nadie ha pedido aviso todavía.'),
+        el('p', { class: 'panel__note' }, 'El aviso se envía en lotes de 10 por el límite diario del correo. Ajusta primero el inventario de esa talla.'),
+        avisos.length ? el('details', null, el('summary', null, 'TODOS LOS CORREOS (' + avisos.length + ')'), ...avisos.map(a => el('p', null, detalle(a), quitar(a)))) : '');
+    } catch (e) { box.replaceChildren(el('p', { class: 'panel__error' }, 'Avisos: ' + e.message)); }
   }
 
   $('panelTitle').setAttribute('tabindex', '-1');

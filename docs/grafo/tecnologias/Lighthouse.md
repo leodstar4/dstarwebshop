@@ -12,6 +12,7 @@ Parte de: [[Tecnologías]]
 
 ## Usado en
 
+- [[evento.js]]
 - [[netlify.toml (dstar-store)]]
 - [[Agente optimizer]]
 

@@ -1,28 +1,28 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/sw.js"
-lineas: 89
+lineas: 90
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # sw.js
 
-`dstar-store/sw.js` · 89 líneas
+`dstar-store/sw.js` · 90 líneas
 
-Service worker de la PWA: precache del shell (incluye js/loader.js), network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, /pedidos, /seguimiento, los .mp4 ni las peticiones con Range.
+Service worker de la PWA: precache del shell (incluye js/loader.js y js/metricas.js), network-first para los archivos del sitio e imágenes de Cloudinary cache-first (hasta 80, pedidas en modo CORS y guardadas solo si responden ok); no intercepta /api, el checkout, las páginas de resultado del pago, /pedidos, /seguimiento, los .mp4 ni las peticiones con Range.
 
 Parte de: [[Frontend]]
 
 ## Conexiones
 
-- Referencia a: [[index.html]], [[offline.html]], [[style.css]], [[products-data.js]], [[cart-store.js]], [[app.js]], [[loader.js]], [[gsap-animations.js]], [[blog-transitions.js]]
+- Referencia a: [[index.html]], [[offline.html]], [[style.css]], [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[app.js]], [[loader.js]], [[gsap-animations.js]], [[blog-transitions.js]]
 - Usa: [[Cloudinary]], [[GSAP]]
 
 ## Funciones y clases
 
-- `networkFirst` (línea 37)
-- `trim` (línea 51)
-- `cacheFirst` (línea 57)
+- `networkFirst` (línea 38)
+- `trim` (línea 52)
+- `cacheFirst` (línea 58)
 
 ## Últimos cambios
 

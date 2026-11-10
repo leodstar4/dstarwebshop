@@ -16,6 +16,7 @@ Parte de: [[Tecnologías]]
 
 - [[playwright.config.js]]
 - [[audit-bugs.spec.js]]
+- [[avisos-y-catalogo.spec.js]]
 - [[flujo-compra.spec.js]]
 - [[operacion.spec.js]]
 - [[seguridad-y-seo.spec.js]]

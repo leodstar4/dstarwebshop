@@ -477,6 +477,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const paymentUrl = new URL(data.init_point);
       if (paymentUrl.protocol === 'https:' && ['www.mercadopago.com.mx', 'mercadopago.com.mx'].includes(paymentUrl.hostname)) {
         sessionStorage.setItem('dstar_last_order', JSON.stringify({ id: data.order_id, token: data.tracking_token, items }));
+        window.DSTAR_TRACK?.('pay');
         window.location.href = data.init_point;
       } else {
         throw new Error('No se recibió el link de pago');
@@ -519,6 +520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
   // Solo continuar si hay carrito
   if (!cart || cart.length === 0) return;
+  window.DSTAR_TRACK?.('checkout');
 
   // Renderizar resumen del pedido
   renderOrderSummary();

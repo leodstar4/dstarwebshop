@@ -436,87 +436,6 @@ function initLookbook() {
 
 
 // ============================================
-// BUTTON GLOW SYSTEM — iluminación premium
-// Mouse-tracking spotlight, ripple on click, magnetic cart
-// ============================================
-function initButtonEffects() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  // ── 1. Cursor-tracking spotlight on primary CTA buttons ──
-  // JS sets --bx/--by CSS vars so the ::after radial-gradient follows the cursor
-  const ctaSelector = '.product-detail__add, .product-modal__add, .cart-drawer__checkout';
-  document.querySelectorAll(ctaSelector).forEach(btn => {
-    btn.addEventListener('mousemove', e => {
-      const r = btn.getBoundingClientRect();
-      btn.style.setProperty('--bx', ((e.clientX - r.left) / r.width  * 100).toFixed(1) + '%');
-      btn.style.setProperty('--by', ((e.clientY - r.top)  / r.height * 100).toFixed(1) + '%');
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.setProperty('--bx', '50%');
-      btn.style.setProperty('--by', '50%');
-    });
-  });
-
-  // ── 2. Ripple on click (event delegation — works on dynamic buttons too) ──
-  function spawnRipple(btn, e, isLight) {
-    if (btn.disabled) return;
-    const r = btn.getBoundingClientRect();
-    const span = document.createElement('span');
-    span.className = 'btn-ripple ' + (isLight ? 'btn-ripple--light' : 'btn-ripple--dark');
-    span.style.left = (e.clientX - r.left - 4) + 'px';
-    span.style.top  = (e.clientY - r.top  - 4) + 'px';
-    btn.appendChild(span);
-    span.addEventListener('animationend', () => span.remove(), { once: true });
-  }
-
-  document.addEventListener('click', e => {
-    // Dark buttons (white bg): light ripple
-    const ctaBtn = e.target.closest(
-      '.product-detail__add, .product-modal__add, .cart-drawer__checkout, .hero__cta'
-    );
-    if (ctaBtn) { spawnRipple(ctaBtn, e, true); return; }
-
-    // Size buttons (dark bg): light ripple
-    const sizeBtn = e.target.closest('.size-btn');
-    if (sizeBtn) { spawnRipple(sizeBtn, e, true); return; }
-
-    // Lookbook arrows (dark bg): light ripple
-    const arrow = e.target.closest('.lookbook__nav-arrow');
-    if (arrow) { spawnRipple(arrow, e, true); return; }
-  });
-
-  // ── 3. Magnetic cart button (desktop only) ──
-  const cartBtn = document.getElementById('cartBtn');
-  if (cartBtn && window.innerWidth > 768) {
-    cartBtn.addEventListener('mousemove', e => {
-      const r  = cartBtn.getBoundingClientRect();
-      const cx = r.left + r.width  / 2;
-      const cy = r.top  + r.height / 2;
-      gsap.to(cartBtn, {
-        x: (e.clientX - cx) * 0.38,
-        y: (e.clientY - cy) * 0.38,
-        duration: 0.28,
-        ease: 'power2.out',
-        overwrite: 'auto'
-      });
-    });
-    cartBtn.addEventListener('mouseleave', () => {
-      gsap.to(cartBtn, { x: 0, y: 0, duration: 0.55, ease: 'elastic.out(1, 0.4)', overwrite: 'auto' });
-    });
-  }
-
-  // ── 4. GSAP hover animations on lookbook nav arrows ──
-  document.querySelectorAll('.lookbook__nav-arrow').forEach(btn => {
-    btn.addEventListener('mouseenter', () => {
-      if (!btn.disabled) gsap.to(btn, { scale: 1.12, duration: 0.2, ease: 'power2.out' });
-    });
-    btn.addEventListener('mouseleave', () => {
-      gsap.to(btn, { scale: 1, duration: 0.3, ease: 'elastic.out(1.2, 0.5)' });
-    });
-  });
-}
-
-// ============================================
 // CUSTOM CURSOR — punto blanco con lerp sobre el grid de productos
 // + magnetic hover sobre hero/CTAs principales (desktop fine pointer)
 // ============================================
@@ -576,65 +495,72 @@ function initCustomCursor() {
   }, { once: true, passive: true });
 }
 
-// Hover magnético: el botón sigue el cursor cuando está cerca, máx 8px
+// Hover magnético: un solo listener; cada botón sigue al cursor cuando está cerca, máx 8px
 function initMagneticButtons() {
   const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const reduce        = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!isFinePointer || reduce || window.innerWidth <= 768 || !window.gsap) return;
+  if (!isFinePointer || REDUCED_MOTION || window.innerWidth <= 768 || !window.gsap) return;
 
-  const MAX = 8; // px de desplazamiento máximo
-  const RADIUS_FACTOR = 1.6; // zona magnética = 1.6x el bounding-box
+  const MAX = 8;
+  const REACH = 1.6;
+  const STALE_MS = 400;
+  const items = Array.from(document.querySelectorAll('.hero__cta, .product-detail__add, .cart-drawer__checkout, #cartBtn'))
+    .map((el) => ({ el, rect: null, at: 0, on: false }));
+  if (!items.length) return;
 
-  const selectors = '.hero__cta, .product-detail__add, .cart-drawer__checkout';
-  document.querySelectorAll(selectors).forEach(btn => {
-    let r = null;
-    const invalidate = () => { r = null; };
-    window.addEventListener('resize', invalidate, { passive: true });
-    window.addEventListener('scroll', invalidate, { passive: true });
+  const release = (item) => {
+    item.on = false;
+    gsap.to(item.el, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)', overwrite: 'auto' });
+  };
+  const invalidate = () => items.forEach((item) => { item.rect = null; });
+  window.addEventListener('resize', invalidate, { passive: true });
+  window.addEventListener('scroll', invalidate, { passive: true });
 
-    document.addEventListener('mousemove', e => {
-      if (!r) r = btn.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > window.innerHeight) return;
-      const cx = r.left + r.width  / 2;
-      const cy = r.top  + r.height / 2;
-      const dx = e.clientX - cx;
-      const dy = e.clientY - cy;
-      const reachX = (r.width  / 2) * RADIUS_FACTOR;
-      const reachY = (r.height / 2) * RADIUS_FACTOR;
-      if (Math.abs(dx) < reachX && Math.abs(dy) < reachY) {
-        // Normalize → clamp a MAX px
-        const nx = Math.max(-1, Math.min(1, dx / reachX));
-        const ny = Math.max(-1, Math.min(1, dy / reachY));
-        gsap.to(btn, { x: nx * MAX, y: ny * MAX, duration: 0.32, ease: 'power2.out', overwrite: 'auto' });
-      } else if (btn._magActive) {
-        gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)', overwrite: 'auto' });
-        btn._magActive = false;
+  let frame = 0;
+  let px = 0;
+  let py = 0;
+  const update = (now) => {
+    frame = 0;
+    items.forEach((item) => {
+      if (!item.rect || (!item.on && now - item.at > STALE_MS)) {
+        item.rect = item.el.getBoundingClientRect();
+        item.at = now;
       }
-      btn._magActive = (Math.abs(dx) < reachX && Math.abs(dy) < reachY);
-    }, { passive: true });
-
-    btn.addEventListener('mouseleave', () => {
-      gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: 'elastic.out(1, 0.5)', overwrite: 'auto' });
-      btn._magActive = false;
+      const r = item.rect;
+      if (!r.width || r.bottom < 0 || r.top > window.innerHeight) return;
+      const reachX = (r.width / 2) * REACH;
+      const reachY = (r.height / 2) * REACH;
+      const dx = px - (r.left + r.width / 2);
+      const dy = py - (r.top + r.height / 2);
+      if (Math.abs(dx) < reachX && Math.abs(dy) < reachY) {
+        item.on = true;
+        gsap.to(item.el, { x: (dx / reachX) * MAX, y: (dy / reachY) * MAX, duration: 0.32, ease: 'power2.out', overwrite: 'auto' });
+      } else if (item.on) {
+        release(item);
+      }
     });
-  });
+  };
+  document.addEventListener('mousemove', (e) => {
+    px = e.clientX;
+    py = e.clientY;
+    if (!frame) frame = requestAnimationFrame(update);
+  }, { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => items.forEach((item) => { if (item.on) release(item); }));
 }
 
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', async () => {
-  await window.DSTAR_CATALOG_READY;
+document.addEventListener('DOMContentLoaded', () => {
   requestAnimationFrame(() => {
     const run = (fn) => { try { fn(); } catch {} };
     if (document.body.classList.contains('page-product')) {
-      [initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
+      [initCustomCursor, initMagneticButtons].forEach(run);
       return;
     }
     if (!REDUCED_MOTION && window.gsap) {
       [initProductReveal, initLookbookReveal, initBlogReveal, initRiseIns].forEach(run);
       fontsReady().then(() => [initHero, initSectionHeaders, initAbout].forEach(run));
     }
-    [initLookbook, initButtonEffects, initCustomCursor, initMagneticButtons].forEach(run);
+    [initLookbook, initCustomCursor, initMagneticButtons].forEach(run);
   });
 });

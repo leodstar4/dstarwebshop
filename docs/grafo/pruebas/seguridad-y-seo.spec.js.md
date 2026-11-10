@@ -16,9 +16,9 @@ Parte de: [[Pruebas]]
 ## Conexiones
 
 - Llama a la API: [[pedidos.js (handlers)]] (`/api/pedidos`)
-- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`), [[products-data.js]] (`DSTAR_PRODUCTS`)
+- Usa la global: [[avisos-analitica.test.cjs]] (`DSTAR_MEMORY_STORE`), [[cart-store.js]] (`DSTAR_PRODUCTS`)
 - Visita: [[index.html]], [[pedidos.html]]
-- Referencia a: [[producto.html]], [[terminos.html]], [[agradecimientos.html]], [[checkout.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[offline.html]], [[storage.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]], [[csp-hashes.js]], [[cotizar-envio.js]]
+- Referencia a: [[producto.html]], [[terminos.html]], [[agradecimientos.html]], [[checkout.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[offline.html]], [[storage.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]], [[csp-hashes.js]], [[products-data.js]], [[cotizar-envio.js]]
 - Usa: [[Playwright]], [[Netlify]], [[Cloudinary]]
 - Lee la variable: [[DSTAR_MEMORY_STORE]], [[PANEL_PASSWORD]]
 

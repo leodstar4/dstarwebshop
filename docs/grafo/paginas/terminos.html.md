@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/terminos.html"
-lineas: 260
+lineas: 261
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # terminos.html
 
-`dstar-store/terminos.html` · 260 líneas
+`dstar-store/terminos.html` · 261 líneas
 
 Términos, envíos y devoluciones: precios, pagos inmediatos sin OXXO, tiempos de envío, devolución en 5 días hábiles, defectos y quejas ante PROFECO; datos del proveedor que llena js/legal.js y enlace a privacidad.html; enlazada en los footers y junto al botón PAGAR.
 
@@ -15,7 +15,7 @@ Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[legal.js]], [[products-data.js]], [[cart-store.js]], [[app.js]], [[blog-transitions.js]]
+- Carga script: [[legal.js]], [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[app.js]], [[blog-transitions.js]]
 - Carga estilos: [[style.css]]
 - Carga manifest: [[manifest.webmanifest]]
 - Enlaza a: [[index.html]], [[privacidad.html]]

@@ -1,30 +1,31 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/cart-store.js"
-lineas: 86
+lineas: 114
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # cart-store.js
 
-`dstar-store/js/cart-store.js` · 86 líneas
+`dstar-store/js/cart-store.js` · 114 líneas
 
-Carrito en localStorage (dstar_cart): pide /api/catalogo (DSTAR_CATALOG_READY, corta a los 5 s con AbortController si existe, si no espera sin señal, para iOS 15) y reemplaza DSTAR_PRODUCTS; sincroniza el stock con /api/stock.
+Carrito en localStorage (dstar_cart) y catálogo: arranca con la copia de localStorage dstar_catalog o con products-data.js, pide /api/catalogo, guarda la respuesta en dstar_catalog y, si cambió, reemplaza DSTAR_PRODUCTS y dispara dstar:catalog; DSTAR_CATALOG_READY se resuelve a más tardar a los 5 s, haya o no AbortController (iOS 15); mientras el catálogo no se confirma, save() conserva las piezas que no conoce; sincroniza el stock con /api/stock.
 
 Parte de: [[Frontend]]
 
 ## Conexiones
 
 - Llama a la API: [[catalogo.js]] (`/api/catalogo`), [[stock.js]] (`/api/stock`)
-- Usa la global: [[products-data.js]] (`DSTAR_PRODUCTS`)
 
 ## Funciones y clases
 
-- `catalog` (línea 11)
-- `stockFor` (línea 15)
-- `load` (línea 21)
-- `save` (línea 49)
-- `syncStock` (línea 56)
+- `validCatalog` (línea 5)
+- `replaceCatalog` (línea 6)
+- `catalog` (línea 31)
+- `stockFor` (línea 35)
+- `load` (línea 41)
+- `save` (línea 69)
+- `syncStock` (línea 84)
 
 ## Últimos cambios
 

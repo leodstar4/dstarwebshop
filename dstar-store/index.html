@@ -54,8 +54,8 @@
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=38" media="print">
-  <noscript><link rel="stylesheet" href="css/style.css?v=38"></noscript>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=40" media="print">
+  <noscript><link rel="stylesheet" href="css/style.css?v=40"></noscript>
 </head>
 <body>
   <!-- SCROLL PROGRESS -->
@@ -103,7 +103,7 @@
         <a href="agradecimientos.html" class="header__link">GRACIAS</a>
       </nav>
       <div class="header__actions">
-        <button class="cart-btn" id="cartBtn" aria-label="Carrito">
+        <button class="cart-btn" id="cartBtn" type="button" aria-label="Abrir carrito" aria-haspopup="dialog" aria-controls="cartDrawer">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
             <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -159,6 +159,19 @@
     <div class="products-grid" id="productsGrid">
       <!-- Products injected by JS -->
     </div>
+    <form class="alert-form alert-form--drop" id="dropAlert" novalidate aria-labelledby="dropAlertTitle">
+      <p class="alert-form__eyebrow">PRÓXIMO DROP</p>
+      <h3 class="alert-form__title" id="dropAlertTitle">ENTÉRATE PRIMERO</h3>
+      <p class="alert-form__text">Te escribimos solo cuando salga un drop nuevo. Piezas limitadas, sin spam.</p>
+      <div class="alert-form__row">
+        <label class="alert-form__label" for="dropAlertEmail">Tu correo</label>
+        <input class="alert-form__input" id="dropAlertEmail" type="email" name="email" autocomplete="email" inputmode="email" required placeholder="TU CORREO" aria-describedby="dropAlertStatus">
+        <button class="alert-form__btn" type="submit">AVÍSAME</button>
+      </div>
+      <label class="alert-form__consent"><input class="alert-form__check" type="checkbox" name="consent" required> Acepto el <a href="privacidad.html">aviso de privacidad</a>; puedo darme de baja en cada correo.</label>
+      <input class="alert-form__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="alert-form__status" id="dropAlertStatus" role="status" aria-live="polite"></p>
+    </form>
   </section>
 
   <!-- LOOKBOOK -->
@@ -278,10 +291,10 @@
 
   <!-- CART DRAWER -->
   <div class="cart-overlay" id="cartOverlay"></div>
-  <div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
     <div class="cart-drawer__header">
-      <h3>TU CARRITO</h3>
-      <button class="cart-drawer__close" id="cartClose">✕</button>
+      <h3 id="cartTitle">TU CARRITO</h3>
+      <button class="cart-drawer__close" id="cartClose" type="button" aria-label="Cerrar carrito"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="cart-drawer__items" id="cartItems">
       <!-- Cart items injected by JS -->
@@ -309,9 +322,10 @@
   <script src="js/vendor/gsap.min.js?v=3.14.2" defer></script>
   <script src="js/vendor/SplitText.min.js?v=3.14.2" defer></script>
   <script src="js/products-data.js?v=1" defer></script>
-  <script src="js/cart-store.js?v=3" defer></script>
-  <script src="js/app.js?v=38" defer></script>
-  <script src="js/gsap-animations.js?v=19" defer></script>
+  <script src="js/metricas.js?v=1" defer></script>
+  <script src="js/cart-store.js?v=4" defer></script>
+  <script src="js/app.js?v=40" defer></script>
+  <script src="js/gsap-animations.js?v=21" defer></script>
   <script src="js/blog-transitions.js?v=7" defer></script>
 </body>
 </html>

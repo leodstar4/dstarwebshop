@@ -15,6 +15,7 @@ Parte de: [[Frontend]]
 
 ## Conexiones
 
+- Usa la global: [[cart-store.js]] (`DSTAR_PRODUCTS`)
 - Usa: [[Cloudinary]]
 
 ## Últimos cambios

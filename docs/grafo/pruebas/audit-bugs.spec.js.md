@@ -16,7 +16,7 @@ Parte de: [[Pruebas]]
 ## Conexiones
 
 - Llama a la API: [[cotizar-envio.js]] (`/api/cotizar-envio`), [[mp-preference.js]] (`/api/mp-preference`)
-- Usa la global: [[correcciones.test.cjs]] (`DSTAR_MEMORY_STORE`)
+- Usa la global: [[avisos-analitica.test.cjs]] (`DSTAR_MEMORY_STORE`)
 - Visita: [[index.html]], [[checkout.html]]
 - Referencia a: [[producto.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[agradecimientos.html]], [[terminos.html]], [[seguimiento.html]], [[storage.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]]
 - Usa: [[Playwright]], [[Netlify]], [[Mercado Pago]], [[Skydropx]], [[Cloudinary]], [[Gmail SMTP]]

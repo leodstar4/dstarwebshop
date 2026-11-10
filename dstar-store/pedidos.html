@@ -108,6 +108,14 @@
     .order details { border-top:1px solid var(--line); padding-top:10px; }
     .panel__btn:disabled { opacity:.5; cursor:wait; }
     #panelHealth { margin-bottom:16px; }
+    .panel__note { color: var(--concrete); margin: 6px 0 14px; }
+    .panel__table-wrap { overflow-x: auto; margin: 12px 0 20px; }
+    .panel__table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .panel__table th, .panel__table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+    .panel__table th:first-child, .panel__table td:first-child { text-align: left; white-space: normal; }
+    .panel__table th { font-weight: 400; font-size: 10px; letter-spacing: 2px; color: var(--concrete); }
+    .panel__bar { display: block; height: 6px; margin-top: 4px; width: var(--w, 0%); background: var(--white); border-radius: var(--radius-pill); }
+    .panel__subtitle { font: 400 22px/1 var(--font-heading); letter-spacing: 1px; margin-top: 18px; }
   </style>
 </head>
 <body>
@@ -146,6 +154,22 @@
       </div>
       <p class="panel__label" id="panelStatus" role="status" aria-live="polite"></p>
       <ul class="panel__list" id="panelList"></ul>
+      <section class="panel__management" aria-labelledby="analyticsTitle">
+        <h2 id="analyticsTitle">ANALÍTICA</h2>
+        <p class="panel__note">Conteos agregados sin cookies ni datos personales. No incluye visitas con bloqueo de rastreo (GPC / Do Not Track) ni robots.</p>
+        <div class="panel__filters" id="analyticsRange" role="group" aria-label="Periodo de la analítica">
+          <button class="panel__btn" type="button" data-dias="7" aria-pressed="false">7 DÍAS</button>
+          <button class="panel__btn" type="button" data-dias="14" aria-pressed="true">14 DÍAS</button>
+          <button class="panel__btn" type="button" data-dias="30" aria-pressed="false">30 DÍAS</button>
+          <button class="panel__btn" type="button" data-dias="90" aria-pressed="false">90 DÍAS</button>
+        </div>
+        <div id="panelAnalytics" aria-live="polite"></div>
+      </section>
+      <section class="panel__management" aria-labelledby="avisosTitle">
+        <h2 id="avisosTitle">AVISOS Y LISTA DE DROPS</h2>
+        <p class="panel__label" id="avisosStatus" role="status" aria-live="polite"></p>
+        <div id="panelAvisos"></div>
+      </section>
       <section class="panel__management" aria-label="Administración de tienda">
         <h2>OPERACIÓN DE LA TIENDA</h2><p id="panelHealth" role="status"></p>
         <div id="panelManagement"></div>
@@ -157,6 +181,6 @@
     <h2 id="dialogTitle"></h2><form id="actionForm" class="panel__form"></form>
     <p id="actionError" role="alert"></p><button type="button" class="panel__btn" id="dialogClose">CERRAR</button>
   </dialog>
-  <script src="js/pedidos.js?v=2"></script>
+  <script src="js/pedidos.js?v=3"></script>
 </body>
 </html>

@@ -16,8 +16,8 @@ Parte de: [[Backend]]
 ## Conexiones
 
 - Llama a la API: [[catalogo.js]] (`/api/catalogo`)
-- Usa la global: [[products-data.js]] (`DSTAR_PRODUCTS`)
-- Referencia a: [[producto.html]]
+- Usa la global: [[cart-store.js]] (`DSTAR_PRODUCTS`)
+- Referencia a: [[producto.html]], [[products-data.js]]
 
 ## Funciones y clases
 

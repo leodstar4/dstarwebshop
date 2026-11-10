@@ -12,6 +12,8 @@ Parte de: [[DSTAR]]
 ## Contenido
 
 - [[audit-bugs.spec.js]] — Pruebas de regresión de la auditoría: stock por talla, localStorage corrupto, código postal del checkout, firma del webhook y origen.
+- [[avisos-analitica.test.cjs]] — Pruebas de backend con node --test: analítica agregada sin datos personales, robots, eventos desconocidos y productos inexistentes ignorados, contraseña en /api/analitica, validación de avisos (correo, consentimiento, talla) y aviso de talla enviado una sola vez, solo con stock y con baja que funciona.
+- [[avisos-y-catalogo.spec.js]] — Pruebas E2E: la tienda pinta sin esperar al catálogo remoto, el catálogo remoto actualiza las tarjetas y queda en caché para la siguiente visita, formulario del próximo drop con consentimiento, aviso solo para las tallas agotadas en la ficha y panel con embudo y avisos.
 - [[correcciones.test.cjs]] — Pruebas de backend de las correcciones: pedidos legacy sin guía, stock ni correos, conciliación que ignora terminados, tarjeta rechazada que conserva el apartado, Skydropx sin credenciales como failed, reintento tras falla de Mercado Pago, preferencia vencida con restart y poda del inventario.
 - [[diagnostico.js]] — Mide fluidez y carga con Playwright en varios perfiles y escribe reportes en tests/perf/reportes.
 - [[flujo-compra.spec.js]] — Pruebas E2E del flujo de compra: carrito, checkout vacío, menú móvil, página de producto, selector de talla, lightbox de la galería (teclado, zoom y cierre con Escape) y redirección a un Mercado Pago simulado con checkout_id.

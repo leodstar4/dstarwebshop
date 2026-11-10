@@ -9,7 +9,7 @@ lineas: 72
 
 `dstar-store/pago-pendiente.html` · 72 líneas
 
-Pantalla heredada de pago pendiente (noindex); Mercado Pago ya regresa a seguimiento.html y su texto todavía menciona OXXO y SPEI.
+Pantalla heredada de pago pendiente (noindex): dice que Mercado Pago procesa el pago y que llegará un correo al acreditarse; Mercado Pago ya regresa a seguimiento.html.
 
 Parte de: [[Páginas]]
 

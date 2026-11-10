@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/blog/streetwear-mexico-escena.html"
-lineas: 241
+lineas: 242
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # streetwear-mexico-escena.html
 
-`dstar-store/blog/streetwear-mexico-escena.html` · 241 líneas
+`dstar-store/blog/streetwear-mexico-escena.html` · 242 líneas
 
 Artículo del blog: la escena del streetwear en México.
 
@@ -15,7 +15,7 @@ Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[products-data.js]], [[cart-store.js]], [[app.js]], [[blog-transitions.js]]
+- Carga script: [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[app.js]], [[blog-transitions.js]]
 - Carga estilos: [[style.css]]
 - Carga manifest: [[manifest.webmanifest]]
 - Enlaza a: [[terminos.html]]

@@ -70,14 +70,19 @@ let cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
 // ============================================
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
+const REDUCED_MOTION_QUERY = window.matchMedia('(prefers-reduced-motion: reduce)');
+const FINE_POINTER_QUERY = window.matchMedia('(hover: hover) and (pointer: fine)');
 
 // ============================================
 // INIT
 // ============================================
 async function initApp() {
-  await window.DSTAR_CATALOG_READY;
+  const isProductPage = document.body.classList.contains('page-product');
+  const productId = new URLSearchParams(location.search).get('id');
+  if (isProductPage && !PRODUCTS.some((p) => p.id === productId)) await window.DSTAR_CATALOG_READY;
   cart = window.DSTAR_CART ? window.DSTAR_CART.load() : [];
-  if (document.body.classList.contains('page-product')) {
+  window.addEventListener('dstar:catalog', applyCatalog);
+  if (isProductPage) {
     // ── Página de detalle de producto ──
     updateCartUI();
     initNav();
@@ -86,6 +91,7 @@ async function initApp() {
     initRippleButtons();
     initProductPage();
     initGlassLight();
+    initNavPill();
     initLiveStock();
   } else {
     // ── Página principal ──
@@ -102,6 +108,7 @@ async function initApp() {
     initCart();
     initScrollProgress();
     initLiveStock();
+    initAlertForm($('#dropAlert'), () => ({ tipo: 'drop' }));
 
     // 2. Idle: interactions decorativas (no bloquean el render crítico)
     const idle = window.requestIdleCallback
@@ -112,8 +119,37 @@ async function initApp() {
       initRippleButtons();
       initTextScramble();
       initGlassLight();
+      initNavPill();
+      initLogoTilt();
     });
   }
+}
+
+const catalogShape = (p) => JSON.stringify({ ...p, stock: undefined, sizesStock: undefined });
+const needsRebuild = (old, fresh) => !fresh || catalogShape(old) !== catalogShape(fresh) || (isProductSoldOut(old) && !isProductSoldOut(fresh));
+let renderedCatalog = [];
+
+function applyCatalog() {
+  const pd = window._pdProduct;
+  if (pd) {
+    const fresh = PRODUCTS.find((p) => p.id === pd.id);
+    if (!fresh) { window.location.href = '/'; return; }
+    if (needsRebuild(pd, fresh)) {
+      const mark = pd.id + catalogShape(fresh);
+      let reloaded = false;
+      try {
+        reloaded = sessionStorage.getItem('dstar_catalog_reload') === mark;
+        sessionStorage.setItem('dstar_catalog_reload', mark);
+      } catch {}
+      if (!reloaded) { window.location.reload(); return; }
+    }
+    window._pdProduct = fresh;
+  } else if ($('#productsGrid')) {
+    const changed = renderedCatalog.length !== PRODUCTS.length
+      || PRODUCTS.some((p, i) => p.id !== renderedCatalog[i].id || needsRebuild(renderedCatalog[i], p));
+    if (changed) renderProducts();
+  }
+  applyLiveStock();
 }
 
 function initLiveStock() {
@@ -201,6 +237,7 @@ function renderProducts() {
   // Guard: blog pages and other sub-pages load app.js but don't have #productsGrid.
   // Without this check, null.innerHTML throws and kills initNav/initCart on those pages.
   if (!grid) return;
+  renderedCatalog = JSON.parse(JSON.stringify(PRODUCTS));
   grid.innerHTML = PRODUCTS.map((p, i) => {
     const isSoldOut = isProductSoldOut(p);
     const name = escapeHtml(p.name);
@@ -323,13 +360,27 @@ function initCardPrefetch() {
   grid.addEventListener('pointerleave', () => clearTimeout(intent));
   grid.addEventListener('pointerdown', (e) => { const card = cardOf(e); if (card) warm(card); });
   grid.addEventListener('touchstart', (e) => { const card = cardOf(e); if (card) warm(card); }, { passive: true });
+
+  const clearMorph = () => grid.querySelectorAll('.product-card__image').forEach((el) => { el.style.viewTransitionName = ''; });
+  grid.addEventListener('click', (e) => {
+    const card = cardOf(e);
+    if (!card || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+    clearMorph();
+    const photo = card.querySelector('.product-card__image');
+    if (photo) photo.style.viewTransitionName = 'pd-photo';
+  });
+  window.addEventListener('pageshow', (e) => { if (e.persisted) clearMorph(); });
 }
 
 // ============================================
 // CART
 // ============================================
+let cartReturnFocus = null;
+
 function initCart() {
-  if (!$('#cartBtn')) return;
+  const drawer = $('#cartDrawer');
+  if (!$('#cartBtn') || !drawer) return;
+  drawer.inert = true;
   $('#cartBtn').addEventListener('click', openCart);
   $('#cartClose').addEventListener('click', closeCart);
   $('#cartOverlay').addEventListener('click', closeCart);
@@ -340,19 +391,82 @@ function initCart() {
     const index = Number(btn.dataset.index);
     if (btn.dataset.cartAction === 'remove') removeFromCart(index);
     else changeQty(index, btn.dataset.cartAction === 'inc' ? 1 : -1);
+    if (!drawer.contains(document.activeElement)) $('#cartClose').focus({ preventScroll: true });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!drawer.classList.contains('open')) return;
+    if (e.key === 'Escape') { closeCart(); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = Array.from(drawer.querySelectorAll('button:not(:disabled), a[href]')).filter((el) => el.getClientRects().length);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 }
 
 function openCart() {
-  $('#cartDrawer').classList.add('open');
+  const drawer = $('#cartDrawer');
+  if (!drawer || drawer.classList.contains('open')) return;
+  cartReturnFocus = document.activeElement;
+  drawer.inert = false;
+  drawer.classList.add('open', 'cart-drawer--entering');
+  setTimeout(() => drawer.classList.remove('cart-drawer--entering'), 900);
   $('#cartOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  $('#cartClose').focus({ preventScroll: true });
 }
 
 function closeCart() {
-  $('#cartDrawer').classList.remove('open');
+  const drawer = $('#cartDrawer');
+  if (!drawer.classList.contains('open')) return;
+  drawer.classList.remove('open', 'cart-drawer--entering');
+  drawer.inert = true;
   $('#cartOverlay').classList.remove('open');
   document.body.style.overflow = '';
+  if (cartReturnFocus && cartReturnFocus.isConnected) cartReturnFocus.focus({ preventScroll: true });
+  cartReturnFocus = null;
+}
+
+function flyToCart(from) {
+  const cartBtn = $('#cartBtn');
+  if (!cartBtn || !from || REDUCED_MOTION_QUERY.matches || !from.animate) return 0;
+  const inView = (el) => {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+  };
+  const photo = Array.from($$('.pd-gallery-img img, .pd-carousel__item img')).find((img) => img.currentSrc && inView(img));
+  if (!photo || !inView(from)) return 0;
+  $('.header')?.classList.remove('header--hidden');
+  const a = from.getBoundingClientRect();
+  const b = cartBtn.getBoundingClientRect();
+  const fly = document.createElement('div');
+  fly.className = 'cart-fly';
+  fly.setAttribute('aria-hidden', 'true');
+  const img = new Image();
+  img.alt = '';
+  img.decoding = 'async';
+  img.src = photo.currentSrc;
+  fly.appendChild(img);
+  document.body.appendChild(fly);
+  const x0 = a.left + a.width / 2 - 28;
+  const y0 = a.top + a.height / 2 - 36;
+  const x1 = b.left + b.width / 2 - 28;
+  const y1 = Math.max(b.top, 24) + b.height / 2 - 36;
+  const duration = 620;
+  const done = () => {
+    fly.remove();
+    cartBtn.classList.remove('cart-btn--bounce');
+    void cartBtn.offsetWidth;
+    cartBtn.classList.add('cart-btn--bounce');
+  };
+  fly.animate([
+    { transform: `translate(${x0}px, ${y0}px) scale(0.4)`, opacity: 0 },
+    { transform: `translate(${x0}px, ${y0 - 56}px) scale(1)`, opacity: 1, offset: 0.28 },
+    { transform: `translate(${x1}px, ${y1}px) scale(0.25)`, opacity: 0.3 }
+  ], { duration, easing: 'cubic-bezier(0.5, 0, 0.2, 1)' }).finished.then(done, done);
+  return duration;
 }
 
 function updateCartUI() {
@@ -721,23 +835,27 @@ function initScrollProgress() {
 }
 
 // ============================================
-// RIPPLE EFFECT (event delegation)
+// RIPPLE — un solo listener para todos los botones de vidrio
 // ============================================
+const RIPPLE_ON_LIGHT = '.hero__cta, .product-detail__add, .cart-drawer__checkout, .pd-sticky-cta__btn, .alert-form__btn, .size-btn.active';
+const RIPPLE_ON_DARK = '.size-btn, .lookbook__ig-link, .lookbook__nav-arrow';
+
 function initRippleButtons() {
+  if (REDUCED_MOTION_QUERY.matches) return;
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest(
-      '.product-modal__add, .cart-drawer__checkout, .size-btn, .lookbook__ig-link'
-    );
+    const btn = e.target.closest(`${RIPPLE_ON_LIGHT}, ${RIPPLE_ON_DARK}`);
     if (!btn || btn.disabled) return;
     const rect = btn.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
+    const size = Math.max(rect.width, rect.height) * 0.45;
+    const fromPointer = e.clientX || e.clientY;
+    const x = fromPointer ? e.clientX - rect.left : rect.width / 2;
+    const y = fromPointer ? e.clientY - rect.top : rect.height / 2;
     const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    ripple.style.cssText = `
-      width: ${size}px; height: ${size}px;
-      left: ${e.clientX - rect.left - size / 2}px;
-      top:  ${e.clientY - rect.top  - size / 2}px;
-    `;
+    ripple.className = `btn-ripple btn-ripple--${btn.matches(RIPPLE_ON_LIGHT) ? 'dark' : 'light'}`;
+    ripple.style.width = `${size}px`;
+    ripple.style.height = `${size}px`;
+    ripple.style.left = `${x - size / 2}px`;
+    ripple.style.top = `${y - size / 2}px`;
     btn.appendChild(ripple);
     ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
   });
@@ -823,6 +941,7 @@ function initProductPage() {
   if (!p) { window.location.href = '/'; return; }
 
   document.title = p.name + ' — DSTAR';
+  window.DSTAR_TRACK?.('product', { id: p.id });
 
   const isSoldOut = p.stock === 0 || p.badge === 'SOLDOUT';
   const gallery   = (p.gallery && p.gallery.length) ? p.gallery : [p.image];
@@ -899,10 +1018,79 @@ function initProductPage() {
 
   // ── MOBILE UX: sticky CTA bar + size-label pulse + smart-scroll ──
   _pdInitMobileUX(p, isSoldOut);
+  updateSizeAlert(p);
+  initAlertForm($('#pdAlert'), () => ({ tipo: 'talla', productId: window._pdProduct.id, size: $('#pdAlertSize').value }));
+}
+
+function updateSizeAlert(p) {
+  const form = $('#pdAlert');
+  const select = $('#pdAlertSize');
+  if (!form || !select) return;
+  const agotadas = p.sizes.filter((s) => p.badge === 'SOLDOUT' || !((p.sizesStock?.[s] || 0) > 0));
+  form.hidden = agotadas.length === 0;
+  const actual = select.value;
+  select.replaceChildren(...agotadas.map((s) => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    return opt;
+  }));
+  if (agotadas.includes(actual)) select.value = actual;
+}
+
+// ============================================
+// AVISOS — próximo drop y tallas agotadas
+// ============================================
+function initAlertForm(form, payload) {
+  if (!form || form.dataset.ready) return;
+  form.dataset.ready = 'true';
+  const status = form.querySelector('.alert-form__status');
+  const btn = form.querySelector('.alert-form__btn');
+  const email = form.elements.email;
+  const consent = form.elements.consent;
+  const say = (msg, error = false) => {
+    status.textContent = msg;
+    form.classList.toggle('alert-form--error', error);
+  };
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const value = email.value.trim();
+    if (!value || !email.checkValidity()) {
+      email.setAttribute('aria-invalid', 'true');
+      say('Escribe un correo válido.', true);
+      email.focus();
+      return;
+    }
+    email.removeAttribute('aria-invalid');
+    if (!consent.checked) {
+      say('Acepta el aviso de privacidad para recibir avisos.', true);
+      consent.focus();
+      return;
+    }
+    btn.disabled = true;
+    say('Guardando…');
+    try {
+      const res = await fetch('/api/avisame', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: value, consent: true, website: form.elements.website.value, ...payload() })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No pudimos guardar tu aviso. Intenta de nuevo.');
+      form.reset();
+      say(`Listo. Te escribiremos a ${value}.`);
+      window.DSTAR_TRACK?.('alert');
+    } catch (err) {
+      say(err instanceof TypeError ? 'Sin conexión. Intenta de nuevo.' : err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 }
 
 function patchProductPageStock(p) {
   const isSoldOut = isProductSoldOut(p);
+  updateSizeAlert(p);
   document.querySelectorAll('#pdSizes .size-btn').forEach((btn) => {
     const out = !((p.sizesStock[btn.dataset.size] || 0) > 0);
     btn.disabled = out;
@@ -1808,7 +1996,7 @@ window.addEventListener('popstate', function () {
   }
 });
 
-function pdAddToCart() {
+function pdAddToCart(e) {
   const addBtn = document.getElementById('pdAddBtn');
   const p      = window._pdProduct;
   const size   = window._pdSelectedSize;
@@ -1837,42 +2025,137 @@ function pdAddToCart() {
   saveCart();
   updateCartUI();
   showToast('¡Agregado al carrito!');
+  window.DSTAR_TRACK?.('add', { id: p.id });
 
   // Haptic feedback al confirmar agregado
   if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
 
-  // Abrir carrito
-  const drawer  = document.getElementById('cartDrawer');
-  const overlay = document.getElementById('cartOverlay');
-  if (drawer && overlay) {
-    drawer.classList.add('open');
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
+  const origin = [e && e.currentTarget, document.getElementById('pdStickyBtn'), addBtn].find((el) => el && el.getClientRects && el.getClientRects().length);
+  const flight = flyToCart(origin);
+  if (flight) setTimeout(openCart, flight - 140);
+  else openCart();
 }
 
 
 // ============================================
-// PRODUCT CARD HOVER — foto real de la prenda (desktop)
+// LIQUID GLASS — reflejo que sigue al puntero en header y botones (desktop)
 // ============================================
-// ============================================
-// LIQUID GLASS — reflejo que sigue al puntero en el header (desktop)
-// ============================================
+const GLASS_LIGHT = '.header__inner, .hero__cta, .product-detail__add, .cart-drawer__checkout, .pd-sticky-cta__btn, .alert-form__btn, .lookbook__ig-link';
+
 function initGlassLight() {
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const glass = $('.header__inner');
-  if (!glass) return;
+  if (!FINE_POINTER_QUERY.matches || REDUCED_MOTION_QUERY.matches) return;
   let frame = 0;
-  glass.addEventListener('pointermove', (e) => {
+  let last = null;
+  document.addEventListener('pointermove', (e) => {
+    last = e;
     if (frame) return;
     frame = requestAnimationFrame(() => {
-      const r = glass.getBoundingClientRect();
-      glass.style.setProperty('--glass-x', `${e.clientX - r.left}px`);
-      glass.style.setProperty('--glass-y', `${e.clientY - r.top}px`);
       frame = 0;
+      const glass = last.target.closest && last.target.closest(GLASS_LIGHT);
+      if (!glass) return;
+      const r = glass.getBoundingClientRect();
+      glass.style.setProperty('--glass-x', `${last.clientX - r.left}px`);
+      glass.style.setProperty('--glass-y', `${last.clientY - r.top}px`);
     });
   }, { passive: true });
+}
+
+// ============================================
+// HEADER — píldora de vidrio que se desliza al link activo o apuntado
+// ============================================
+function initNavPill() {
+  const nav = $('#mainNav');
+  if (!nav || !nav.animate) return;
+  const links = Array.from(nav.querySelectorAll('.header__link'));
+  if (!links.length) return;
+  const pill = document.createElement('span');
+  pill.className = 'header__pill';
+  pill.setAttribute('aria-hidden', 'true');
+  nav.prepend(pill);
+  nav.classList.add('header__nav--pill');
+
+  let current = null;
+  let active = null;
+  const place = (link) => {
+    pill.style.left = `${link.offsetLeft}px`;
+    pill.style.width = `${link.offsetWidth}px`;
+  };
+  const moveTo = (link) => {
+    if (link === current) return;
+    if (!link) {
+      pill.classList.remove('is-on');
+      current = null;
+      return;
+    }
+    const was = current ? pill.getBoundingClientRect() : null;
+    place(link);
+    pill.classList.add('is-on');
+    if (was && was.width && !REDUCED_MOTION_QUERY.matches) {
+      const now = pill.getBoundingClientRect();
+      if (now.width) {
+        pill.animate(
+          [{ transform: `translateX(${was.left - now.left}px) scaleX(${was.width / now.width})` }, { transform: 'none' }],
+          { duration: 420, easing: 'cubic-bezier(0.3, 1.3, 0.5, 1)' }
+        );
+      }
+    }
+    current = link;
+  };
+  const rest = () => moveTo(active);
+  const linkOf = (e) => e.target.closest && e.target.closest('.header__link');
+
+  nav.addEventListener('pointerover', (e) => { const link = linkOf(e); if (link) moveTo(link); });
+  nav.addEventListener('pointerleave', () => { if (!nav.contains(document.activeElement)) rest(); });
+  nav.addEventListener('focusin', (e) => { const link = linkOf(e); if (link) moveTo(link); });
+  nav.addEventListener('focusout', () => { if (!nav.matches(':hover')) rest(); });
+  const resync = () => { if (current) place(current); };
+  window.addEventListener('resize', resync, { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(resync);
+
+  if (!('IntersectionObserver' in window)) return;
+  const sections = new Map();
+  links.forEach((link) => {
+    const url = new URL(link.href);
+    const section = url.pathname === location.pathname && url.hash ? document.getElementById(url.hash.slice(1)) : null;
+    if (section) sections.set(section, link);
+  });
+  if (!sections.size) return;
+  const visible = new Set();
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => { if (entry.isIntersecting) visible.add(entry.target); else visible.delete(entry.target); });
+    const section = Array.from(sections.keys()).find((s) => visible.has(s));
+    const next = section ? sections.get(section) : null;
+    if (next === active) return;
+    if (active) active.removeAttribute('aria-current');
+    active = next;
+    if (active) active.setAttribute('aria-current', 'location');
+    if (!nav.matches(':hover') && !nav.contains(document.activeElement)) rest();
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  sections.forEach((link, section) => observer.observe(section));
+}
+
+// ============================================
+// HERO — el logo 3D se inclina hacia el puntero (desktop)
+// ============================================
+function initLogoTilt() {
+  const hero = $('.hero');
+  const logo = $('.hero__logo');
+  if (!hero || !logo || !FINE_POINTER_QUERY.matches || REDUCED_MOTION_QUERY.matches) return;
+  let frame = 0;
+  let last = null;
+  hero.addEventListener('pointermove', (e) => {
+    last = e;
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      logo.style.setProperty('--tilt-y', `${((last.clientX / window.innerWidth) - 0.5) * 16}deg`);
+      logo.style.setProperty('--tilt-x', `${(0.5 - last.clientY / window.innerHeight) * 12}deg`);
+    });
+  }, { passive: true });
+  hero.addEventListener('pointerleave', () => {
+    logo.style.setProperty('--tilt-x', '0deg');
+    logo.style.setProperty('--tilt-y', '0deg');
+  });
 }
 
 // ============================================

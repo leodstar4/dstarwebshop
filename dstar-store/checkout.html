@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>DSTAR — Checkout</title>
   <meta name="description" content="Completa tu pedido DSTAR — envío a todo México.">
   <meta name="robots" content="noindex">
@@ -71,7 +71,7 @@
        ============================================ */
     .header {
       position: fixed;
-      top: 32px;
+      top: calc(32px + env(safe-area-inset-top));
       left: 50%;
       transform: translateX(-50%);
       width: calc(100% - 40px);
@@ -86,7 +86,7 @@
       transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .header--scrolled { transform: translateX(-50%) translateY(-20px); }
-    .header--hidden { transform: translateX(-50%) translateY(calc(-100% - 48px)); }
+    .header--hidden { transform: translateX(-50%) translateY(calc(-100% - 48px - env(safe-area-inset-top))); }
     @media (max-width: 768px) {
       .header { width: calc(100% - 20px); border-radius: 18px; }
     }
@@ -501,7 +501,7 @@
        ============================================ */
     .toast {
       position: fixed;
-      bottom: 32px;
+      bottom: calc(32px + env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       background: var(--dark);
@@ -712,8 +712,9 @@
        JAVASCRIPT — Lógica del checkout
        ============================================ -->
   <script src="js/products-data.js?v=1"></script>
-  <script src="js/cart-store.js?v=3"></script>
-  <script src="js/checkout.js?v=2"></script>
+  <script src="js/metricas.js?v=1"></script>
+  <script src="js/cart-store.js?v=4"></script>
+  <script src="js/checkout.js?v=3"></script>
 
 </body>
 </html>

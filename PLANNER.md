@@ -1,6 +1,6 @@
 # DSTAR — Lo que falta
 
-Actualizado: 2026-10-20.
+Actualizado: 2026-11-10.
 
 ## Cambios locales del 19/10/2026 (pendientes de publicar)
 
@@ -16,12 +16,12 @@ Actualizado: 2026-10-20.
 - [x] Correcciones del 20/10/2026: pedidos legacy (clave numérica sin `paymentStatus`) marcados `legacy`, nunca despachados ni re-notificados; tarjeta rechazada no libera el apartado; reintento de la preferencia tras una falla de Mercado Pago; preferencia vencida responde `restart: true`; errores de Skydropx antes del POST quedan como guía fallida reintentable; la conciliación ignora pedidos terminados; poda del libro de inventario; respaldo de `AbortController` en `cart-store.js` para iOS 15. Backend: 34 pruebas aprobadas.
 - [ ] Completar datos legales reales y verificar pesos/medidas físicos.
 - [ ] Respaldar el blob `stock/vendidas` y los pedidos desde Netlify antes de publicar (la migración del inventario no tiene vuelta atrás con el código anterior).
-- [ ] Configurar `PANEL_PASSWORD` y `MP_WEBHOOK_SECRET` en Netlify (ámbito Functions).
-- [ ] Registrar en Mercado Pago el webhook de pagos (`/.netlify/functions/mp-webhook`) con eventos de pagos.
+- [x] Configurar `PANEL_PASSWORD` y `MP_WEBHOOK_SECRET` en Netlify (ámbito Functions).
+- [x] Registrar en Mercado Pago el webhook de pagos (`/.netlify/functions/mp-webhook`) con eventos de pagos.
 - [ ] Compra de prueba real autorizada: pago, apartado, stock, guía, correo, seguimiento y conciliación.
 - [ ] Verificar en un iPhone físico la compra completa (catálogo remoto, checkout, regreso a `seguimiento.html` y carrito), incluido iOS 15.
 - [ ] Inventario en un solo blob de Netlify Blobs: en un drop muy grande las escrituras compiten y habrá reintentos o 409. Para volumen alto, mover el libro a una base transaccional y paginar pedidos.
-- [ ] `initApp` (y checkout y animaciones) espera hasta 5 s a `/api/catalogo` antes de renderizar; en iOS 15 sin `AbortController` no hay corte. Valorar pintar primero con `products-data.js` y actualizar después.
+- [x] La tienda ya no espera a `/api/catalogo`: pinta con la copia guardada (`dstar_catalog`) o `products-data.js` y se actualiza con el evento `dstar:catalog`. Solo la ficha de una pieza que no está en local y el checkout esperan, con tope de 5 s también en iOS 15.
 - **Excluido por decisión del usuario:** emitir reembolsos, gestionar devoluciones y facturación. No hay botones ni operaciones API para esas funciones; la detección de pagos revertidos sigue activa por seguridad.
 - Ver [OPERACION.md](OPERACION.md) para configuración, migración, límites y pruebas.
 
@@ -33,7 +33,7 @@ Actualizado: 2026-10-20.
 
 ## Prioridad media
 
-- [ ] **Configurar `PANEL_PASSWORD`** (mínimo 16 caracteres) en Netlify → Environment variables. Sin ella el panel de pedidos (`/pedidos.html`) y `admin-store` responden 503. Ya está en `.env.example`.
+- [x] **Configurar `PANEL_PASSWORD`** (mínimo 16 caracteres) en Netlify → Environment variables. Sin ella el panel de pedidos (`/pedidos.html`) y `admin-store` responden 503. Ya está en `.env.example`.
 - [ ] **Correo transaccional con dominio propio:** el código ya admite Resend (`RESEND_API_KEY`, `MAIL_FROM`) o un SMTP propio (`SMTP_*`) en `netlify/lib/mail.js`; falta el dominio con SPF/DKIM. Mientras tanto se usa Gmail SMTP, con límite diario y riesgo de spam.
 - [x] **Enlaces rotos de redes:** Instagram (`https://www.instagram.com/dstar_.4/`) en todas las páginas; TikTok quitado hasta que haya cuenta.
 - [x] **Límite de peticiones** en `/api/cotizar-envio`, `/api/mp-preference`, `/api/stock` y el panel (`netlify/lib/rate-limit.js`).
@@ -43,11 +43,29 @@ Actualizado: 2026-10-20.
 
 ## Prioridad baja
 
-- [ ] Dominio propio (hoy `dstarshop.netlify.app`).
+- [x] Dominio propio: `dstar4.party`.
 - [ ] Enlace de TikTok cuando exista la cuenta.
 - [x] Agregar productos sin tocar código (panel y catálogo persistente; pendiente de despliegue).
-- [ ] Analítica respetuosa de privacidad (Plausible o Netlify Analytics).
+- [x] Analítica propia sin cookies: contadores agregados por día en Netlify Blobs (`/api/evento`), embudo, productos y fuentes en el panel.
 - [ ] Prueba E2E del logo con autoplay bloqueado (necesita Chrome con H.264: `channel: 'chrome'`).
+- [ ] Página aparte `/museo.html`: museo 3D con Three.js local donde las prendas son las obras. Planeada, sin empezar.
+- [ ] Hacer commit del trabajo local del 2026-10-29 y del 2026-11-10 (incluye avisos, analítica y `metricas.js`).
+
+## Hecho el 2026-11-10 (local, sin commit)
+
+- Botones "liquid glass" en un solo bloque de `style.css` (claros y oscuros, sin `backdrop-filter`, presión con `scale`); se quitaron reglas duplicadas, `.ripple` y `.cart-particle`, y los `!important` bajaron a 26.
+- Un solo ripple (`.btn-ripple`) y un solo reflejo de puntero delegados en `app.js`; `initButtonEffects` eliminado de `gsap-animations.js` y botones magnéticos con un solo `mousemove`.
+- Carrito accesible: `role="dialog"`, `inert` cerrado, foco que entra y regresa, Escape y Tab atrapado; abre con resorte, items escalonados y miniatura que vuela al ícono al agregar.
+- Píldora de vidrio en el nav con `aria-current="location"`, inclinación del logo del hero y view transition `pd-photo` de la tarjeta a la ficha.
+- Service worker `dstar-v15`; `style.css?v=40`, `app.js?v=40`, `gsap-animations.js?v=21`.
+- Playwright: 261 aprobadas, 33 omitidas, 0 fallos.
+
+## Hecho el 2026-10-29
+
+- Catálogo sin espera: render inmediato con la copia local, actualización con `dstar:catalog`, caché de CDN de 15 s en `/api/catalogo` y el carrito conserva piezas desconocidas hasta confirmar el catálogo.
+- Analítica propia sin cookies ni IPs (`metricas.js`, `netlify/lib/analytics.js`): visitas, páginas, productos vistos, carrito, checkout y pago; respeta GPC/Do Not Track y descarta robots. Sección ANALÍTICA en el panel con embudo, productos, fuentes, dispositivos y días.
+- Avisos (`netlify/lib/avisos.js`): formulario del próximo drop en el index y "avísame" para tallas agotadas en la ficha; consentimiento, honeypot, límite por IP, baja con confirmación desde cada correo. En el panel: exportar CSV de la lista y avisar por talla en lotes de 10 cuando hay stock.
+- Detalles: `viewport-fit=cover` y safe areas en el checkout; canonical y `og:*` en `privacidad.html`; `operacion.css` con BEM y custom properties; aviso de privacidad actualizado (avisos y medición).
 
 ## Hecho el 2026-10-17 (auditoría)
 

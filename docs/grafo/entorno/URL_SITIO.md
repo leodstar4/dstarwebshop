@@ -15,9 +15,11 @@ Relacionada con: [[Netlify]]
 ## Leída en
 
 - [[mp-preference.js]]
+- [[avisos.js (lib)]]
 - [[jobs.js]]
 - [[payment-service.js]]
 - [[validate.js]]
+- [[avisos-analitica.test.cjs]]
 - [[correcciones.test.cjs]]
 - [[operacion.test.cjs]]
 - [[audit-bugs.spec.js]]

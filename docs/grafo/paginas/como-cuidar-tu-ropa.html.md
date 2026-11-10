@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/blog/como-cuidar-tu-ropa.html"
-lineas: 254
+lineas: 255
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # como-cuidar-tu-ropa.html
 
-`dstar-store/blog/como-cuidar-tu-ropa.html` · 254 líneas
+`dstar-store/blog/como-cuidar-tu-ropa.html` · 255 líneas
 
 Artículo del blog: cómo cuidar tu ropa.
 
@@ -15,7 +15,7 @@ Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[products-data.js]], [[cart-store.js]], [[app.js]], [[blog-transitions.js]]
+- Carga script: [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[app.js]], [[blog-transitions.js]]
 - Carga estilos: [[style.css]]
 - Carga manifest: [[manifest.webmanifest]]
 - Enlaza a: [[terminos.html]]

@@ -13,7 +13,7 @@
       const r=await fetch('/api/seguimiento',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,token}),cache:'no-store'});
       const p=await r.json(); if(!r.ok) throw new Error(p.error || 'No pudimos consultar el pedido.');
       status.textContent=names[p.paymentStatus] || 'Estado en revisión';
-      detail.hidden=false; const dl=document.createElement('dl');
+      detail.hidden=false; const dl=document.createElement('dl');dl.className='ops__list';
       row(dl,'Pedido',p.id); row(dl,'Total',money(p.total)); row(dl,'Preparación',names[p.fulfillment] || 'Pendiente');
       if(p.refundedAmount) row(dl,'Reembolsado',money(p.refundedAmount));
       if(p.tracking) row(dl,'Rastreo',p.carrier+' '+p.tracking);

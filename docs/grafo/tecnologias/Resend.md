@@ -14,6 +14,7 @@ Parte de: [[Tecnologías]]
 
 - [[admin-store.js]]
 - [[mail.js]]
+- [[avisos-analitica.test.cjs]]
 - [[correcciones.test.cjs]]
 - [[operacion.test.cjs]]
 - [[Agente budgeter]]

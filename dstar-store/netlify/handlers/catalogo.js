@@ -6,6 +6,8 @@ exports.handler = async event => {
   try {
     const products = await catalog(event);
     const stock = await leerStock(event, products);
-    return reply(200, { products: products.filter(p => p.active !== false).map(p => ({ ...p, sizesStock: stock[p.id], stock: Object.values(stock[p.id]).reduce((a, b) => a + b, 0) })) });
+    const res = reply(200, { products: products.filter(p => p.active !== false).map(p => ({ ...p, sizesStock: stock[p.id], stock: Object.values(stock[p.id]).reduce((a, b) => a + b, 0) })) });
+    res.headers['Netlify-CDN-Cache-Control'] = 'public, s-maxage=15, stale-while-revalidate=30';
+    return res;
   } catch (e) { return failure(e); }
 };

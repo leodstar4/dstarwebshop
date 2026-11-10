@@ -9,7 +9,7 @@ lineas: 4
 
 `dstar-store/seguimiento.html` · 4 líneas
 
-Seguimiento privado del pedido (noindex, no-store, no-referrer): back_url de Mercado Pago con #id/token en el hash; muestra pago, preparación y rastreo con js/seguimiento.js y estilos de css/operacion.css.
+Seguimiento privado del pedido (noindex, no-store, no-referrer, viewport-fit=cover): back_url de Mercado Pago con #id/token en el hash; muestra pago, preparación y rastreo con js/seguimiento.js y estilos .ops__* de css/operacion.css; no carga metricas.js.
 
 Parte de: [[Páginas]]
 
@@ -18,6 +18,7 @@ Parte de: [[Páginas]]
 - Carga script: [[seguimiento.js (js)]]
 - Carga estilos: [[operacion.css]]
 - Enlaza a: [[index.html]]
+- Usa: [[Google Fonts]]
 
 ## Últimos cambios
 

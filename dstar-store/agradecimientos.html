@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=38">
+  <link rel="stylesheet" href="css/style.css?v=40">
   <style>
     .agradecimientos {
       max-width: 720px;
@@ -141,7 +141,7 @@
         <a href="/#contact" class="header__link">CONTACTO</a>
       </nav>
       <div class="header__actions">
-        <button class="cart-btn" id="cartBtn" aria-label="Carrito">
+        <button class="cart-btn" id="cartBtn" type="button" aria-label="Abrir carrito" aria-haspopup="dialog" aria-controls="cartDrawer">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
             <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -242,10 +242,10 @@
 
   <!-- CART DRAWER -->
   <div class="cart-overlay" id="cartOverlay"></div>
-  <div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
     <div class="cart-drawer__header">
-      <h3>TU CARRITO</h3>
-      <button class="cart-drawer__close" id="cartClose">✕</button>
+      <h3 id="cartTitle">TU CARRITO</h3>
+      <button class="cart-drawer__close" id="cartClose" type="button" aria-label="Cerrar carrito"><span aria-hidden="true">✕</span></button>
     </div>
     <div class="cart-drawer__items" id="cartItems"></div>
     <div class="cart-drawer__empty" id="cartEmpty">
@@ -264,7 +264,8 @@
   <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
   <script src="js/products-data.js?v=1" defer></script>
-  <script src="js/cart-store.js?v=3" defer></script>
-  <script src="js/app.js?v=38" defer></script>
+  <script src="js/metricas.js?v=1" defer></script>
+  <script src="js/cart-store.js?v=4" defer></script>
+  <script src="js/app.js?v=40" defer></script>
 </body>
 </html>

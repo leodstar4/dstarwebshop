@@ -1,21 +1,20 @@
 ---
 tags: [codigo, frontend]
 ruta: "dstar-store/js/gsap-animations.js"
-lineas: 641
+lineas: 567
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # gsap-animations.js
 
-`dstar-store/js/gsap-animations.js` · 641 líneas
+`dstar-store/js/gsap-animations.js` · 567 líneas
 
-Animaciones del index y del detalle (arrancan después de DSTAR_CATALOG_READY): hero letra por letra (SplitText) y CTA con element.animate() al recibir dstar:loaded, revelados de scroll con IntersectionObserver y element.animate() (WAAPI, en el compositor), contador de Nosotros, lookbook en móvil/tablet, cursor y botones magnéticos con GSAP desde js/vendor; el SplitText que parte solo en líneas va con aria: none. El contenido es visible por defecto y respeta prefers-reduced-motion.
+Animaciones del index y del detalle (arrancan en DOMContentLoaded, ya sin esperar DSTAR_CATALOG_READY): hero letra por letra (SplitText) y CTA con element.animate() al recibir dstar:loaded, revelados de scroll con IntersectionObserver y element.animate() (WAAPI, en el compositor), contador de Nosotros, lookbook en móvil/tablet, cursor y botones magnéticos con GSAP desde js/vendor (initMagneticButtons: un solo mousemove con requestAnimationFrame para .hero__cta, .product-detail__add, .cart-drawer__checkout y #cartBtn; el ripple y el brillo de los botones viven en app.js); el SplitText que parte solo en líneas va con aria: none. El contenido es visible por defecto y respeta prefers-reduced-motion.
 
 Parte de: [[Frontend]]
 
 ## Conexiones
 
-- Usa la global: [[cart-store.js]] (`DSTAR_CATALOG_READY`)
 - Usa: [[GSAP]]
 
 ## Funciones y clases
@@ -42,12 +41,12 @@ Parte de: [[Frontend]]
 - `onKey` (línea 341)
 - `scrollToPanel` (línea 393)
 - `setActive` (línea 401)
-- `initButtonEffects` (línea 442)
-- `spawnRipple` (línea 461)
-- `initCustomCursor` (línea 523)
-- `initMagneticButtons` (línea 580)
-- `invalidate` (línea 591)
-- `run` (línea 629)
+- `initCustomCursor` (línea 442)
+- `initMagneticButtons` (línea 499)
+- `release` (línea 510)
+- `invalidate` (línea 514)
+- `update` (línea 521)
+- `run` (línea 555)
 
 ## Últimos cambios
 

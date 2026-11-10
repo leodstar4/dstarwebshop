@@ -1,21 +1,21 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/checkout.html"
-lineas: 720
+lineas: 721
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # checkout.html
 
-`dstar-store/checkout.html` · 720 líneas
+`dstar-store/checkout.html` · 721 líneas
 
-Checkout (noindex): datos del cliente con referencia de entrega, cotización de envío y pago con Mercado Pago (solo pagos inmediatos, sin OXXO); enlaza terminos.html y privacidad.html junto a PAGAR; toda la lógica está en js/checkout.js.
+Checkout (noindex): datos del cliente con referencia de entrega, cotización de envío y pago con Mercado Pago (solo pagos inmediatos, sin OXXO); enlaza terminos.html y privacidad.html junto a PAGAR; `viewport-fit=cover` con env(safe-area-inset-*) en el header y el toast de su `<style>` inline; toda la lógica está en js/checkout.js y carga js/metricas.js.
 
 Parte de: [[Páginas]]
 
 ## Conexiones
 
-- Carga script: [[products-data.js]], [[cart-store.js]], [[checkout.js]]
+- Carga script: [[products-data.js]], [[metricas.js]], [[cart-store.js]], [[checkout.js]]
 - Carga manifest: [[manifest.webmanifest]]
 - Enlaza a: [[index.html]], [[terminos.html]], [[privacidad.html]]
 - Usa: [[Cloudinary]], [[GSAP]], [[Google Fonts]]

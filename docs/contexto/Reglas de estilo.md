@@ -12,7 +12,7 @@ Resumen de [[CLAUDE]]; los estilos viven en [[style.css]].
 - Animaciones respetan `prefers-reduced-motion` ([[gsap-animations.js]]) y los revelados de scroll solo animan `opacity` y `transform` (WAAPI con `element.animate()`); el JS oculta cada elemento justo antes de animarlo, así que sin JS nada queda oculto; sin `will-change` permanente en tarjetas, paneles del lookbook ni `.hero__content`.
 - Targets táctiles de 44x44px mínimo y `aria-*` en todo elemento interactivo.
 - `100svh` en hero y secciones a pantalla completa, `100dvh` solo en overlays fijos; nunca `100vh`.
-- `backdrop-filter` solo en elementos chicos y fijos de navegación.
+- `backdrop-filter` solo en elementos chicos y fijos de navegación. Los botones de vidrio no lo usan: se arman con degradados y los tokens `--btn-light*` y `--btn-dark*` del bloque BOTONES de [[style.css]], y su presión va con la propiedad `scale`, no con `transform` ([[Rendimiento y PWA]]).
 - `font-display: swap` en todas las fuentes ([[Google Fonts]]).
 
 Convenciones del código desde la auditoría del 2026-10-17 (no están en [[CLAUDE]]):
