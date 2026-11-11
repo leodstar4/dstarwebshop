@@ -29,6 +29,7 @@ Parte de: [[Frontend]]
 
 ## Últimos cambios
 
+- 2026-11-10 · `4d7afee` · Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
 - 2026-10-20 · `b116e0b` · Operación de la tienda: inventario persistente, conciliación de pagos, seguimiento y correcciones de pedidos anteriores
 - 2026-10-12 · `17c7774` · Stock vivo, alertas de pedidos, términos y animaciones que nunca ocultan contenido
 - 2026-10-10 · `8b73af2` · Rediseño premium, seguridad de pagos, fluidez y PWA

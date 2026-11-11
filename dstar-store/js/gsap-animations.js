@@ -71,7 +71,8 @@ function splitLines(el) {
 }
 
 // ============================================
-// HERO — "TODO CON AMOR" entra letra por letra cuando se va el loader
+// HERO — "TODO CON AMOR" sube desde una máscara, del centro hacia afuera, y se enciende como las lámparas.
+// Solo translate, rotate y opacity: escalar texto obliga a re-rasterizarlo en cada cuadro y se traba.
 // ============================================
 function initHero() {
   const hero = document.querySelector('.hero');
@@ -82,18 +83,30 @@ function initHero() {
 
   safely([tagline, cta], () => {
     hero.classList.add('hero--gsap');
-    const chars = window.SplitText ? SplitText.create(tagline, { type: 'chars', charsClass: 'split-char' }).chars : [tagline];
-    const charsIn = prepareAll(chars, { opacity: 0, transform: 'translateY(45%) scale(1.25)' }, 1.3);
-    if (cta) cta.style.opacity = '0';
-    const ctaIn = (delay) => {
-      if (!cta) return;
-      cta.style.opacity = '';
-      cta.animate([{ opacity: 0, transform: 'translateY(26px) scale(0.96)', offset: 0 }], { duration: 800, delay: delay * 1000, easing: CSS_EASE.out, fill: 'backwards' });
-    };
+    const split = window.SplitText ? SplitText.create(tagline, { type: 'lines,chars', mask: 'lines', linesClass: 'split-line', charsClass: 'split-char' }) : null;
+    const rows = split ? split.lines.map((line) => Array.from(line.querySelectorAll('.split-char'))) : [];
+    const starts = rows.map((chars) => chars.map((char) => prepare(char, { transform: 'translateY(128%) rotate(9deg)' }, 0.95)));
+    const wholeIn = split ? null : prepare(tagline, { opacity: 0, transform: 'translateY(30px)' }, 0.9);
+    const ctaIn = prepare(cta, { opacity: 0, transform: 'translateY(22px)' }, 0.7);
 
     const play = () => {
-      charsIn(0.32, 0.055);
-      ctaIn(0.47);
+      if (wholeIn) wholeIn(0.1);
+      rows.forEach((chars, row) => {
+        const mid = (chars.length - 1) / 2;
+        chars.forEach((char, i) => starts[row][i](0.1 + row * 0.1 + Math.abs(i - mid) * 0.03));
+      });
+      if (split) {
+        tagline.animate([
+          { opacity: 0, offset: 0 },
+          { opacity: 1, offset: 0.1 },
+          { opacity: 0.4, offset: 0.17 },
+          { opacity: 1, offset: 0.27 },
+          { opacity: 0.75, offset: 0.36 },
+          { opacity: 1, offset: 0.45 },
+          { opacity: 1, offset: 1 }
+        ], { duration: 1000, delay: 100, fill: 'backwards' });
+      }
+      ctaIn(0.55);
     };
     if (window.__dstarLoaded) play();
     else window.addEventListener('dstar:loaded', play, { once: true });

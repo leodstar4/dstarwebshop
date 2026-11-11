@@ -24,5 +24,6 @@ Parte de: [[Backend]]
 
 ## Últimos cambios
 
+- 2026-11-10 · `4d7afee` · Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
 - 2026-10-20 · `cb71c3f` · Funciones en formato v2 de Netlify para que las lecturas strong de Blobs funcionen en producción
 

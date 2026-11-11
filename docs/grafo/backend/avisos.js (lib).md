@@ -34,3 +34,7 @@ Parte de: [[Backend]]
 - `linkBaja` (línea 40)
 - `notificarTalla` (línea 41)
 
+## Últimos cambios
+
+- 2026-11-10 · `4d7afee` · Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
+

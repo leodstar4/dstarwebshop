@@ -54,8 +54,8 @@
     @keyframes loadBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (prefers-reduced-motion: reduce) { .loader__fill { animation: none; } }
   </style>
-  <link rel="stylesheet" id="mainCss" href="css/style.css?v=40" media="print">
-  <noscript><link rel="stylesheet" href="css/style.css?v=40"></noscript>
+  <link rel="stylesheet" id="mainCss" href="css/style.css?v=44" media="print">
+  <noscript><link rel="stylesheet" href="css/style.css?v=44"></noscript>
 </head>
 <body>
   <!-- SCROLL PROGRESS -->
@@ -97,6 +97,7 @@
       <nav class="header__nav" id="mainNav">
         <a href="#drops" class="header__link">DROPS</a>
         <a href="#lookbook" class="header__link">LOOKBOOK</a>
+        <a href="/museo.html" class="header__link">MUSEO</a>
         <a href="#about" class="header__link">NOSOTROS</a>
         <a href="#blog" class="header__link">BLOG</a>
         <a href="#contact" class="header__link">CONTACTO</a>
@@ -123,6 +124,7 @@
     <div class="mobile-nav__inner">
       <a href="#drops" class="mobile-nav__link" data-close-nav>DROPS</a>
       <a href="#lookbook" class="mobile-nav__link" data-close-nav>LOOKBOOK</a>
+      <a href="/museo.html" class="mobile-nav__link">MUSEO</a>
       <a href="#about" class="mobile-nav__link" data-close-nav>NOSOTROS</a>
       <a href="#blog" class="mobile-nav__link" data-close-nav>BLOG</a>
       <a href="#contact" class="mobile-nav__link" data-close-nav>CONTACTO</a>
@@ -159,20 +161,13 @@
     <div class="products-grid" id="productsGrid">
       <!-- Products injected by JS -->
     </div>
-    <form class="alert-form alert-form--drop" id="dropAlert" novalidate aria-labelledby="dropAlertTitle">
-      <p class="alert-form__eyebrow">PRÓXIMO DROP</p>
-      <h3 class="alert-form__title" id="dropAlertTitle">ENTÉRATE PRIMERO</h3>
-      <p class="alert-form__text">Te escribimos solo cuando salga un drop nuevo. Piezas limitadas, sin spam.</p>
-      <div class="alert-form__row">
-        <label class="alert-form__label" for="dropAlertEmail">Tu correo</label>
-        <input class="alert-form__input" id="dropAlertEmail" type="email" name="email" autocomplete="email" inputmode="email" required placeholder="TU CORREO" aria-describedby="dropAlertStatus">
-        <button class="alert-form__btn" type="submit">AVÍSAME</button>
-      </div>
-      <label class="alert-form__consent"><input class="alert-form__check" type="checkbox" name="consent" required> Acepto el <a href="privacidad.html">aviso de privacidad</a>; puedo darme de baja en cada correo.</label>
-      <input class="alert-form__trap" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <p class="alert-form__status" id="dropAlertStatus" role="status" aria-live="polite"></p>
-    </form>
   </section>
+
+  <!-- BANDA -->
+  <div class="kinetic" aria-hidden="true">
+      <div class="kinetic__row kinetic__row--line"><span>TODO CON AMOR</span><i class="kinetic__star"></i><span>PIEZAS LIMITADAS</span><i class="kinetic__star"></i><span>TODO CON AMOR</span><i class="kinetic__star"></i><span>PIEZAS LIMITADAS</span><i class="kinetic__star"></i><span>TODO CON AMOR</span><i class="kinetic__star"></i><span>PIEZAS LIMITADAS</span><i class="kinetic__star"></i></div>
+      <div class="kinetic__row kinetic__row--fill"><span>HECHO EN MÉXICO</span><i class="kinetic__star"></i><span>NADA COMO DSTAR</span><i class="kinetic__star"></i><span>HECHO EN MÉXICO</span><i class="kinetic__star"></i><span>NADA COMO DSTAR</span><i class="kinetic__star"></i><span>HECHO EN MÉXICO</span><i class="kinetic__star"></i><span>NADA COMO DSTAR</span><i class="kinetic__star"></i></div>
+  </div>
 
   <!-- LOOKBOOK -->
   <section class="lookbook" id="lookbook">
@@ -191,6 +186,16 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
         VER MÁS EN INSTAGRAM
       </a>
+    </div>
+  </section>
+
+  <!-- MUSEO -->
+  <section class="museo-teaser" aria-labelledby="museoTeaserTitle">
+    <div class="museo-teaser__inner fade-in">
+      <p class="museo-teaser__label">NUEVO · RECORRIDO EN 3D</p>
+      <h2 class="museo-teaser__title" id="museoTeaserTitle">MUSEO DSTAR</h2>
+      <p class="museo-teaser__text">Cada prenda es una obra. Camina por la galería y mira cada pieza colgada como se merece.</p>
+      <a href="/museo.html" class="hero__cta museo-teaser__cta">ENTRAR AL MUSEO</a>
     </div>
   </section>
 
@@ -324,8 +329,8 @@
   <script src="js/products-data.js?v=1" defer></script>
   <script src="js/metricas.js?v=1" defer></script>
   <script src="js/cart-store.js?v=4" defer></script>
-  <script src="js/app.js?v=40" defer></script>
-  <script src="js/gsap-animations.js?v=21" defer></script>
+  <script src="js/app.js?v=42" defer></script>
+  <script src="js/gsap-animations.js?v=22" defer></script>
   <script src="js/blog-transitions.js?v=7" defer></script>
 </body>
 </html>

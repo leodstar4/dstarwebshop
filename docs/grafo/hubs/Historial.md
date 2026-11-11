@@ -9,6 +9,10 @@ Commits del repo, del más reciente al más antiguo. Cada archivo de código lis
 
 Parte de: [[DSTAR]]
 
+## 2026-11-10
+
+- `4d7afee` Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
+
 ## 2026-10-20
 
 - `ee825c3` Incluir @netlify/blobs y nodemailer en el paquete de cada función v2

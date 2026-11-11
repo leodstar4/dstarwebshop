@@ -9,7 +9,7 @@ lineas: 197
 
 `dstar-store/tests/e2e/seguridad-y-seo.spec.js` · 197 líneas
 
-Pruebas de la auditoría del 2026-10-17: CSP real sin violaciones por página, metadatos de SEO y noindex, 404, enlaces a Instagram, edge functions producto-meta y sitemap, 429 de cotizar-envio y panel de pedidos.
+Pruebas de la auditoría del 2026-10-17: CSP real sin violaciones por página, metadatos de SEO y noindex, 404, enlaces a Instagram, edge functions producto-meta y sitemap, 429 de cotizar-envio y panel de pedidos; museo.html está entre las páginas indexables que revisa.
 
 Parte de: [[Pruebas]]
 
@@ -18,7 +18,7 @@ Parte de: [[Pruebas]]
 - Llama a la API: [[pedidos.js (handlers)]] (`/api/pedidos`)
 - Usa la global: [[avisos-analitica.test.cjs]] (`DSTAR_MEMORY_STORE`), [[cart-store.js]] (`DSTAR_PRODUCTS`)
 - Visita: [[index.html]], [[pedidos.html]]
-- Referencia a: [[producto.html]], [[terminos.html]], [[agradecimientos.html]], [[checkout.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[offline.html]], [[storage.js]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]], [[csp-hashes.js]], [[products-data.js]], [[cotizar-envio.js]]
+- Referencia a: [[producto.html]], [[terminos.html]], [[agradecimientos.html]], [[checkout.html]], [[gracias.html]], [[error-pago.html]], [[pago-pendiente.html]], [[offline.html]], [[storage.js]], [[museo.html]], [[born-to-shine-detras-del-drop.html]], [[como-cuidar-tu-ropa.html]], [[streetwear-mexico-escena.html]], [[csp-hashes.js]], [[products-data.js]], [[cotizar-envio.js]]
 - Usa: [[Playwright]], [[Netlify]], [[Cloudinary]]
 - Lee la variable: [[DSTAR_MEMORY_STORE]], [[PANEL_PASSWORD]]
 

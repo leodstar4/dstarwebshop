@@ -3,6 +3,7 @@ import '../../js/products-data.js';
 const SITE = 'https://dstar4.party';
 const PAGES = [
   '/',
+  '/museo.html',
   '/terminos.html',
   '/privacidad.html',
   '/agradecimientos.html',

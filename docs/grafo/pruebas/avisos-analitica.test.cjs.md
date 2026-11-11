@@ -35,3 +35,7 @@ Parte de: [[Pruebas]]
 - aviso exige correo válido, consentimiento y talla existente
 - aviso de talla se envía una vez, solo con stock, y la baja funciona
 
+## Últimos cambios
+
+- 2026-11-10 · `4d7afee` · Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
+

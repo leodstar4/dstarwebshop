@@ -19,7 +19,7 @@ const seedCart = JSON.stringify([{
   size: 'S', qty: 1
 }]);
 
-const INDEXABLES = ['/', PRODUCT_URL, '/terminos.html', '/agradecimientos.html', '/blog/born-to-shine-detras-del-drop.html',
+const INDEXABLES = ['/', PRODUCT_URL, '/museo.html', '/terminos.html', '/agradecimientos.html', '/blog/born-to-shine-detras-del-drop.html',
   '/blog/como-cuidar-tu-ropa.html', '/blog/streetwear-mexico-escena.html'];
 const PRIVADAS = ['/pedidos.html', '/checkout.html', '/gracias.html', '/error-pago.html', '/pago-pendiente.html', '/offline.html', '/no-existe'];
 

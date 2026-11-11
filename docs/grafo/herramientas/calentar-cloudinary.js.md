@@ -1,15 +1,15 @@
 ---
 tags: [codigo, herramienta]
 ruta: "scripts/calentar-cloudinary.js"
-lineas: 67
+lineas: 68
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # calentar-cloudinary.js
 
-`scripts/calentar-cloudinary.js` · 67 líneas
+`scripts/calentar-cloudinary.js` · 68 líneas
 
-Pide una vez a Cloudinary todas las variantes que usa la web a partir de products-data.js (tarjetas, galería y lightbox hasta 2400, miniaturas, LQIP y la imagen para compartir de 1200x630) para que ningún cliente espere a que se generen; se corre tras agregar o cambiar fotos.
+Pide una vez a Cloudinary todas las variantes que usa la web a partir de products-data.js (tarjetas, galería y lightbox hasta 2400, miniaturas, LQIP y la imagen para compartir de 1200x630) para que ningún cliente espere a que se generen; museo.js pide las mismas variantes AVIF que las tarjetas y el probador (museo-ropa.js), la de 900 px de la galería; se corre tras agregar o cambiar fotos.
 
 Parte de: [[Herramientas]]
 
@@ -19,11 +19,11 @@ Parte de: [[Herramientas]]
 
 ## Funciones y clases
 
-- `withTransform` (línea 21)
-- `urlsFor` (línea 23)
-- `warm` (línea 35)
-- `main` (línea 46)
-- `worker` (línea 50)
+- `withTransform` (línea 22)
+- `urlsFor` (línea 24)
+- `warm` (línea 36)
+- `main` (línea 47)
+- `worker` (línea 51)
 
 ## Últimos cambios
 

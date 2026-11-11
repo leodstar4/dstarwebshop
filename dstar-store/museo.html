@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MUSEO — DSTAR</title>
+  <meta name="description" content="Recorre el museo DSTAR con su gato negro: una galería en 3D donde cada prenda es una obra. Piezas limitadas, todo con amor.">
+  <link rel="canonical" href="https://dstar4.party/museo.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DSTAR">
+  <meta property="og:locale" content="es_MX">
+  <meta property="og:title" content="MUSEO — DSTAR">
+  <meta property="og:description" content="Recorre el museo DSTAR con su gato negro: una galería en 3D donde cada prenda es una obra. Piezas limitadas, todo con amor.">
+  <meta property="og:url" content="https://dstar4.party/museo.html">
+  <meta property="og:image" content="https://dstar4.party/assets/brand/og-dstar.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="MUSEO — DSTAR">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png?v=2">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/brand/favicon-48.png?v=2">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png?v=3">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap">
+  <link rel="stylesheet" href="css/museo.css?v=5">
+  <link rel="modulepreload" href="js/vendor/three.module.min.js?v=170">
+  <link rel="modulepreload" href="js/museo-ropa.js?v=1">
+</head>
+<body class="museo">
+  <header class="museo-bar">
+    <a class="museo-btn museo-btn--dark" href="/" aria-label="Volver a la tienda DSTAR"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg><span>TIENDA</span></a>
+    <p class="museo-bar__title" aria-hidden="true">MUSEO DSTAR</p>
+    <button class="museo-btn museo-btn--dark" id="museoModo" type="button" aria-pressed="false"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/></svg><span class="museo-btn__label">VER LISTA</span></button>
+  </header>
+
+  <main class="museo-main" id="main">
+    <h1 class="museo-sr">Museo DSTAR</h1>
+
+    <section class="museo-sala" id="museoSala" aria-label="Recorrido en 3D por el museo">
+      <canvas class="museo-sala__canvas" id="museoCanvas" tabindex="0" aria-label="Galería en 3D. Guías a un gato negro por la sala: W y S o las flechas arriba y abajo para caminar, A y D o las flechas izquierda y derecha para girar, arrastra para girar la cámara alrededor del gato, el botón Ver gato lo muestra de frente, y los botones Anterior y Siguiente para ir de obra en obra."></canvas>
+
+      <div class="museo-hud" id="museoHud" hidden>
+        <button class="museo-btn museo-btn--dark museo-btn--icon" id="museoPrev" type="button" aria-label="Obra anterior"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <p class="museo-hud__count" aria-hidden="true"><span id="museoActual">00</span> / <span id="museoTotal">00</span></p>
+        <button class="museo-btn museo-btn--dark museo-btn--icon" id="museoNext" type="button" aria-label="Obra siguiente"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        <span class="museo-hud__sep" aria-hidden="true"></span>
+        <button class="museo-btn museo-btn--dark" id="museoCamara" type="button" aria-pressed="false"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="museo-btn__label">VER GATO</span></button>
+        <button class="museo-btn museo-btn--dark museo-btn--icon" id="museoQuitar" type="button" aria-label="Quitar toda la ropa del gato" hidden><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3 6l2 4 3-1.5V21h8V8.5L19 10l2-4-5-3a4 4 0 0 1-8 0z"/><path d="M4 4l16 16"/></svg></button>
+      </div>
+
+      <aside class="museo-ficha" id="museoFicha" aria-labelledby="museoFichaNombre" hidden>
+        <button class="museo-ficha__close" id="museoFichaCerrar" type="button" aria-label="Cerrar ficha"><span aria-hidden="true">✕</span></button>
+        <p class="museo-ficha__drop" id="museoFichaDrop"></p>
+        <h2 class="museo-ficha__name" id="museoFichaNombre"></h2>
+        <p class="museo-ficha__price" id="museoFichaPrecio"></p>
+        <p class="museo-ficha__desc" id="museoFichaDesc"></p>
+        <p class="museo-ficha__sizes" id="museoFichaTallas"></p>
+        <div class="museo-ficha__actions">
+          <button class="museo-btn museo-btn--line" id="museoFichaProbar" type="button" aria-pressed="false" hidden><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3 6l2 4 3-1.5V21h8V8.5L19 10l2-4-5-3a4 4 0 0 1-8 0z"/></svg><span class="museo-btn__label">PROBAR</span></button>
+          <a class="museo-btn museo-btn--light museo-ficha__cta" id="museoFichaLink" href="/">VER PIEZA</a>
+        </div>
+      </aside>
+
+      <div class="museo-intro" id="museoIntro">
+        <div class="museo-intro__inner">
+          <img class="museo-intro__logo" src="/assets/brand/logo-240.webp?v=2" srcset="/assets/brand/logo-120.webp?v=2 120w, /assets/brand/logo-240.webp?v=2 240w, /assets/brand/logo-480.webp?v=2 480w" sizes="56px" width="56" height="80" alt="" decoding="async">
+          <p class="museo-intro__eyebrow">PIEZAS LIMITADAS</p>
+          <p class="museo-intro__title">MUSEO DSTAR</p>
+          <p class="museo-intro__text">Cada prenda es una obra. Lleva al gato por la sala, acércalo a la que te llame y pruébasela.</p>
+          <button class="museo-btn museo-btn--light museo-intro__cta" id="museoEntrar" type="button">ENTRAR</button>
+          <p class="museo-intro__hint museo-intro__hint--mouse">W S PARA CAMINAR · A D PARA GIRAR · ARRASTRA PARA MIRAR · CLIC EN UNA OBRA PARA VERLA</p>
+          <p class="museo-intro__hint museo-intro__hint--touch">ARRASTRA PARA MIRAR · TOCA EL PISO PARA CAMINAR · TOCA UNA OBRA PARA VERLA</p>
+          <p class="museo-intro__status" id="museoEstado" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="museo-lista" id="museoLista" aria-labelledby="museoListaTitulo" hidden>
+      <h2 class="museo-lista__title" id="museoListaTitulo">LA COLECCIÓN</h2>
+      <p class="museo-lista__note" id="museoListaNota" hidden>Tu navegador no pudo abrir la sala en 3D, así que aquí está la colección completa.</p>
+      <ol class="museo-lista__grid" id="museoListaGrid"></ol>
+    </section>
+
+    <p class="museo-sr" id="museoVoz" role="status" aria-live="polite"></p>
+  </main>
+
+  <noscript><p class="museo-noscript">El museo necesita JavaScript. <a href="/">Volver a la tienda</a></p></noscript>
+
+  <script src="js/products-data.js?v=1" defer></script>
+  <script src="js/cart-store.js?v=4" defer></script>
+  <script src="js/metricas.js?v=1" defer></script>
+  <script type="module" src="js/museo.js?v=5"></script>
+</body>
+</html>

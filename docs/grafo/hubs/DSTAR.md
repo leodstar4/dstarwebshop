@@ -7,7 +7,7 @@ tags: [hub]
 
 Mapa del proyecto: notas de contexto, páginas, código del navegador, backend, pruebas, servicios y variables de entorno, todo conectado.
 
-Archivos de código mapeados: 89 · tecnologías: 16 · variables de entorno: 31 · commits: 56
+Archivos de código mapeados: 94 · tecnologías: 17 · variables de entorno: 31 · commits: 57
 
 ## Contexto
 

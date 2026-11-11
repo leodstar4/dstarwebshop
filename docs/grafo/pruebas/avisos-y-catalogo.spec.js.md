@@ -9,7 +9,7 @@ lineas: 74
 
 `dstar-store/tests/e2e/avisos-y-catalogo.spec.js` · 74 líneas
 
-Pruebas E2E: la tienda pinta sin esperar al catálogo remoto, el catálogo remoto actualiza las tarjetas y queda en caché para la siguiente visita, formulario del próximo drop con consentimiento, aviso solo para las tallas agotadas en la ficha y panel con embudo y avisos.
+Pruebas E2E: la tienda pinta sin esperar al catálogo remoto, el catálogo remoto actualiza las tarjetas y queda en caché para la siguiente visita, formulario del próximo drop con consentimiento (en test.skip mientras el formulario no esté en index.html), aviso solo para las tallas agotadas en la ficha y panel con embudo y avisos.
 
 Parte de: [[Pruebas]]
 
@@ -23,7 +23,10 @@ Parte de: [[Pruebas]]
 
 - la tienda pinta los productos sin esperar al catálogo remoto
 - el catálogo remoto actualiza las tarjetas y queda en caché para la siguiente visita
-- formulario del próximo drop pide consentimiento y confirma
 - ficha ofrece aviso solo para las tallas agotadas
 - panel muestra embudo y avisos pendientes
+
+## Últimos cambios
+
+- 2026-11-10 · `4d7afee` · Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
 

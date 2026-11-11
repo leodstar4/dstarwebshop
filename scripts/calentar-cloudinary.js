@@ -9,6 +9,7 @@
  *   node scripts/calentar-cloudinary.js
  *
  * Los tamaños deben coincidir con PD_WIDTHS / PD_LB_WIDTHS / renderProducts de app.js.
+ * museo.js pide las fotos con la misma transformación que las tarjetas (CARD_WIDTHS).
  */
 
 const PRODUCTS = require('../dstar-store/js/products-data.js');

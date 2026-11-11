@@ -25,3 +25,7 @@ Parte de: [[Backend]]
 - `pagina` (línea 7)
 - `handler` (línea 12)
 
+## Últimos cambios
+
+- 2026-11-10 · `4d7afee` · Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
+

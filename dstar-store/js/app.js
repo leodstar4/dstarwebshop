@@ -116,11 +116,12 @@ async function initApp() {
       : (cb) => setTimeout(cb, 200);
 
     idle(() => {
-      initRippleButtons();
+        initRippleButtons();
       initTextScramble();
       initGlassLight();
       initNavPill();
       initLogoTilt();
+      initCardTilt();
     });
   }
 }
@@ -835,7 +836,7 @@ function initScrollProgress() {
 }
 
 // ============================================
-// RIPPLE — un solo listener para todos los botones de vidrio
+// RIPPLE — un solo listener para todos los botones
 // ============================================
 const RIPPLE_ON_LIGHT = '.hero__cta, .product-detail__add, .cart-drawer__checkout, .pd-sticky-cta__btn, .alert-form__btn, .size-btn.active';
 const RIPPLE_ON_DARK = '.size-btn, .lookbook__ig-link, .lookbook__nav-arrow';
@@ -2038,9 +2039,9 @@ function pdAddToCart(e) {
 
 
 // ============================================
-// LIQUID GLASS — reflejo que sigue al puntero en header y botones (desktop)
+// REFLEJO — sigue al puntero en el header y en AGREGAR AL CARRITO (desktop)
 // ============================================
-const GLASS_LIGHT = '.header__inner, .hero__cta, .product-detail__add, .cart-drawer__checkout, .pd-sticky-cta__btn, .alert-form__btn, .lookbook__ig-link';
+const GLASS_LIGHT = '.header__inner, .product-detail__add';
 
 function initGlassLight() {
   if (!FINE_POINTER_QUERY.matches || REDUCED_MOTION_QUERY.matches) return;
@@ -2137,6 +2138,38 @@ function initNavPill() {
 // ============================================
 // HERO — el logo 3D se inclina hacia el puntero (desktop)
 // ============================================
+function initCardTilt() {
+  const grid = $('#productsGrid');
+  if (!grid || !FINE_POINTER_QUERY.matches || REDUCED_MOTION_QUERY.matches) return;
+  const PROPS = ['--card-rx', '--card-ry', '--card-px', '--card-py'];
+  let frame = 0;
+  let last = null;
+  let active = null;
+  const reset = () => {
+    if (active) PROPS.forEach((prop) => active.style.removeProperty(prop));
+    active = null;
+  };
+  grid.addEventListener('pointermove', (e) => {
+    last = e;
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      const card = last.target.closest && last.target.closest('.product-card:not(.sold-out)');
+      if (card !== active) reset();
+      if (!card) return;
+      active = card;
+      const r = card.getBoundingClientRect();
+      const x = (last.clientX - r.left) / r.width - 0.5;
+      const y = (last.clientY - r.top) / r.height - 0.5;
+      card.style.setProperty('--card-ry', `${(x * 10).toFixed(2)}deg`);
+      card.style.setProperty('--card-rx', `${(-y * 10).toFixed(2)}deg`);
+      card.style.setProperty('--card-px', `${(x * 12).toFixed(1)}px`);
+      card.style.setProperty('--card-py', `${(y * 12).toFixed(1)}px`);
+    });
+  }, { passive: true });
+  grid.addEventListener('pointerleave', reset);
+}
+
 function initLogoTilt() {
   const hero = $('.hero');
   const logo = $('.hero__logo');

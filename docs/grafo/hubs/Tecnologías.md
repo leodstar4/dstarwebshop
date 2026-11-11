@@ -26,5 +26,6 @@ Parte de: [[DSTAR]]
 - [[Resend]] — servicio. API de correo opcional (RESEND_API_KEY y MAIL_FROM); si está configurada tiene prioridad sobre SMTP y envía con Idempotency-Key.
 - [[sharp]] — herramienta. Redimensiona y comprime imágenes antes de subirlas.
 - [[Skydropx]] — servicio. Paquetería: cotización de envíos y creación de guías (Skydropx Pro, API v1 con OAuth2).
+- [[Three.js]] — librería. Motor WebGL del museo (museo.js): versión r170 como módulo ES servido desde js/vendor del propio sitio; solo lo carga museo.html.
 - [[Vite]] — herramienta. Configuración heredada; el despliegue actual no compila nada.
 

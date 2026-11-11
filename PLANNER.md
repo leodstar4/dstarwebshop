@@ -48,17 +48,30 @@ Actualizado: 2026-11-10.
 - [x] Agregar productos sin tocar código (panel y catálogo persistente; pendiente de despliegue).
 - [x] Analítica propia sin cookies: contadores agregados por día en Netlify Blobs (`/api/evento`), embudo, productos y fuentes en el panel.
 - [ ] Prueba E2E del logo con autoplay bloqueado (necesita Chrome con H.264: `channel: 'chrome'`).
-- [ ] Página aparte `/museo.html`: museo 3D con Three.js local donde las prendas son las obras. Planeada, sin empezar.
-- [ ] Hacer commit del trabajo local del 2026-10-29 y del 2026-11-10 (incluye avisos, analítica y `metricas.js`).
+- [x] Página aparte `/museo.html`: museo 3D con Three.js local donde las prendas son las obras (Fase 4, hecha el 2026-11-10; sin commit ni publicar).
+- [ ] Probar el museo en un teléfono real (fluidez con el gato en tercera persona, gestos táctiles, botón de cámara, ficha y safe areas).
+- [ ] Averiguar por qué Netlify no desplegó el push del commit `4d7afee` (está en `origin/main`; producción sigue en `ee825c3`, con `sw.js` `dstar-v13` y `style.css?v=38`). Resolverlo antes de publicar lo nuevo.
+- [ ] Hacer commit del trabajo local del 2026-10-29 y del 2026-11-10 (incluye avisos, analítica, `metricas.js` y el museo) y publicarlo.
+- [ ] Reactivar el formulario "PRÓXIMO DROP / ENTÉRATE PRIMERO" (`#dropAlert`) en `index.html`; se quitó temporalmente el 2026-11-10. El backend, los estilos y `initAlertForm` siguen; quitar el `test.skip` de `tests/e2e/avisos-y-catalogo.spec.js`.
+- [ ] Confirmar en un iPhone real que la página sigue respondiendo tras abrir y cerrar el carrito (en el WebKit headless de Playwright `requestAnimationFrame` a veces deja de disparar; el commit `4d7afee` se comporta igual).
+- [ ] Ajustar el gato del museo con el dibujo de referencia de la cabeza (no llegó adjunto; el modelo salió solo del texto).
 
 ## Hecho el 2026-11-10 (local, sin commit)
 
-- Botones "liquid glass" en un solo bloque de `style.css` (claros y oscuros, sin `backdrop-filter`, presión con `scale`); se quitaron reglas duplicadas, `.ripple` y `.cart-particle`, y los `!important` bajaron a 26.
-- Un solo ripple (`.btn-ripple`) y un solo reflejo de puntero delegados en `app.js`; `initButtonEffects` eliminado de `gsap-animations.js` y botones magnéticos con un solo `mousemove`.
+- Botones en un solo bloque de `style.css`, "BOTONES — diseño de producción": sin `!important` ni `backdrop-filter`, presión con `scale`; se quitaron reglas duplicadas, `.ripple` y `.cart-particle`, y en toda la hoja quedan 26 `!important`. Reproduce el aspecto de la versión publicada (`ee825c3`): placas blancas planas con hover gris claro y brillo, checkout y barra fija en píldora, tallas de línea fina con ✓ en la activa, link de Instagram y flechas del lookbook de línea fina y cerrar carrito redondo, con ripple (`initRippleButtons`, `.btn-ripple`) y cursor crosshair en los CTA.
+- El usuario rechazó los dos rediseños de botones de ese día: liquid glass (commit `4d7afee`, en GitHub pero no publicado) y placas con esquina cortada. Regla de trabajo: no rediseñar botones, formas ni tarjetas sin mostrarle antes una propuesta.
+- `initButtonEffects` eliminado de `gsap-animations.js` y botones magnéticos con un solo `mousemove`; el reflejo de puntero de `app.js` (`GLASS_LIGHT`) cubre `.header__inner` y `.product-detail__add`.
 - Carrito accesible: `role="dialog"`, `inert` cerrado, foco que entra y regresa, Escape y Tab atrapado; abre con resorte, items escalonados y miniatura que vuela al ícono al agregar.
 - Píldora de vidrio en el nav con `aria-current="location"`, inclinación del logo del hero y view transition `pd-photo` de la tarjeta a la ficha.
-- Service worker `dstar-v15`; `style.css?v=40`, `app.js?v=40`, `gsap-animations.js?v=21`.
-- Playwright: 261 aprobadas, 33 omitidas, 0 fallos.
+- Service worker `dstar-v19`; `style.css?v=44`, `app.js?v=42`, `museo.css?v=4`, `museo.js?v=4`, `gsap-animations.js?v=22`.
+- Hero rehecho (`initHero` en `gsap-animations.js`): "TODO CON AMOR" sube desde una máscara por línea, del centro hacia afuera, con parpadeo de opacidad (cerca de 1 s); el CTA entra con translate y opacity. Regla: no animar `scale` sobre texto (la versión anterior lo hacía y se veía lenta y trabada).
+- Botones del museo rehechos a pedido del usuario: barra superior y dock inferior en cápsulas de vidrio con botones fantasma e iconos SVG; el dock agrupa anterior, contador, siguiente y `#museoCamara`; ENTRAR y VER PIEZA son placas blancas planas con brillo, sin esquina cortada ni estrella.
+- Museo DSTAR (`museo.html`, `css/museo.css`, `js/museo.js`, Three.js r170 en `js/vendor/`): recorrido libre en 3D con una sala por drop, fotos enmarcadas y ficha que enlaza a `producto.html?id=`; lista 2D sin WebGL o con movimiento reducido; sin scripts inline. Enlace MUSEO en header y menú móvil y bloque `.museo-teaser` en el index; `/museo.html` en el sitemap; pruebas en `tests/e2e/museo.spec.js`.
+- Inmersión (el usuario pidió conservarla, junto con el vuelo al carrito, el paso de tarjeta a ficha, la píldora del menú y el logo que se inclina): animaciones ligadas al scroll con `animation-timeline` (hero que se hunde, banda `.kinetic` entre drops y lookbook, sello de Nosotros que gira, fotos de la ficha y bloque del museo que suben), transición entre páginas `pageOut`/`pageIn` e inclinación 3D de las tarjetas (`initCardTilt`); todo respeta `prefers-reduced-motion`.
+- Museo en tercera persona: gato negro modelado por código (`createCat` en `js/museo.js`) que camina en dos patas; la cámara se orbita arrastrando y ya no se regresa sola; el botón `#museoCamara` (VER GATO / VER SALA) la pone de frente o detrás y al ir a una obra vuelve detrás. W/S o flechas arriba/abajo caminan, A/D o flechas izquierda/derecha giran, tocar el piso o una obra lo manda ahí. Con el recorrido activo dibuja de forma continua (~30 fps en reposo); con movimiento reducido no hay bucle continuo. `museo.html` ya carga `metricas.js`.
+- Formulario del próximo drop quitado del home de forma temporal (su prueba E2E quedó en `test.skip`); los avisos por talla siguen activos.
+- Playwright, suite completa: la última corrida (tras el hero y los botones del museo) dio 280 aprobadas, 36 omitidas y 2 fallos intermitentes de Mobile (WebKit): `audit-bugs.spec.js:74` (stock por talla) y `flujo-compra.spec.js:87` (lightbox); repetidas solas pasan 3 de 6. La corrida anterior del mismo día dio 282/36/0. No vienen de estos cambios, el commit `4d7afee` se comporta igual.
+- Despliegue: Netlify sigue sirviendo `ee825c3`; `4d7afee` está en `origin/main` sin publicar.
 
 ## Hecho el 2026-10-29
 

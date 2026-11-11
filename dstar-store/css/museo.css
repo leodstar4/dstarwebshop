@@ -1,0 +1,377 @@
+/* ============================================
+   DSTAR — MUSEO (página aparte, no carga style.css)
+   ============================================ */
+
+:root {
+  --black: #0a0a0a;
+  --dark: #141414;
+  --concrete: #8a8a83;
+  --concrete-light: #b0b0a8;
+  --concrete-dark: #5c5c57;
+  --white: #f0ede8;
+  --red: #e63232;
+  --font-display: 'Archivo Black', sans-serif;
+  --font-heading: 'Bebas Neue', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 0.18s;
+  --dur-base: 0.32s;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+  --z-hud: 10;
+  --z-ficha: 20;
+  --z-bar: 30;
+  --z-intro: 40;
+
+  --glass-tint: rgba(16, 16, 16, 0.5);
+  --glass-fallback: rgba(12, 12, 12, 0.94);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 42%, rgba(255, 255, 255, 0) 100%);
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 0 rgba(255, 255, 255, 0.04), 0 12px 40px rgba(0, 0, 0, 0.38);
+  --glass-blur: 16px;
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-edge-hover: rgba(255, 255, 255, 0.45);
+  --pill: rgba(255, 255, 255, 0.1);
+  --pill-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --btn-dark-hover: rgba(44, 44, 44, 0.62);
+  --scrim: rgba(6, 6, 6, 0.88);
+  --card: rgba(255, 255, 255, 0.04);
+  --line: rgba(255, 255, 255, 0.08);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: var(--font-mono);
+  background: var(--black);
+  color: var(--white);
+  line-height: 1.5;
+}
+.museo--sala { overflow: hidden; overscroll-behavior: none; }
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: 0; background: none; font-family: inherit; color: inherit; touch-action: manipulation; }
+img { max-width: 100%; display: block; }
+picture { display: contents; }
+ol { list-style: none; }
+[hidden] { display: none !important; }
+
+.museo-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Botones de vidrio ---- */
+.museo-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  letter-spacing: 3px;
+  white-space: nowrap;
+  transition: color var(--dur-base) var(--ease), background-color var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease), scale 0.5s var(--ease-spring);
+}
+.museo-btn--dark {
+  border-radius: var(--radius-pill);
+  color: var(--concrete-light);
+  background: transparent;
+}
+.museo-btn--dark[aria-pressed="true"] {
+  color: var(--white);
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+}
+.museo-btn--light {
+  color: var(--black);
+  background: var(--white);
+  transition: background-color var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease), scale 0.5s var(--ease-spring);
+}
+.museo-btn--icon { width: 44px; padding: 0; }
+.museo-btn__icon { flex: none; width: 18px; height: 18px; }
+.museo-btn:active { scale: 0.95; transition-duration: 0.12s; }
+.museo-btn:focus-visible,
+.museo-ficha__close:focus-visible,
+.museo-sala__canvas:focus-visible,
+.museo-pieza__link:focus-visible { outline: 2px solid var(--white); outline-offset: 3px; }
+@media (hover: hover) {
+  .museo-btn--dark:hover {
+    color: var(--white);
+    background: var(--pill);
+    box-shadow: var(--pill-shadow);
+  }
+  .museo-btn--line:hover { background: var(--pill); border-color: var(--white); }
+  .museo-btn--light:hover {
+    background: var(--concrete-light);
+    box-shadow: 0 0 0 1px rgba(240, 237, 232, 0.6), 0 0 44px 6px rgba(240, 237, 232, 0.24), 0 12px 36px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* ---- Barra superior y dock: vidrio de navegación, como el header de la tienda ---- */
+.museo-bar,
+.museo-hud {
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-sheen), var(--glass-tint);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+}
+.museo-bar {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  right: calc(10px + env(safe-area-inset-right));
+  z-index: var(--z-bar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+}
+.museo-bar__title {
+  display: none;
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  letter-spacing: 6px;
+  color: var(--concrete-light);
+  pointer-events: none;
+}
+
+/* ---- Sala 3D ---- */
+.museo-sala { position: fixed; inset: 0; }
+.museo-sala__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+  outline-offset: -4px;
+}
+.museo-sala__canvas.is-dragging { cursor: grabbing; }
+.museo-sala__canvas.is-over { cursor: pointer; }
+
+.museo-hud {
+  position: absolute;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: var(--z-hud);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  translate: -50% 0;
+}
+.museo-hud__count {
+  min-width: 62px;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+}
+.museo-hud__sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 6px;
+  background: var(--glass-edge);
+}
+
+/* ---- Ficha de la obra ---- */
+.museo-ficha {
+  position: absolute;
+  left: calc(10px + env(safe-area-inset-left));
+  right: calc(10px + env(safe-area-inset-right));
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: var(--z-ficha);
+  padding: 20px 20px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-sheen), var(--glass-tint);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.7);
+  animation: museoFichaIn 0.45s var(--ease-out) backwards;
+}
+@keyframes museoFichaIn {
+  from { opacity: 0; transform: translateY(18px); }
+}
+.museo-ficha__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  font-size: 16px;
+  color: var(--concrete-light);
+  transition: color var(--dur-base) var(--ease), scale 0.5s var(--ease-spring);
+}
+.museo-ficha__close:active { scale: 0.9; }
+.museo-ficha__drop {
+  padding-right: 40px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--concrete);
+}
+.museo-ficha__name {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(22px, 6vw, 30px);
+  letter-spacing: 2px;
+  line-height: 1.1;
+}
+.museo-ficha__price {
+  margin-top: 8px;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+.museo-ficha__desc {
+  display: none;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--concrete-light);
+}
+.museo-ficha__sizes {
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--concrete-light);
+}
+.museo-ficha__sizes--out { color: var(--red); }
+.museo-ficha__actions { display: flex; gap: 8px; margin-top: 14px; }
+.museo-ficha__cta { flex: 1.3 1 0; min-height: 48px; }
+.museo-btn--line {
+  flex: 1 1 0;
+  min-height: 48px;
+  padding: 10px 12px;
+  color: var(--white);
+  border: 1px solid var(--glass-edge-hover);
+}
+.museo-btn--line[aria-pressed="true"] { background: var(--pill); border-color: var(--white); }
+.museo-btn--line[aria-busy="true"] { opacity: 0.55; cursor: progress; }
+
+/* ---- Entrada ---- */
+.museo-intro {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-intro);
+  display: grid;
+  place-items: center;
+  padding: 88px 20px 40px;
+  background: var(--scrim);
+  transition: opacity 0.6s var(--ease), visibility 0.6s;
+}
+.museo-intro.is-gone { opacity: 0; visibility: hidden; }
+.museo-intro__inner { max-width: 440px; text-align: center; }
+.museo-intro__logo { width: 56px; height: auto; margin: 0 auto 18px; }
+.museo-intro__eyebrow { font-size: 11px; letter-spacing: 4px; color: var(--concrete-light); }
+.museo-intro__title {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 11vw, 60px);
+  letter-spacing: 4px;
+  line-height: 1.05;
+  text-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+}
+.museo-intro__text { margin-top: 14px; font-size: 13px; color: var(--concrete-light); }
+.museo-intro__cta { margin-top: 26px; min-width: 200px; min-height: 52px; font-size: 20px; letter-spacing: 6px; }
+.museo-intro__hint { margin-top: 22px; font-size: 10px; letter-spacing: 2px; line-height: 1.8; color: var(--concrete); }
+.museo-intro__hint--mouse { display: none; }
+.museo-intro__status { min-height: 1.6em; margin-top: 10px; font-size: 10px; letter-spacing: 2px; color: var(--concrete); }
+
+/* ---- Lista (vista sin 3D) ---- */
+.museo-lista {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: calc(96px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+}
+.museo-lista__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(28px, 8vw, 48px);
+  letter-spacing: 4px;
+}
+.museo-lista__note { margin-top: 10px; font-size: 12px; color: var(--concrete-light); }
+.museo-lista__grid { display: grid; gap: 16px; margin-top: 28px; }
+.museo-pieza {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  overflow: hidden;
+}
+.museo-pieza__link { display: block; min-height: 44px; }
+.museo-pieza__img { width: 100%; aspect-ratio: 3 / 2; object-fit: contain; background: var(--dark); }
+.museo-pieza__info { padding: 14px 16px 16px; }
+.museo-pieza__drop { font-size: 10px; letter-spacing: 3px; color: var(--concrete); }
+.museo-pieza__name { margin-top: 4px; font-family: var(--font-heading); font-weight: 400; font-size: 24px; letter-spacing: 2px; }
+.museo-pieza__price { margin-top: 2px; font-size: 13px; color: var(--concrete-light); }
+
+.museo-noscript { padding: 120px 20px; text-align: center; font-size: 13px; }
+.museo-noscript a { text-decoration: underline; }
+
+@media (hover: hover) and (pointer: fine) {
+  .museo-intro__hint--mouse { display: block; }
+  .museo-intro__hint--touch { display: none; }
+  .museo-ficha__close:hover { color: var(--white); }
+}
+
+@media (min-width: 600px) {
+  .museo-lista__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 769px) {
+  .museo-bar { top: 16px; left: 24px; right: 24px; }
+  .museo-bar__title { display: block; }
+  .museo-hud { bottom: 24px; }
+  .museo-ficha {
+    left: auto;
+    right: 28px;
+    bottom: 28px;
+    width: 340px;
+    padding: 24px 24px 22px;
+  }
+  .museo-ficha__desc { display: block; }
+  .museo-lista__grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .museo-bar,
+  .museo-hud,
+  .museo-ficha { background: var(--glass-sheen), var(--glass-fallback); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .museo-bar,
+  .museo-hud,
+  .museo-ficha { background: var(--glass-fallback); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .museo-btn,
+  .museo-ficha__close { transition: none; scale: none; }
+  .museo-ficha { animation: none; }
+  .museo-intro { transition: none; }
+}

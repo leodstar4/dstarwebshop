@@ -9,7 +9,7 @@ lineas: 57
 
 `dstar-store/js/metricas.js` · 57 líneas
 
-Analítica sin cookies en el navegador: manda view (ruta, visita nueva, fuente por utm_source o referrer y dispositivo) a /api/evento con sendBeacon (fetch keepalive de respaldo) y expone window.DSTAR_TRACK para product, add, checkout (una vez por sesión), pay y alert; no envía nada con navigator.webdriver, Global Privacy Control o Do Not Track y espera a que termine el prerender; la cargan index, producto, checkout, términos, privacidad, agradecimientos y el blog.
+Analítica sin cookies en el navegador: manda view (ruta, visita nueva, fuente por utm_source o referrer y dispositivo) a /api/evento con sendBeacon (fetch keepalive de respaldo) y expone window.DSTAR_TRACK para product, add, checkout (una vez por sesión), pay y alert; no envía nada con navigator.webdriver, Global Privacy Control o Do Not Track y espera a que termine el prerender; la cargan index, producto, museo, checkout, términos, privacidad, agradecimientos y el blog.
 
 Parte de: [[Frontend]]
 
@@ -23,4 +23,8 @@ Parte de: [[Frontend]]
 - `source` (línea 22)
 - `device` (línea 33)
 - `pageView` (línea 38)
+
+## Últimos cambios
+
+- 2026-11-10 · `4d7afee` · Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
 
