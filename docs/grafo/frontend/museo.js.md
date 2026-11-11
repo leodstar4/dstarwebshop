@@ -63,3 +63,7 @@ Parte de: [[Frontend]]
 - `plane` (línea 599)
 - y 27 más
 
+## Últimos cambios
+
+- 2026-11-11 · `4469385` · Museo 3D con probador, ajustes de botones y animaciones, sitemap y documentación al día
+

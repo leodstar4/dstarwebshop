@@ -39,3 +39,7 @@ Parte de: [[Pruebas]]
 - el home tiene el bloque y el menú enlaza al museo
 - el museo regresa a la tienda
 
+## Últimos cambios
+
+- 2026-11-11 · `4469385` · Museo 3D con probador, ajustes de botones y animaciones, sitemap y documentación al día
+

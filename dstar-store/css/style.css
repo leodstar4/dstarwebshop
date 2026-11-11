@@ -3874,42 +3874,11 @@ body {
 }
 
 /* ============================================
-   INMERSIÓN — banda tipográfica, movimiento ligado al scroll e inclinación de tarjetas.
+   INMERSIÓN — movimiento ligado al scroll e inclinación de tarjetas.
    Las animaciones de scroll usan animation-timeline: corren en el compositor, sin JS por cuadro.
    Sin soporte o con movimiento reducido todo queda quieto y visible.
    ============================================ */
-.kinetic {
-  overflow: hidden;
-  padding: 0 0 64px;
-}
-.kinetic__row {
-  display: flex;
-  align-items: center;
-  gap: 0.32em;
-  width: max-content;
-  font-family: var(--font-display);
-  font-size: clamp(44px, 11vw, 150px);
-  line-height: 1.08;
-  letter-spacing: 2px;
-  white-space: nowrap;
-  color: var(--white);
-}
-.kinetic__row--line {
-  color: transparent;
-  -webkit-text-stroke: 1px var(--btn-line);
-}
-.kinetic__row--fill { margin-left: -60vw; }
-.kinetic__star {
-  flex: none;
-  width: 0.42em;
-  height: 0.42em;
-  background: var(--concrete);
-  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
-}
-
 @keyframes heroSink { to { opacity: 0; transform: translateY(20svh) scale(0.9); } }
-@keyframes kineticLeft { to { transform: translateX(-22%); } }
-@keyframes kineticRight { from { transform: translateX(-22%); } }
 @keyframes stampTurn { to { rotate: 200deg; } }
 @keyframes riseIn { from { opacity: 0.25; transform: translateY(70px) scale(0.94); } }
 @keyframes pageOut { to { opacity: 0; transform: translateY(-14px) scale(0.985); } }
@@ -3925,12 +3894,6 @@ body {
       animation-timeline: scroll(root block);
       animation-range: 0 90svh;
     }
-    .kinetic__row {
-      animation: kineticLeft linear both;
-      animation-timeline: view();
-      animation-range: cover;
-    }
-    .kinetic__row--fill { animation-name: kineticRight; }
     .about__stamp img {
       animation: stampTurn linear both;
       animation-timeline: view();

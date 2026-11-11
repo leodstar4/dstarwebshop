@@ -29,7 +29,7 @@ Ya resueltos:
   - Hero rehecho sin `scale` sobre texto (`initHero` de [[gsap-animations.js]]) y botones del museo en cápsulas de vidrio con iconos ([[museo.css]], [[museo.html]]); detalle en [[Rendimiento y PWA]].
   - [[sw.js]] en `dstar-v19`, [[style.css]] en `?v=44`, [[gsap-animations.js]] en `?v=22`, [[app.js]] en `?v=42` y [[museo.css]] y [[museo.js]] en `?v=4`; [[CLAUDE]] al día (Node 22 y Functions v2, sin `npm run build` ni `npm run lh`).
   - Museo DSTAR (Fase 4): página aparte [[museo.html]] con [[museo.css]] y [[museo.js]] sobre [[Three.js]] servido desde el sitio; recorrido en 3D con una sala por drop y lista 2D de respaldo ([[Rendimiento y PWA]]). Entradas desde la tienda: enlace MUSEO en el header y el menú móvil y bloque `.museo-teaser` en [[index.html]]. Pruebas en [[museo.spec.js]]; [[sitemap.js]] ya la lista. En la segunda tanda pasó a tercera persona: se guía a un gato negro modelado por código, la cámara se orbita arrastrando y el botón `#museoCamara` la pone de frente o detrás; además [[museo.html]] ya carga [[metricas.js]], así que sus visitas entran a la analítica.
-  - Inmersión: banda tipográfica `.kinetic` en [[index.html]], animaciones ligadas al scroll, transición entre páginas `pageOut`/`pageIn` e inclinación 3D de las tarjetas (`initCardTilt` de [[app.js]]), todo en el bloque INMERSIÓN de [[style.css]] ([[Rendimiento y PWA]]).
+  - Inmersión: animaciones ligadas al scroll, transición entre páginas `pageOut`/`pageIn` e inclinación 3D de las tarjetas (`initCardTilt` de [[app.js]]), todo en el bloque INMERSIÓN de [[style.css]] ([[Rendimiento y PWA]]).
 
 Antes de publicar:
 

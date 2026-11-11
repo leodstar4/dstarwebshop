@@ -21,3 +21,7 @@ Parte de: [[Frontend]]
 
 `--black`, `--dark`, `--concrete`, `--concrete-light`, `--concrete-dark`, `--white`, `--red`, `--font-display`, `--font-heading`, `--font-mono`, `--ease`, `--ease-out`, `--ease-spring`, `--dur-fast`, `--dur-base`, `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-pill`, `--z-hud`, `--z-ficha`, `--z-bar`, `--z-intro`, `--glass-tint`, `--glass-fallback`, `--glass-sheen`, `--glass-shadow`, `--glass-blur`, `--glass-edge`, `--glass-edge-hover`, `--pill`, `--pill-shadow`, `--btn-dark-hover`, `--scrim`, `--card`, `--line`
 
+## Últimos cambios
+
+- 2026-11-11 · `4469385` · Museo 3D con probador, ajustes de botones y animaciones, sitemap y documentación al día
+

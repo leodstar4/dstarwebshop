@@ -9,6 +9,10 @@ Commits del repo, del más reciente al más antiguo. Cada archivo de código lis
 
 Parte de: [[DSTAR]]
 
+## 2026-11-11
+
+- `4469385` Museo 3D con probador, ajustes de botones y animaciones, sitemap y documentación al día
+
 ## 2026-11-10
 
 - `4d7afee` Avisos de drop y talla, analítica propia, botones liquid glass y carrito accesible
