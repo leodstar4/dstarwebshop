@@ -5,7 +5,7 @@ const SITE = 'https://dstar4.party';
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const ogImage = (src) => src.replace('/image/upload/', '/image/upload/f_jpg,q_auto,c_pad,b_auto,w_1200,h_630/');
 const setMeta = (html, attr, name, value) =>
-  html.replace(new RegExp(`(<meta ${attr}="${name}" content=")[^"]*`), `$1${esc(value)}`);
+  html.replace(new RegExp(`(<meta ${attr}="${name}" content=")[^"]*`), (_, start) => start + esc(value));
 
 function jsonLd(p, url, image) {
   const stock = p.sizesStock ? Object.values(p.sizesStock).reduce((a, b) => a + b, 0) : p.stock;
@@ -45,8 +45,8 @@ export default async (request, context) => {
   const image = ogImage(p.image);
 
   let html = await response.text();
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
-  html = html.replace(/(<link rel="canonical" href=")[^"]*/, `$1${esc(url)}`);
+  html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title>`);
+  html = html.replace(/(<link rel="canonical" href=")[^"]*/, (_, start) => start + esc(url));
   html = setMeta(html, 'name', 'description', description);
   html = setMeta(html, 'property', 'og:title', title);
   html = setMeta(html, 'property', 'og:description', description);
@@ -55,7 +55,7 @@ export default async (request, context) => {
   html = setMeta(html, 'property', 'og:image:alt', p.name);
   html = html.replace(
     '<meta name="twitter:card"',
-    `<meta property="product:price:amount" content="${p.price}">\n  <meta property="product:price:currency" content="MXN">\n  ${jsonLd(p, url, image)}\n  <meta name="twitter:card"`
+    () => `<meta property="product:price:amount" content="${esc(p.price)}">\n  <meta property="product:price:currency" content="MXN">\n  ${jsonLd(p, url, image)}\n  <meta name="twitter:card"`
   );
 
   const headers = new Headers(response.headers);

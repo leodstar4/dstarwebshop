@@ -11,6 +11,7 @@ Parte de: [[DSTAR]]
 
 ## 2026-11-11
 
+- `96ab210` Quitar la banda tipográfica del inicio
 - `4469385` Museo 3D con probador, ajustes de botones y animaciones, sitemap y documentación al día
 
 ## 2026-11-10

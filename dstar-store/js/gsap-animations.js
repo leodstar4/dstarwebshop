@@ -138,23 +138,45 @@ function initSectionHeaders() {
 // DROPS — cada prenda sube y se asienta, en cascada
 // ============================================
 function initProductReveal() {
-  const cards = Array.from(document.querySelectorAll('.product-card'));
-  if (!cards.length) return;
-  safely(cards, () => {
-    const starts = cards.map((card) => [
-      prepare(card, { opacity: 0 }, 0.9, CSS_EASE.soft),
-      prepare(card.querySelector('.product-card__image'), { transform: 'translateY(10%) scale(0.92)' }, 1.4),
-      prepare(card.querySelector('.product-card__info'), { opacity: 0, transform: 'translateY(22px)' }, 1)
-    ]);
-    revealOnEnter(cards, (batch) => {
-      batch.forEach((card, i) => {
-        const [cardIn, imageIn, infoIn] = starts[cards.indexOf(card)];
-        const at = i * 0.12;
-        cardIn(at);
-        imageIn(at);
-        infoIn(at + 0.18);
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const animations = new Map();
+  const seen = new Set();
+  const observer = new IntersectionObserver((entries) => {
+    const cards = entries.filter((entry) => entry.isIntersecting).map((entry) => entry.target);
+    cards.sort((a, b) => Number(a.dataset.productIndex) - Number(b.dataset.productIndex));
+    cards.forEach((card, i) => {
+      observer.unobserve(card);
+      if (!grid.contains(card)) return;
+      const id = card.dataset.productId;
+      if (seen.has(id)) return;
+      seen.add(id);
+      if (motion.matches || card.matches(':focus-within')) return;
+      const animation = card.animate([{ opacity: 0.35, translate: '0 22px' }, { opacity: 1, translate: '0 0' }], {
+        duration: 380, delay: Math.min(i, 4) * 65, easing: CSS_EASE.out, fill: 'backwards'
       });
-    }, '-6%');
+      animations.set(card, animation);
+      animation.onfinish = animation.oncancel = () => animations.delete(card);
+    });
+  }, { threshold: 0.08 });
+  const watch = (node) => {
+    if (node instanceof Element && node.matches('.product-card') && !seen.has(node.dataset.productId)) observer.observe(node);
+  };
+  new MutationObserver((records) => {
+    records.forEach(({ addedNodes, removedNodes }) => {
+      removedNodes.forEach((node) => {
+        if (!(node instanceof Element)) return;
+        observer.unobserve(node);
+        animations.get(node)?.cancel();
+      });
+      addedNodes.forEach(watch);
+    });
+  }).observe(grid, { childList: true });
+  Array.from(grid.children).forEach(watch);
+  grid.addEventListener('focusin', (event) => animations.get(event.target.closest('.product-card'))?.cancel());
+  motion.addEventListener('change', () => {
+    if (motion.matches) animations.forEach((animation) => animation.cancel());
   });
 }
 

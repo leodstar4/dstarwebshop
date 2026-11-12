@@ -26,9 +26,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap">
-  <link rel="stylesheet" href="css/museo.css?v=5">
+  <link rel="stylesheet" href="css/museo.css?v=6">
   <link rel="modulepreload" href="js/vendor/three.module.min.js?v=170">
-  <link rel="modulepreload" href="js/museo-ropa.js?v=1">
+  <link rel="modulepreload" href="js/museo-ropa.js?v=3">
 </head>
 <body class="museo">
   <header class="museo-bar">
@@ -41,7 +41,7 @@
     <h1 class="museo-sr">Museo DSTAR</h1>
 
     <section class="museo-sala" id="museoSala" aria-label="Recorrido en 3D por el museo">
-      <canvas class="museo-sala__canvas" id="museoCanvas" tabindex="0" aria-label="Galería en 3D. Guías a un gato negro por la sala: W y S o las flechas arriba y abajo para caminar, A y D o las flechas izquierda y derecha para girar, arrastra para girar la cámara alrededor del gato, el botón Ver gato lo muestra de frente, y los botones Anterior y Siguiente para ir de obra en obra."></canvas>
+      <canvas class="museo-sala__canvas" id="museoCanvas" tabindex="0" aria-label="Galería en 3D. W y S para caminar, A y D para girar al gato. Usa las flechas o arrastra para girar la cámara alrededor del gato. Acerca y aleja con la rueda, las teclas más y menos o los botones de zoom. Los botones Anterior y Siguiente te llevan de obra en obra."></canvas>
 
       <div class="museo-hud" id="museoHud" hidden>
         <button class="museo-btn museo-btn--dark museo-btn--icon" id="museoPrev" type="button" aria-label="Obra anterior"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -50,6 +50,11 @@
         <span class="museo-hud__sep" aria-hidden="true"></span>
         <button class="museo-btn museo-btn--dark" id="museoCamara" type="button" aria-pressed="false"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="museo-btn__label">VER GATO</span></button>
         <button class="museo-btn museo-btn--dark museo-btn--icon" id="museoQuitar" type="button" aria-label="Quitar toda la ropa del gato" hidden><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 3 6l2 4 3-1.5V21h8V8.5L19 10l2-4-5-3a4 4 0 0 1-8 0z"/><path d="M4 4l16 16"/></svg></button>
+      </div>
+
+      <div class="museo-hud museo-hud--zoom" id="museoZoom" role="group" aria-label="Zoom de la cámara" hidden>
+        <button class="museo-btn museo-btn--dark museo-btn--icon" id="museoAcercar" type="button" aria-label="Acercar cámara" aria-disabled="false"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+        <button class="museo-btn museo-btn--dark museo-btn--icon" id="museoAlejar" type="button" aria-label="Alejar cámara" aria-disabled="false"><svg class="museo-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
       </div>
 
       <aside class="museo-ficha" id="museoFicha" aria-labelledby="museoFichaNombre" hidden>
@@ -72,8 +77,8 @@
           <p class="museo-intro__title">MUSEO DSTAR</p>
           <p class="museo-intro__text">Cada prenda es una obra. Lleva al gato por la sala, acércalo a la que te llame y pruébasela.</p>
           <button class="museo-btn museo-btn--light museo-intro__cta" id="museoEntrar" type="button">ENTRAR</button>
-          <p class="museo-intro__hint museo-intro__hint--mouse">W S PARA CAMINAR · A D PARA GIRAR · ARRASTRA PARA MIRAR · CLIC EN UNA OBRA PARA VERLA</p>
-          <p class="museo-intro__hint museo-intro__hint--touch">ARRASTRA PARA MIRAR · TOCA EL PISO PARA CAMINAR · TOCA UNA OBRA PARA VERLA</p>
+          <p class="museo-intro__hint museo-intro__hint--mouse">WASD PARA MOVER AL GATO · FLECHAS O ARRASTRA PARA GIRAR LA CÁMARA · RUEDA O + / − PARA ZOOM</p>
+          <p class="museo-intro__hint museo-intro__hint--touch">ARRASTRA PARA GIRAR LA CÁMARA · + / − PARA ZOOM · TOCA EL PISO PARA CAMINAR</p>
           <p class="museo-intro__status" id="museoEstado" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -93,6 +98,6 @@
   <script src="js/products-data.js?v=1" defer></script>
   <script src="js/cart-store.js?v=4" defer></script>
   <script src="js/metricas.js?v=1" defer></script>
-  <script type="module" src="js/museo.js?v=5"></script>
+  <script type="module" src="js/museo.js?v=12"></script>
 </body>
 </html>

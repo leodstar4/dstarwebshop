@@ -1,13 +1,13 @@
 ---
 tags: [codigo, pagina]
 ruta: "dstar-store/checkout.html"
-lineas: 721
+lineas: 726
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # checkout.html
 
-`dstar-store/checkout.html` · 721 líneas
+`dstar-store/checkout.html` · 726 líneas
 
 Checkout (noindex): datos del cliente con referencia de entrega, cotización de envío y pago con Mercado Pago (solo pagos inmediatos, sin OXXO); enlaza terminos.html y privacidad.html junto a PAGAR; `viewport-fit=cover` con env(safe-area-inset-*) en el header y el toast de su `<style>` inline; toda la lógica está en js/checkout.js y carga js/metricas.js.
 

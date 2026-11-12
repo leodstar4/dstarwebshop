@@ -250,6 +250,7 @@ function renderProducts() {
     return `
       <${tag} class="product-card fade-in${isSoldOut ? ' sold-out' : ''}"
            data-product-index="${i}"
+           data-product-id="${escapeHtml(p.id)}"
            ${attrs}>
         <div class="product-card__image">
           ${cdnPicture(p.image, {
@@ -377,6 +378,7 @@ function initCardPrefetch() {
 // CART
 // ============================================
 let cartReturnFocus = null;
+let checkoutExit = null;
 
 function initCart() {
   const drawer = $('#cartDrawer');
@@ -386,6 +388,16 @@ function initCart() {
   $('#cartClose').addEventListener('click', closeCart);
   $('#cartOverlay').addEventListener('click', closeCart);
   $('#checkoutBtn').addEventListener('click', handleCheckout);
+  window.addEventListener('pageswap', (event) => {
+    if (!checkoutExit || !event.viewTransition) return;
+    event.viewTransition.ready.catch(() => {});
+    event.viewTransition.skipTransition();
+  });
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
+    checkoutExit?.cancel();
+    checkoutExit = null;
+  });
   $('#cartItems')?.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-cart-action]');
     if (!btn) return;
@@ -571,11 +583,19 @@ function handleCheckout() {
   // El carrito lleva a la página de checkout completa, donde se capturan
   // los datos de envío, se cotiza con Skydropx y se crea la preferencia de
   // pago (mp-preference). El pago directo desde el drawer queda deprecado.
+  if (checkoutExit) return;
   if (!cart || cart.length === 0) {
     showToast('TU CARRITO ESTÁ VACÍO');
     return;
   }
-  window.location.href = 'checkout.html';
+  const navigate = () => { window.location.href = '/checkout.html'; };
+  const drawer = $('#cartDrawer');
+  if (REDUCED_MOTION_QUERY.matches || !drawer?.animate) {
+    navigate();
+    return;
+  }
+  checkoutExit = drawer.animate([{ opacity: 1 }, { opacity: 0.35 }], { duration: 120, fill: 'forwards' });
+  Promise.race([checkoutExit.finished, new Promise((resolve) => setTimeout(resolve, 140))]).then(navigate, navigate);
 }
 
 // ============================================
@@ -980,8 +1000,9 @@ function initProductPage() {
   if (sizesEl) {
     sizesEl.innerHTML = p.sizes.map(s => {
       const inStock = (p.sizesStock[s] || 0) > 0;
-      return `<button class="size-btn" data-size="${s}"
-                      ${!inStock ? 'disabled' : ''}>${s}</button>`;
+      const size = escapeHtml(s);
+      return `<button class="size-btn" data-size="${size}"
+                      ${!inStock ? 'disabled' : ''}>${size}</button>`;
     }).join('');
     sizesEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.size-btn');

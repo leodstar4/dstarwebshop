@@ -196,6 +196,19 @@ ol { list-style: none; }
   margin: 0 6px;
   background: var(--glass-edge);
 }
+.museo-hud--zoom {
+  top: calc(76px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  bottom: auto;
+  left: auto;
+  flex-direction: column;
+  padding: 4px;
+  translate: none;
+}
+.museo-hud--zoom .museo-btn[aria-disabled="true"] { opacity: 0.45; cursor: default; }
+@media (max-height: 450px) {
+  .museo-hud--zoom { flex-direction: row; }
+}
 
 /* ---- Ficha de la obra ---- */
 .museo-ficha {
@@ -348,6 +361,7 @@ ol { list-style: none; }
   .museo-bar { top: 16px; left: 24px; right: 24px; }
   .museo-bar__title { display: block; }
   .museo-hud { bottom: 24px; }
+  .museo-hud--zoom { top: 84px; right: 24px; bottom: auto; }
   .museo-ficha {
     left: auto;
     right: 28px;

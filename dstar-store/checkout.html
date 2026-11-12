@@ -44,6 +44,11 @@
       --border:          1px solid #2a2a2a;
     }
 
+    @media (prefers-reduced-motion: no-preference) {
+      .checkout-page { animation: checkoutIn 260ms var(--ease); }
+      @keyframes checkoutIn { from { opacity: 0; } }
+    }
+
     /* ============================================
        RESET BÁSICO
        ============================================ */

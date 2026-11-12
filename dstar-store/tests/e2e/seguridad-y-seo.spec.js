@@ -113,6 +113,13 @@ test.describe('Edge functions y límites (sin red)', () => {
     expect(out).toContain('<meta property="product:price:amount" content="450">');
     expect(out).toContain('"@type":"Product"');
 
+    const base = globalThis.DSTAR_PRODUCTS[0];
+    global.fetch = async () => Response.json({ products: [{ ...base, id: 'precio-alto', name: 'PIEZA $& CARA', price: 1200, description: 'Cuesta $1 y $& más' }] });
+    const caro = await (await edge(new Request('https://dstar4.party/producto.html?id=precio-alto'), context)).text();
+    expect(caro).toContain('<title>PIEZA $&amp; CARA — DSTAR</title>');
+    expect(caro).toContain('<meta name="description" content="Cuesta $1 y $&amp; más $1200 MXN.">');
+    global.fetch = async () => Response.json({ products: globalThis.DSTAR_PRODUCTS });
+
     const otro = await edge(new Request('https://dstar4.party/producto.html?id=no-existe'), context);
     expect(await otro.text()).toBe(html);
     } finally { global.fetch = originalFetch; }

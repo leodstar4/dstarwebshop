@@ -15,7 +15,9 @@ Parte de: [[DSTAR]]
 - [[CP_ORIGEN]] — Dirección y datos de contacto del almacén de origen del envío.
 - [[DIAG_BLOCK]]
 - [[DIAG_CHANNEL]]
+- [[DIAG_GPU]]
 - [[DIAG_PERFIL]]
+- [[DIAG_URL]]
 - [[DIRECCION_ORIGEN]] — Dirección y datos de contacto del almacén de origen del envío.
 - [[DSTAR_MEMORY_STORE]] — Solo pruebas: almacén en memoria con NODE_ENV=test y sin NETLIFY. Nunca en Netlify.
 - [[EMAIL_ORIGEN]] — Dirección y datos de contacto del almacén de origen del envío.

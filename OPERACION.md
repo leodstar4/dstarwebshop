@@ -90,6 +90,26 @@ Las políticas y derechos legales del comprador no se eliminan.
 
 ## Operación y límites
 
+### Remitente transaccional en `dstar4.party`
+
+La tienda ya admite Resend mediante `RESEND_API_KEY` y `MAIL_FROM`. El DNS
+autoritativo de `dstar4.party` está en Cloudflare. La propuesta es verificar el
+subdominio `pedidos.dstar4.party` y usar `DSTAR <confirmaciones@pedidos.dstar4.party>`.
+
+1. Añadir el subdominio en Resend con envío habilitado. Publicar en Cloudflare
+   los valores exactos de DKIM (TXT) y del dominio de retorno (TXT para SPF y
+   MX) que muestre el panel de Resend. [Guía de Resend para Cloudflare](https://resend.com/docs/guides/dns/cloudflare).
+2. Cuando Resend indique que el dominio está verificado, configurar una clave
+   de envío restringida a ese dominio y `MAIL_FROM` en el entorno de funciones
+   de producción del proyecto `dstarshop` en Netlify. Conservar Gmail SMTP
+   durante la migración para poder restaurarlo quitando ambas variables.
+3. Con un buzón de prueba autorizado, verificar la recepción y que el mensaje
+   indique `spf=pass` y `dkim=pass` en `Authentication-Results`. La prueba de
+   correo puede hacerse por separado de una compra real.
+
+Estado al 11 de noviembre de 2026. Falta acceso a Resend y Cloudflare para
+obtener los valores de verificación, publicarlos y activar el remitente.
+
 Los ajustes de stock, notas, cancelaciones y cambios de preparación son acciones
 del operador autenticado. Conservar la contraseña en un gestor, cerrar sesión
 en equipos compartidos y no compartir enlaces de seguimiento.

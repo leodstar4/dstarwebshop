@@ -1,13 +1,13 @@
 ---
 tags: [codigo, prueba]
 ruta: "dstar-store/tests/e2e/seguridad-y-seo.spec.js"
-lineas: 197
+lineas: 204
 ---
 %% Generado por docs/generar-grafo.js. No lo edites a mano: vuelve a correr `node docs/generar-grafo.js`. %%
 
 # seguridad-y-seo.spec.js
 
-`dstar-store/tests/e2e/seguridad-y-seo.spec.js` · 197 líneas
+`dstar-store/tests/e2e/seguridad-y-seo.spec.js` · 204 líneas
 
 Pruebas de la auditoría del 2026-10-17: CSP real sin violaciones por página, metadatos de SEO y noindex, 404, enlaces a Instagram, edge functions producto-meta y sitemap, 429 de cotizar-envio y panel de pedidos; museo.html está entre las páginas indexables que revisa.
 
@@ -25,7 +25,7 @@ Parte de: [[Pruebas]]
 ## Funciones y clases
 
 - `cargarEdge` (línea 95)
-- `ev` (línea 185)
+- `ev` (línea 192)
 
 ## Casos de prueba
 
